@@ -5,6 +5,8 @@ Element 02 · type: business concept · roles: **Editor** (mutable draft surface
 The editor for an immutable `ProductDescription`: drafts tolerate quality violations, publication freezes a version that
 holds the description **by value**. One offer per product (Q8 closed: 1 : 1).
 
+`productId` in these instances is the offer's own identifier — the same value 12 exposes as `offerId` and 13 carries as `productId` (D31).
+
 ## Instance A — OfferEditor, draft with a tolerated violation (no eanGtin yet)
 
 ```yaml
@@ -55,7 +57,7 @@ version, not a state.
 - **RULE-4** publication embeds the description **by value** in the frozen offer version; the frozen version never re-reads a draft, so a later edit cannot change what was published.
 - **RULE-5** revert = create a new offer version copying an older version's content; the old version number is never reused (01 RULE-3).
 - **RULE-6** `removed` is terminal for that product's offer (Q11).
-- **RULE-7** the editor holds the description in builder form (`ProductDescription.Draft`): same components, nullable fields, no invariants. It never holds a frozen `ProductDescription`; a frozen `OfferVersion` pins a `descriptionVersion` number.
+- **RULE-7** the editor holds the description in builder form (`ProductDescription.Draft`): same components, nullable fields, no invariants. It never holds a frozen `ProductDescription`, and a frozen `OfferVersion` embeds the value — there is no `descriptionVersion` reference to resolve (D24/D25).
 - **RULE-8** quality violations are legal in the draft; only freeze enforces invariants. 08 QualityPolicy reports findings continuously on the draft, 09 PublishDecision blocks the transition.
 - **RULE-9** the draft is immutable like everything else — `merge(...)` returns a new draft, no setters, no Lombok `@Data` (`model.no-setters`, `model.no-lombok-data`); `@Builder(toBuilder = true)` allowed.
 - **RULE-10** `Draft.toDefinition()` is the only producer of a `ProductDescription`; it throws on a violated invariant — one rule set, one place.
@@ -88,7 +90,7 @@ Two files, one concept each: `Offer.java` (editor + frozen version + lifecycle) 
 `ProductDescription.java` — `Identifiers`, `Parameter`, `DescriptionBlock` (+ sealed alternatives) — so no second
 shape of the same content exists.
 
-## Open questions
+## Decisions taken at acceptance
 
-- **Q11** after removal, may the same product be offered again, and does numbering continue or restart?
-- **Q12** media formats and minimum quality are unspecified on the board; RULE-1 assumes JPG/PNG/WebP, no size limit.
+- **Q11** removal is terminal: the same product is never offered again and version numbering never restarts (RULE-6).
+- **Q12** media `format` is accepted as sent, unvalidated (JPG/PNG/WebP per D17); no size limit, no dimension check.

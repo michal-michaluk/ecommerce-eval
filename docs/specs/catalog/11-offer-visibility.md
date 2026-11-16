@@ -16,7 +16,8 @@ Decision: Visible(offerState, availabilityStart, today)
 | R4   | draft        | any                    | HIDDEN  |
 | R5   | removed      | any                    | HIDDEN |
 
-today = current date in the business timezone, `Europe/Warsaw` (config `catalog.timezone`)
+today = current date in the business timezone, `Europe/Warsaw` (config `catalog.timezone`), read from the injected `Clock` — never
+from `LocalDate.now()`; tests and the HTTP prototype supply a fixed or run-relative date (D35)
 R2 becomes R1 at local midnight of availabilityStart; no event is emitted by the transition
 itself — 13 ShoppingEvents already carried `availabilityStart` in `OfferPublished`.
 ```

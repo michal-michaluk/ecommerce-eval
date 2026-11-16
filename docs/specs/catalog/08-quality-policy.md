@@ -53,20 +53,27 @@ multi-block description, which is what the sample actually looks like. Heading t
 ```yaml
 catalog:
   quality:
-    minProseChars: 1000
-    requiredParameters:            # keyed by a categoryPath prefix; longest matching prefix wins
-      "[Dziecko, Zabawki, Klocki, LEGO]":
-        condition:    { valueType: text,     required: true }
-        childAge:     { valueType: rangeFrom, required: true }
-        pieceCount:   { valueType: integer,  required: true }
-        gender:       { valueType: enumSet,  required: true }
-        certificates: { valueType: list,     required: true }
-        safetyInfo:   { valueType: text,     required: true }
+    min-prose-chars: 1000
+    severity:                      # per-rule severity override; absent = 08's table
+      QP-8: warning                # | blocking  (the `strict-media` variant)
+    grammar:
+      enabled: false               # reserved, unimplemented (QP-9)
+    required-parameters:           # a list, not a map key: the prefix is a real list value
+      - prefix: [Dziecko, Zabawki, Klocki, LEGO]
+        parameters:                # declaration order is the report order for QP-10..QP-12
+          condition:    { value-type: text,      required: true }
+          childAge:     { value-type: rangeFrom, required: true }
+          pieceCount:   { value-type: integer,   required: true }
+          gender:       { value-type: enumSet,   required: true }
+          certificates: { value-type: list,      required: true }
+          safetyInfo:   { value-type: text,      required: true }
 ```
 
+This is the binding shape (`@ConfigurationProperties`, key `catalog.quality`): a list of `{prefix, parameters}`, because a category
+path is a list and a YAML map key cannot carry one (D33).
+
 - Ordering and matching: findings are ordered by rule number, then by the configuration's **declaration order** within one rule. The draft's `categoryPath` is matched against configured prefixes; the **longest matching prefix wins**;
-  the first match is final (deterministic).
-- No match → no QP-10…QP-12 findings; universal rules still apply. One category (`LEGO`) is configured today.
+  the first match is final (deterministic).- No match → no QP-10…QP-12 findings; universal rules still apply. One category (`LEGO`) is configured today.
 - Adding a category is a config change only — no code change, no migration.
 
 ## Parameter and value-object origins
@@ -75,7 +82,7 @@ catalog:
 |---|---|---|---|
 | DescriptionDraft | title, ids, parameters, blocks | Business concept | 01 ProductDescription (`Draft`) |
 | MediaSet | items, primary, position | Business concept | 02 Offer |
-| CategoryPath | path | Business concept | 02 Offer (draft) |
+| CategoryPath | path | Business concept | 01 ProductDescription (component of the value) |
 | QualityConfig | minProseChars, requiredParameters | Configuration | config keys `catalog.quality.*` |
 
 ## Variants and configurations
@@ -85,6 +92,9 @@ catalog:
 | default | no match | QP-1…QP-8 + category rules | — |
 | grammar-enabled | config `catalog.quality.grammar.enabled = true` | QP-9 added — **not implemented**, needs a `poc` and an external service | config key `catalog.quality.grammar.enabled` |
 | strict-media | config `catalog.quality.severity.QP-8 = blocking` | QP-8 promoted to blocking (the name states the stricter behaviour) | config key `catalog.quality.severity.*` |
+
+Every variant above except `grammar-enabled` is implemented as a bound config property and covered by a scenario in this file's
+list (D29); `grammar-enabled` stays a documented key with no behaviour.
 
 ## Executable scenarios
 
@@ -143,15 +153,16 @@ categoryPath: [Dziecko, Zabawki, Klocki, LEGO, Zestawy, Star Wars]
 ```yaml
 catalog:
   quality:
-    minProseChars: 1000
-    requiredParameters:
-      "[Dziecko, Zabawki, Klocki, LEGO]":
-        condition:    { valueType: text,      required: true }
-        childAge:     { valueType: rangeFrom, required: true }
-        pieceCount:   { valueType: integer,   required: true }
-        gender:       { valueType: enumSet,   required: true }
-        certificates: { valueType: list,      required: true }
-        safetyInfo:   { valueType: text,      required: true }
+    min-prose-chars: 1000
+    required-parameters:
+      - prefix: [Dziecko, Zabawki, Klocki, LEGO]
+        parameters:
+          condition:    { value-type: text,      required: true }
+          childAge:     { value-type: rangeFrom, required: true }
+          pieceCount:   { value-type: integer,   required: true }
+          gender:       { value-type: enumSet,   required: true }
+          certificates: { value-type: list,      required: true }
+          safetyInfo:   { value-type: text,      required: true }
 ```
 
 Matched prefix: `[Dziecko, Zabawki, Klocki, LEGO]` (longest of the configured prefixes; `…, Star Wars` is not configured).

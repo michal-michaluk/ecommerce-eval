@@ -158,8 +158,9 @@ rows live.
 
 ## Risks and assumptions
 
-- **R4** `review` calls `offer` through a mediator inside one transaction; if the freeze throws, the acceptance must not stay accepted —
-  the `reviewId` idempotency (09 R8) covers the retry, but the transaction boundary is a design decision for `plan`.
+- **R4 → D34 (resolved)** `review` calls `offer` through a mediator inside **one** transaction: acceptance, the `publishedOfferVersion`
+  record and the freeze commit or roll back together, so an accepted review always has its version. The retry is safe because the
+  publication is idempotent per `reviewId` (09 R6). No compensating action, no saga, no second write path.
 - **R5** the visibility rule must stay in one context (RULE-6); duplicating it in `offer`'s query path would drift.
 - **A4** `quality` is a separate context rather than a policy inside `offer`, because it carries per-category configuration and two
   consumers (14 and 04) — worth the port.

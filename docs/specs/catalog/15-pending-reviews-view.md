@@ -14,14 +14,14 @@ rows:                       # one row per open review, oldest first
     title: "LEGO Star Wars SMART Play X-Wing Czerwona Piątka Luke'a 75423"
     requestedBy: author.nowak
     requestedAt: "2025-06-14T09:10:00+02:00"
-    waitingFor: "1 d 0 h"
+    waitingFor: "P1D"          # RFC3339 duration from the API; the view renders "1 d 0 h"
     findingsCount: 0
   - reviewId: RV-13
     productId: PRD-75375
     title: "LEGO Star Wars Sokół Millennium 75375 + LEGO Brelok na dzień Ojca"
     requestedBy: author.zielinski
     requestedAt: "2025-06-14T16:40:00+02:00"
-    waitingFor: "16 h 30 m"
+    waitingFor: "PT16H30M"
     findingsCount: 2
 emptyState: "Brak ofert oczekujących na przegląd"
 ```
