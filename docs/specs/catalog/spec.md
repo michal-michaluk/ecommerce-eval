@@ -162,7 +162,7 @@ Every row is a command with an exit code — the `prove-dod` node executes each 
 | P1 | the service compiles, its tests pass, coverage and static analysis hold | `./gradlew build` | exit 0; `jacocoTestCoverageVerification` no longer `SKIPPED` (80 % instruction) |
 | P2 | five bounded contexts exist and no edge crosses them illegally | `./gradlew test --tests '*ArchitectureOf*Test'` | 5 suites, one per context, every rule `allowEmptyShould(true)` and green |
 | P3 | the code obeys the shape rules of the service | `sqt check .` | exit 0 over `src/main/java` + `src/test/java` |
-| P4 | 08/09/10/11 behave exactly as their scenario tables say | `./gradlew test --tests '*QualityPolicyTest' --tests '*PublishDecisionTest' --tests '*ActivePriceCalculationTest' --tests '*OfferVisibilityTest'` | 18 + 10 + 10 + 8 scenarios green |
+| P4 | 08/09/10/11 behave exactly as their scenario tables say | `./gradlew test --tests '*QualityPolicyTest' --tests '*PublishDecisionTest' --tests '*ActivePriceCalculationTest' --tests '*OfferVisibilityTest'` | 18 + 11 + 10 + 8 scenarios green (09 gained S11 with D37) |
 | P5 | the HTTP contract of 12 is real, including every error path and scope | `./gradlew e2eHurl` | exit 0, every request in `e2e/catalog-http-api.hurl` green |
 | P6 | the public events are the 13 contract, and no draft ever leaves | `./gradlew test --tests '*ShoppingEventsTest' --tests '*DraftPrivacyTest'` | payloads match the 13 schemas; no event, no `GET`, no log carries an unpublished draft |
 | P7 | the three views of 14/15/16 exist and render | `cd .storybook && node verify-storybook.frames.cjs http://127.0.0.1:6010 --flow flows.json` | every story non-empty, zero console errors, 3 flow chains pass |
