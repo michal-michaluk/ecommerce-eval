@@ -1,1 +1,204 @@
 databaseChangeLog:
+
+  # The editable offer: the draft surface (description in builder form, its media), the availability date and the state, plus the
+  # two identifier columns RULE-11 is queried and enforced on. A column a query filters on stays outside the JSON.
+  - changeSet:
+      id: 0003-offer-document
+      author: michal.michaluk
+      changes:
+        - createTable:
+            tableName: offer_document
+            columns:
+              - column:
+                  name: offer_id
+                  type: varchar(64)
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: offer_document_pkey
+                    nullable: false
+              - column:
+                  name: version
+                  type: bigint
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+              - column:
+                  name: state
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: product_number
+                  type: varchar(64)
+              - column:
+                  name: ean_gtin
+                  type: varchar(13)
+              - column:
+                  name: availability_start
+                  type: date
+              - column:
+                  name: content
+                  type: jsonb
+                  constraints:
+                    nullable: false
+        # RULE-11 backed at the schema level: an identifier is held by at most one offer, forever (D43). Removal is terminal
+        # (RULE-6, Q11), so a removed offer keeps its identifiers reserved — otherwise "the same product is never offered again"
+        # would be bypassable by creating a new offer with the old identifiers.
+        - sql:
+            sql: |
+              CREATE UNIQUE INDEX offer_document_product_number_idx
+                  ON offer_document (product_number) WHERE product_number IS NOT NULL;
+              CREATE UNIQUE INDEX offer_document_ean_gtin_idx
+                  ON offer_document (ean_gtin) WHERE ean_gtin IS NOT NULL;
+
+  # One row per frozen version, written once: a published version is never updated and a revert inserts the next number (RULE-4,
+  # RULE-5). The description is embedded by value, so no row ever reads a draft.
+  - changeSet:
+      id: 0003-offer-version
+      author: michal.michaluk
+      changes:
+        - createTable:
+            tableName: offer_version
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: offer_version_pkey
+                    nullable: false
+              - column:
+                  name: offer_id
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version_number
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: jsonb
+                  constraints:
+                    nullable: false
+              - column:
+                  name: availability_start
+                  type: date
+                  constraints:
+                    nullable: false
+              - column:
+                  name: published_at
+                  type: timestamptz
+                  constraints:
+                    nullable: false
+              - column:
+                  name: published_by
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: copied_from
+                  type: int
+        - addUniqueConstraint:
+            tableName: offer_version
+            columnNames: offer_id, version_number
+            constraintName: offer_version_offer_id_version_number_key
+
+  # The media a version froze, in the author's order: position and the single primary flag survive the round trip (RULE-1, RULE-2).
+  - changeSet:
+      id: 0003-offer-version-media
+      author: michal.michaluk
+      changes:
+        - createTable:
+            tableName: offer_version_media
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: offer_version_media_pkey
+                    nullable: false
+              - column:
+                  name: offer_id
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version_number
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: media_position
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: media_id
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: kind
+                  type: varchar(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: is_primary
+                  type: boolean
+                  constraints:
+                    nullable: false
+              - column:
+                  name: media_format
+                  type: varchar(32)
+        - addUniqueConstraint:
+            tableName: offer_version_media
+            columnNames: offer_id, version_number, media_position
+            constraintName: offer_version_media_offer_id_version_number_media_position_key
+
+  # One row per emitted domain event: the facts a write produced, drained from the aggregate's buffer (persistence.drain-events).
+  - changeSet:
+      id: 0003-offer-history
+      author: michal.michaluk
+      changes:
+        - createTable:
+            tableName: offer_history
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: offer_history_pkey
+                    nullable: false
+              - column:
+                  name: offer_id
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: recorded_at
+                  type: timestamptz
+                  constraints:
+                    nullable: false
+              - column:
+                  name: event_type
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: payload
+                  type: jsonb
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: offer_history
+            indexName: offer_history_offer_id_idx
+            columns:
+              - column:
+                  name: offer_id
