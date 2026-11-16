@@ -68,6 +68,10 @@ ignores every override, always. This element therefore has no variant of its own
 | S9 | accepted | blocking + 1 warning finding | present | no | pendingReview | BLOCK (findings) — warnings never block, blocking ones always do |
 | S10 | accepted | empty | stale override | no | draft | PUBLISH — the override is irrelevant to this decision |
 
+Every `BLOCK` freezes no version, so it also ends the attempt on the offer: `review` calls `OfferReview.closeReview` in the same
+transaction (04 RULE-4, 17 D51), a `pendingReview` draft returns to `draft` so the author can fix the findings and ask again, and a
+live offer stays `published` with no review left open over it.
+
 ## Domain events
 
 ```yaml

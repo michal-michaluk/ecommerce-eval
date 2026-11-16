@@ -23,8 +23,10 @@ import java.util.UUID;
  * for the content, which the candidate already froze at the request (RULE-3, D38).
  *
  * <p>Both ends of the lifecycle go through the offer's own ports: {@link OfferReview} asks it to enter review before anything is
- * frozen, and {@link OfferPublication} hands the frozen candidate back to be published — the offer stays the only writer of its
- * state.
+ * frozen and closes the attempt again whenever the review ends without a version — rejected, withdrawn (04 RULE-5, RULE-6) or
+ * blocked by 09 — and {@link OfferPublication} hands the frozen candidate back to be published. The offer stays the only writer of
+ * its state, and an acceptance that publishes closes nothing through the port: the freeze clears the offer's review on its own
+ * (D37).
  *
  * <p>{@code Optional} is the whole "not found" vocabulary for a review: a command on an unknown review answers with
  * {@code Optional.empty()} and invents no second one. An offer this service cannot find is a different matter — an accepted review
@@ -163,9 +165,20 @@ public class ReviewService {
         switch (decision.outcome()) {
             case PUBLISH -> review.recordPublication(
                     publications.publish(accepted.offerId(), accepted.candidate(), at, reviewer));
-            case BLOCK -> review.recordBlock(decision.reason());
+            case BLOCK -> blocked(review, decision.reason());
             case NO_OP -> throw new ReviewException(ReviewException.Error.DECISION_NOT_APPLICABLE, accepted.reviewId());
         }
+    }
+
+    /**
+     * 09 refused the publication, so the attempt ended without a version and the offer leaves its review (04 RULE-5, 17 RULE-3):
+     * the review stays recorded as accepted and blocked (S2/S3/S9), while the offer stops believing a review it will never publish
+     * is still open — otherwise the draft would stay {@code pendingReview} and a live offer would refuse every revert.
+     */
+    private void blocked(ReviewProcess review, PublishDecision.BlockReason reason) {
+        review.recordBlock(reason);
+        Review blocked = review.toReview();
+        offerReviews.closeReview(blocked.offerId(), blocked.reviewId());
     }
 
     private Offer.State offerStateOf(String offerId) {
@@ -176,14 +189,23 @@ public class ReviewService {
 
     private Review rejected(ReviewProcess review, String reviewer, String reason) {
         review.reject(reviewer, Instant.now(clock), reason);
-        reviews.save(review);
-        return review.toReview();
+        return closed(review);
     }
 
     private Review withdrawn(ReviewProcess review, String requester) {
         review.withdraw(requester);
+        return closed(review);
+    }
+
+    /**
+     * 04 RULE-5 and RULE-6: the attempt ended without a version, so the offer ends its own review too (17 RULE-3) — a draft returns
+     * to {@code draft} and a published offer stays as it was (D37) — in the same transaction as the decision (D34).
+     */
+    private Review closed(ReviewProcess review) {
+        Review ended = review.toReview();
+        offerReviews.closeReview(ended.offerId(), ended.reviewId());
         reviews.save(review);
-        return review.toReview();
+        return ended;
     }
 
     private OfferContent contentOf(String offerId) {

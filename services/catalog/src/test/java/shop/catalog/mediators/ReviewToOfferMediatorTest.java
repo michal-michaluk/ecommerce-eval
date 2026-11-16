@@ -48,6 +48,32 @@ class ReviewToOfferMediatorTest {
         assertThat(offers.getOffer(offerId).orElseThrow().state()).isEqualTo(Offer.State.DRAFT);
     }
 
+    @Test
+    void closesTheAttemptSoTheOfferLeavesReviewAndCanBeReviewedAgain() {
+        String offerId = aDraftWithAPrimaryImage();
+        String reviewId = ReviewFixture.aNewReviewId();
+        offerReviews.requestReview(offerId, reviewId, ReviewFixture.REQUESTED_AT);
+
+        offerReviews.closeReview(offerId, reviewId);
+
+        assertThat(offers.getOffer(offerId).orElseThrow().state()).isEqualTo(Offer.State.DRAFT);
+        offerReviews.requestReview(offerId, ReviewFixture.aNewReviewId(), ReviewFixture.REQUESTED_AT);
+        assertThat(offers.getOffer(offerId).orElseThrow().state()).isEqualTo(Offer.State.PENDING_REVIEW);
+    }
+
+    @Test
+    void closesTheAttemptOfAPublishedOfferWithoutTakingItOffTheShop() {
+        String offerId = aDraftWithAPrimaryImage();
+        offers.publish(offerId, ReviewFixture.REVIEWED_AT, ReviewFixture.REVIEWER);
+        String reviewId = ReviewFixture.aNewReviewId();
+        offerReviews.requestReview(offerId, reviewId, ReviewFixture.REQUESTED_AT);
+
+        offerReviews.closeReview(offerId, reviewId);
+
+        assertThat(offers.getOffer(offerId).orElseThrow().state()).isEqualTo(Offer.State.PUBLISHED);
+        assertThat(offers.revert(offerId, 1, ReviewFixture.REVIEWED_AT, ReviewFixture.REVIEWER)).isPresent();
+    }
+
     private String aDraftWithAPrimaryImage() {
         String offerId = aDraft();
         offers.updateMedia(offerId, OfferFixture.mediaOfInstanceA());

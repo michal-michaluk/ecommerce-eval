@@ -77,6 +77,21 @@ class OfferServiceTest {
     }
 
     @Test
+    void closesAReview() {
+        offers.put(OfferFixture.OFFER_ID, OfferFixture.offerPendingReview());
+
+        Offer closed = service.closeReview(OfferFixture.OFFER_ID, OfferFixture.REVIEW_ID);
+
+        OfferAssert.assertThat(closed).hasState(State.DRAFT).hasVersion(0);
+    }
+
+    @Test
+    void refusesToCloseAReviewOfAnOfferItDoesNotKnow() {
+        OfferAssert.assertRefused(OfferException.Error.OFFER_UNKNOWN,
+                () -> service.closeReview(OfferFixture.OTHER_OFFER_ID, OfferFixture.REVIEW_ID));
+    }
+
+    @Test
     void publishes() {
         offers.put(OfferFixture.OFFER_ID, OfferFixture.offerPendingReview());
 

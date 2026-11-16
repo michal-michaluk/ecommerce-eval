@@ -15,6 +15,7 @@ public class OfferFixture {
     public static final String OFFER_ID = "PRD-75423";
     public static final String OTHER_OFFER_ID = "PRD-75375";
     public static final String REVIEWER = "reviewer.kowalska";
+    public static final String REVIEW_ID = "RV-12";
     public static final LocalDate AVAILABILITY_START = LocalDate.of(2026, 7, 1);
     public static final Instant PUBLISHED_AT = Instant.parse("2025-06-15T08:00:00Z");
 

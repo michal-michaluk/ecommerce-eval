@@ -6,9 +6,13 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import shop.catalog.IntegrationTest;
 import shop.catalog.offer.Offer;
 import shop.catalog.offer.OfferDocumentFixture;
+import shop.catalog.offer.OfferFixture;
 import shop.catalog.offer.OfferService;
 import shop.catalog.offer.ProductDescription;
 import shop.catalog.offer.ProductDescriptionDraftFixture;
+import shop.catalog.quality.QualityFixture;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -94,6 +98,18 @@ class ReviewPublicationIntegrationTest {
     }
 
     @Test
+    void leavesTheOffersReviewToTheFreezeSoALiveOfferIsRevertableAfterwards() {
+        String offerId = aPublishedOffer();
+        Review requested = reviews.requestFor(offerId, ReviewFixture.AUTHOR, List.of());
+
+        transactional(() -> reviews.decide(requested.reviewId(), ReviewFixture.REVIEWER)).orElseThrow();
+
+        assertThat(versionsOf(offerId)).isEqualTo(2);
+        assertThat(transactional(() -> offers.revert(offerId, 1, ReviewFixture.REVIEWED_AT, ReviewFixture.REVIEWER)))
+                .isPresent();
+    }
+
+    @Test
     void answersAnOfferItDoesNotKnowWithNothingAndRefusesToFreezeForIt() {
         assertThat(transactional(() -> offerDrafts.snapshotOf(ReviewFixture.aNewOfferId()))).isEmpty();
         assertThatThrownBy(() -> transactional(() -> publications.publish(
@@ -108,6 +124,17 @@ class ReviewPublicationIntegrationTest {
                 OfferDocumentFixture.uniqueProductNumber(), OfferDocumentFixture.uniqueEanGtin());
         transactional(() -> offers.draftOffer(offerId, draft));
         transactional(() -> offers.scheduleAvailability(offerId, ReviewCandidateFixture.AVAILABILITY_START));
+        return offerId;
+    }
+
+    /** A live offer awaiting its next version: the freeze of an acceptance must be the only thing that clears its review (D37). */
+    private String aPublishedOffer() {
+        String offerId = ReviewFixture.aNewOfferId();
+        transactional(() -> offers.draftOffer(offerId, QualityFixture.draftWithIdentifiers(
+                OfferDocumentFixture.uniqueProductNumber(), OfferDocumentFixture.uniqueEanGtin())));
+        transactional(() -> offers.scheduleAvailability(offerId, ReviewCandidateFixture.AVAILABILITY_START));
+        transactional(() -> offers.updateMedia(offerId, OfferFixture.mediaOfInstanceA()));
+        transactional(() -> offers.publish(offerId, ReviewFixture.REVIEWED_AT, ReviewFixture.REVIEWER));
         return offerId;
     }
 
