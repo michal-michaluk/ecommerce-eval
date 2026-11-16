@@ -65,9 +65,13 @@ utils:
     inside: { stopBy: neighbor, kind: program }
 
   # An AGGREGATE is a top-level entity that collects domain events.
+  # An aggregate is a class with its own id and a domain-event buffer. Deliberately NOT keyed on
+  # `is.entity` (which requires `is.mutable`): an immutable editor would silently skip all thirteen
+  # `aggregate.*` checks. Same fix as eval/ecommerce services/catalog (commit 84bb802).
   is.aggregate:
     all:
-      - matches: is.entity
+      - kind: class_declaration
+      - matches: has.id
       - matches: is.top-level
       - matches: has.events
 

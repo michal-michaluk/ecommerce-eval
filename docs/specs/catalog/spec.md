@@ -280,6 +280,7 @@ Plan tickets (both top level: #1 has no parent):
 - Verification skills available: `review` (complexity/tests/arch/security/backward-compat/spec-coverage), `diagnosing-bugs`, `demo`, `poc`, `contract-testing`, `api-docs`, `knowledge`
 - Architecture docs: `docs/arch/microservice-java-spring/*` (index = mandatory workflow + task routing, context-boundaries, arch-unit, persistence-adapters, projection, integration-events, http-adapter, security, testing)
 - Baseline facts: `./gradlew build` green, `sqt check .` green, zero context packages, zero `ArchitectureOf*Test`, `mediators/` empty
+- Gate discipline: no node may edit `.sqt.yaml`, `build.gradle` gates or an architecture test to make its own gate pass — a violation is fixed in the code. Only the orchestrator may change `.sqt.yaml`, and only to widen coverage (as in the `is.aggregate` fix, commit `84bb802`); every Java-writing node ends with `sqt check .`, and every aggregate-bearing node also proves the classifier sees it (`sqt explain … | grep -qE 'is\.aggregate +true'`)
 
 ### Clarification Decisions
 
@@ -330,6 +331,7 @@ Plan tickets (both top level: #1 has no parent):
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; ./gradlew test --tests 'shop.catalog.offer.*'`
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; ./gradlew build`
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; sqt check .`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; sqt explain src/main/java/shop/catalog/offer/Offer.java | grep -qE 'is\.aggregate +true'`
 - **review_prompt:** Review the work in `/Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog`; do not inspect other repositories; if a premise below is false, say so and stop. Premises: every RULE-1…RULE-11 of 02 is enforced inside the aggregate (one primary image, contiguous positions, one video, availability date shape, embed-by-value freeze, revert as a new version, removed terminal, immutable draft with `merge`); uniqueness of `productNumber`/`eanGtin` is expressed as a port the aggregate asks, never as a repository query inside the model; the frozen version holds the `ProductDescription` by value and never re-reads a draft; events are past-tense nested records carrying ids and values only; the aggregate has no getters and no public members beyond its commands and snapshot; nothing here knows Spring, JPA or JSON. Report every missing rule, every framework leak into the model, and every invariant that lives outside the aggregate, with file:line; report only.
 
 ##### pricing-domain
@@ -341,6 +343,7 @@ Plan tickets (both top level: #1 has no parent):
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; ./gradlew test --tests 'shop.catalog.pricing.*'`
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; ./gradlew build`
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; sqt check .`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; sqt explain src/main/java/shop/catalog/pricing/PricingModel.java | grep -qE 'is\.aggregate +true'`
 - **review_prompt:** Review the work in `/Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog`; do not inspect other repositories; if a premise below is false, say so and stop. Premises: money is `amountMinor` + currency with the scale taken from the currency and no float or stored `BigDecimal`; ranges are half-open; a price change closes and appends and never overwrites; one open entry per (offer, currency); a started entry cannot be deleted but may be closed by a new one; stacking is fixed-then-percentage with a floor at 0 and a single half-up rounding; activation-due is a pure rule over (state, instant) and the scheduler is absent; all 10 scenarios of 10 exist as tests with an injected clock. Report each violated rule, each time-dependent test and each business rule placed outside the aggregate or the policy, with file:line; report only.
 
 #### 3. Human review — STOP
@@ -377,6 +380,8 @@ Plan tickets (both top level: #1 has no parent):
 - **checks:**
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; ./gradlew test --tests 'shop.catalog.review.*'`
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; ./gradlew build`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; sqt check .`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; sqt explain src/main/java/shop/catalog/review/ReviewProcess.java | grep -qE 'is\.aggregate +true'`
 - **review_prompt:** Review the work in `/Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog`; do not inspect other repositories; if a premise below is false, say so and stop. Premises: one open review per offer, reviewer differs from requester, candidate frozen at request, acceptance publishes exactly once per reviewId, rejection records a reason and keeps the candidate, withdrawal is requester-only and only while requested, the request-time override is recorded and never unblocks acceptance (D27), every port signature is value objects only and lives in `review`, all 10 scenarios of 09 exist. Report each violated rule, any producer internals in a port signature, and any missing scenario, with file:line; report only.
 
 #### 5. Application and persistence — AFK
@@ -389,6 +394,7 @@ Plan tickets (both top level: #1 has no parent):
 - **checks:**
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; ./gradlew test --tests 'shop.catalog.offer.*'`
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; ./gradlew build`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; sqt check .`
 - **review_prompt:** Review the work in `/Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog`; do not inspect other repositories; if a premise below is false, say so and stop. Premises: the service is thin (load, command, save, publish) with no invariant of its own; the repository drains the event buffer, writes, then publishes the snapshot and each event; every table is a Liquibase changeset and `ddl-auto` stays `none`; the port signature carries no JPA type; every read-back path of the adapter has a test on testcontainers Postgres; uniqueness is enforced by a DB constraint as well as by the port. Report each business decision found in the service, each missing changeset and each untested adapter path, with file:line; report only.
 
 ##### pricing-application
@@ -399,6 +405,7 @@ Plan tickets (both top level: #1 has no parent):
 - **checks:**
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; ./gradlew test --tests 'shop.catalog.pricing.*'`
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; ./gradlew build`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; sqt check .`
 - **review_prompt:** Review the work in `/Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog`; do not inspect other repositories; if a premise below is false, say so and stop. Premises: the normalized shape keeps history rows and no in-place update; activation runs on the injected clock, is idempotent through a marker written in the same transaction, catches up after downtime, and emits `occurredAt` = poll time with `effectiveFrom` = the entry's `validFrom`; the `KnownOffer` listener only records a fact and throws nothing. Report every write path without a read-back test and every activation case without a test, with file:line; report only.
 
 ##### quality-config
@@ -419,6 +426,7 @@ Plan tickets (both top level: #1 has no parent):
 - **checks:**
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; ./gradlew test --tests 'shop.catalog.review.*' --tests 'shop.catalog.offer.*'`
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; ./gradlew build`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; sqt check .`
 - **review_prompt:** Review the work in `/Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog`; do not inspect other repositories; if a premise below is false, say so and stop. Premises: acceptance, the `publishedOfferVersion` record and the freeze commit in one transaction (D34); a freeze failure leaves no accepted review and no version; the candidate is stored as a value snapshot and never re-read from the draft; the producer-side adapter lives in `offer` and only translates to the offer service; replaying an accepted decision returns the same version. Report every path that can leave an accepted review without its version, with file:line; report only.
 
 #### 6. Cross-context plumbing — AFK
@@ -431,6 +439,7 @@ Plan tickets (both top level: #1 has no parent):
 - **checks:**
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; ./gradlew test --tests 'shop.catalog.mediators.*'`
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; ./gradlew build`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; sqt check .`
 - **review_prompt:** Review the work in `/Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog`; do not inspect other repositories; if a premise below is false, say so and stop. Premises: each mediator is a package-private `@Component` in `mediators`, single method, single delegation, one provider port, no branch, no state, no listener, no publish; the contracts stay public in `review`; each mediator is tested through its contract, not through delegation. Report every rule break with file:line; report only.
 
 ##### reads-projection
@@ -461,6 +470,7 @@ Plan tickets (both top level: #1 has no parent):
 - **checks:**
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; ./gradlew test --tests '*ErrorMappingTest' --tests '*ScopeGuardTest'`
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; ./gradlew build`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; sqt check .`
 - **review_prompt:** Review the work in `/Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog`; do not inspect other repositories; if a premise below is false, say so and stop. Premises: the five failure classes map to exactly 400/401/403/404/409/500 with `reason` as the contract and messages never asserted; `FIELD_NOT_IN_SCOPE` is the only body-carrying 403; `include-message: never` stays; all four scopes are enforced per the matrix and a missing scope is 403; the `Location` header comes from a created-response advice (D19a); no endpoint is left without a decision. Report every route whose scope differs from 12 and every missing reason code, with file:line; report only.
 
 #### 7. HTTP surface — AFK
@@ -483,6 +493,7 @@ Plan tickets (both top level: #1 has no parent):
 - **checks:**
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; ./gradlew test --tests 'shop.catalog.pricing.*Controller*' --tests 'shop.catalog.review.*Controller*'`
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; ./gradlew build`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; sqt check .`
 - **review_prompt:** Review the work in `/Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog`; do not inspect other repositories; if a premise below is false, say so and stop. Premises: pricing PATCH handles `prices`, `discounts`, `removePriceIds`, `removeDiscountIds` in one call; review POST freezes the candidate and accepts only the request-time override; review PATCH carries `decision` + `reason` and never an override; replaying `accepted` returns the same version; `/reviews` is paged, requires `page`+`size`, excludes the caller's own requests and returns `waitingFor` as a duration. Report every deviation with file:line; report only.
 
 #### 8. Runtime proof — AFK
@@ -495,6 +506,7 @@ Plan tickets (both top level: #1 has no parent):
 - **checks:**
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; ./gradlew e2eHurl`
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/docs/specs/catalog/prototypes; hurlfmt --check catalog-http-api.hurl`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; sqt check .`
 - **review_prompt:** Review the work in `/Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog`; do not inspect other repositories; if a premise below is false, say so and stop. Premises: the task starts Postgres + Keycloak (realm `catalog`, four scopes) + Kafka, boots the app and fails the build on any hurl failure; the hurl captures every variable it reads and creates every fixture offer; no request depends on the wall clock; every error path of 12 is asserted with its `reason`; the realm file is test-only. Report every request that cannot run from a clean database and every contract mismatch, with file:line; report only.
 
 ##### views-gallery
@@ -569,7 +581,9 @@ Plan tickets (both top level: #1 has no parent):
 | offer-domain / pricing-domain | 02 and 03 were originally planned together with persistence, which hides the model behind adapters | split into `*-domain` (no Spring, no JPA, no Liquibase, secondary ports only) and `*-application` (service + adapter + schema) |
 | domain-review-hitl | the plan had no place to stop for the operator | a HALT node after the two domain slices; nothing after it runs before `status: approved` |
 | context-skeleton | the node put the five arch tests in `shop.catalog`
-| offer-domain (gate defect) | `is.aggregate` in `src/main/java/.sqt.yaml` required `is.entity`, i.e. `is.mutable`; the immutable editor of 02 RULE-9 was therefore invisible and all 13 `aggregate.*` checks were silently skipped (probe: 0 violations before, 5 after) | `is.aggregate` broadened to `class_declaration + has.id + is.top-level + has.events`; coverage went up, no threshold changed. `offer-domain` must prove `is.aggregate: true` for `Offer` with `sqt explain` before it closes |, while `arch-unit.md` (`archunit.context-test-location`) and the reference app put each test inside its context package — and the plan's `--tests 'shop.catalog.ArchitectureOf*Test'` filter then matched nothing | tests moved to `shop.catalog.{offer,pricing,quality,reads,review}`; every arch gate now uses `--tests '*ArchitectureOf*Test'` (updated in §Prove of Done P2 and in the node) |
+| offer-domain (gate defect) |
+| all Java nodes | the reference app `.agents/blueprints/microservice-java-spring/src/main/java/.sqt.yaml` carried the same `is.aggregate` defect, so every future scaffold would regenerate the blind gate | fixed there too (identical classifier, comment cross-references `84bb802`); the reference app stays `SUCCESS` with its 3 pre-existing `method_logical_lines` warnings, before and after the change |
+| plan gates | 8 of 22 nodes wrote Java without a `sqt` gate, and no node proved the classifier actually saw its aggregate | `sqt check .` added to every Java-writing node, `sqt explain … | grep -qE 'is\.aggregate +true'` added to the three aggregate-bearing domain nodes, and a gate-discipline line forbids a node from editing `.sqt.yaml` or an architecture test to pass its own gate | `is.aggregate` in `src/main/java/.sqt.yaml` required `is.entity`, i.e. `is.mutable`; the immutable editor of 02 RULE-9 was therefore invisible and all 13 `aggregate.*` checks were silently skipped (probe: 0 violations before, 5 after) | `is.aggregate` broadened to `class_declaration + has.id + is.top-level + has.events`; coverage went up, no threshold changed. `offer-domain` must prove `is.aggregate: true` for `Offer` with `sqt explain` before it closes |, while `arch-unit.md` (`archunit.context-test-location`) and the reference app put each test inside its context package — and the plan's `--tests 'shop.catalog.ArchitectureOf*Test'` filter then matched nothing | tests moved to `shop.catalog.{offer,pricing,quality,reads,review}`; every arch gate now uses `--tests '*ArchitectureOf*Test'` (updated in §Prove of Done P2 and in the node) |
 | e2e-harness | the prototype reads 10 variables it never captures and asserts a wall-clock-dependent visibility | captures + fixture offers + run-relative dates (F9/F16/D32) |
 
 ### Open Topics
