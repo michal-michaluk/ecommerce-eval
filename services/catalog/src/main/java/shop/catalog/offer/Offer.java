@@ -7,8 +7,9 @@ import java.util.Objects;
  * One offer as the read side serves it after a write: its identity, its lifecycle state, the number of the version currently in
  * force and the date the product becomes available (02 Instance A, 11 R1–R5).
  *
- * <p>Public because it leaves the context: 13 publishes it and the shopping side reads it, while the editor that produces it stays
- * package-private (17, {@code structure.editor-package-private}).
+ * <p>Public because it leaves the context: it is the snapshot an in-process listener of a sibling context reads (pricing keeps only the
+ * fact that the offer exists), while 13 publishes {@link OfferPublished} — the frozen version, not this summary — to the shop. The editor
+ * that produces it stays package-private (17, {@code structure.editor-package-private}).
  */
 public record Offer(String offerId, State state, int version, LocalDate availabilityStart) {
 
