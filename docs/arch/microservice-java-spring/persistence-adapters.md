@@ -33,6 +33,9 @@ decision made at wiring time, not a property of the model.
   overwriting it; `persistence.optimistic-version`
 - Store a whole snapshot in a JSONB column with `@JdbcTypeCode(SqlTypes.JSON)` on the field — the type stays a plain record with no
   JPA mapping; `persistence.json-column`
+- Type the column `JsonNode` and convert in the adapter when the stored value embeds a sealed hierarchy that carries no
+  `@JsonTypeInfo`: Jackson writes such a value and cannot read it back, so the record cannot be the column type — the conversion lives
+  in the adapter, with a `private static final` derived mapper and a mix-in that adds the discriminator; `persistence.json-column`
 - Keep the columns a query filters on outside the JSON, and leave everything only ever read as a whole inside it; `persistence.filter-columns-outside-json`
 - Name the table after the strategy's data, not after the class (`{table}`, `{events_table}`, `{table}` + `{child_table}`); `persistence.table-name`
 - Stop after the write: publishing events and snapshots is the adapter's last step, and only the adapters that own history do it; `persistence.publish-after-write`

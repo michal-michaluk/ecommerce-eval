@@ -65,7 +65,10 @@ because 11 R3 hides `pendingReview`).
 - **RULE-8** quality violations are legal in the draft; only freeze enforces invariants. 08 QualityPolicy reports findings continuously on the draft, 09 PublishDecision blocks the transition.
 - **RULE-9** the draft is immutable like everything else — `merge(...)` returns a new draft, no setters, no Lombok `@Data`; `@Builder(toBuilder = true)` allowed. Encoded: `aggregate.no-setters` and `vo.no-setters`. **Not encoded:** there is no rule against `@Data` — the ids `model.no-setters`/`model.no-lombok-data` cited earlier do not exist in this service (verified against `src/main/java/.sqt.yaml`), so immutability here is a review rule; a `@Data` check would be a gate addition (see plan §Open Topics).
 - **RULE-10** `Draft.toDefinition()` is the only producer of a `ProductDescription`; it throws on a violated invariant — one rule set, one place.
-- **RULE-11** the aggregate enforces the population rules a value object cannot: `productNumber` and `eanGtin` are unique across offers.
+- **RULE-11** the aggregate enforces the population rules a value object cannot: `productNumber` and `eanGtin` are unique across offers,
+  **forever** — removal included (D43). Removal is terminal (RULE-6, Q11); were a removed offer's identifiers claimable, a second
+  offer could carry the same `productNumber`/`eanGtin` and "the same product is never offered again" would be bypassable. The check
+  spans both halves of the stored truth: the document row (what the draft carries now) and every frozen version (what was published).
 
 ## Instance diff — draft → published with future availability
 

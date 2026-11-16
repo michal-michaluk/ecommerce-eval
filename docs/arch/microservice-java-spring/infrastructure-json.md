@@ -88,6 +88,10 @@ spring:
   class name, so there is nothing to inject; `json.hibernate-format-mapper`
 - Keep exactly one `FormatMapper` — a second one is a second JSON dialect for the same columns, and Hibernate takes one; `json.hibernate-format-mapper`
 - Mark the column `@JdbcTypeCode(SqlTypes.JSON)` and keep the Java type a plain record; `persistence.json-column`
+- Annotate a sealed value hierarchy with `@JsonTypeInfo` before it is stored, or store the column as `JsonNode` and add the
+  discriminator as a mix-in on a mapper derived in the adapter: the process mapper writes a sealed value fine and cannot read it back,
+  so a context that stores one and a context that later serialises the same value outbound do not agree on the format unless one place
+  owns it; `json.single-mapper` (reviewed)
 - A leftover `hibernate-types` properties file is dead once the format mapper above exists: no dependency on the classpath reads it.
   Delete it rather than update it; `json.no-legacy-properties` (reviewed)
 

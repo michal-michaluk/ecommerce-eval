@@ -406,7 +406,7 @@ Plan tickets (both top level: #1 has no parent):
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; ./gradlew test --tests 'shop.catalog.pricing.*'`
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; ./gradlew build`
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; sqt check .`
-- **review_prompt:** Review the work in `/Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog`; do not inspect other repositories; if a premise below is false, say so and stop. Premises: the normalized shape keeps history rows and no in-place update; activation runs on the injected clock, is idempotent through a marker written in the same transaction, catches up after downtime, and emits `occurredAt` = poll time with `effectiveFrom` = the entry's `validFrom`; the `KnownOffer` listener only records a fact and throws nothing. Report every write path without a read-back test and every activation case without a test, with file:line; report only.
+- **review_prompt:** Review the work in `/Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog`; do not inspect other repositories; if a premise below is false, say so and stop. Premises: the normalized shape keeps history rows and updates nothing in place except `validUntil` and the activation marker (`@DynamicUpdate`); activation runs on the injected clock, is idempotent through a marker written in the same transaction, catches up after downtime, and emits `occurredAt` = poll time with `effectiveFrom` = the entry's `validFrom`; the `KnownOffer` listener only records a fact and throws nothing. Report every write path without a read-back test and every activation case without a test, with file:line; report only.
 
 ##### quality-config
 - **Goal:** bind `catalog.quality.*` in the D33 shape and provide the configuration adapter the policy reads
@@ -598,6 +598,11 @@ Plan tickets (both top level: #1 has no parent):
 - **D41 (approved at review approval — as implemented)** a fixed discount bound to a currency the offer does not price is **refused** at write time
   (`DISCOUNT_CURRENCY_NOT_PRICED`) rather than stored and ignored. Confirm, or accept-and-ignore so sales can prepare a EUR discount before
   the EUR price exists
+- **D43 (decided)** `productNumber`/`eanGtin` are reserved **forever**, removal included: the uniqueness predicate and the two unique
+  indexes drop the `state <> 'REMOVED'` exemption. Accepted consequence: a genuinely new product cannot reuse a retired GTIN
+- **D44 (decided)** pricing's `known_offer` fact is fed by offer's **public `Offer` snapshot**, not by `OfferVersionFrozen` (which sits in the
+  package-private `OfferEvent`): a price may therefore be set before the first publication (13 RULE-7 already allows a published offer without
+  a price), and a removed offer stays in `known_offer` — harmless, and it keeps the consumer on an exported type (17 RULE-4 updated below)
 - **D42 (decided)** quality's media input is the **consumer's own contract type** (`quality.MediaItem`), not a copy of a producer's exposed
   snapshot: offer's media is package-private, and the mediator that wires `review`/`offer` to `quality` maps it (`contract.client-driven`).
   The wiring node makes `QualityPolicy`, `QualityFindings`, `Finding`, `Rule`, `Severity`, `QualityConfig` and `MediaItem` public and lists them

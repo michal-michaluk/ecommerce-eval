@@ -151,7 +151,8 @@ rows live.
 - **RULE-1** only `mediators/` may name two contexts; every other edge is an event or a port (`context-boundaries.md`).
 - **RULE-2** `quality` and `reads` own no aggregate and never write another context's tables.
 - **RULE-3** `review` never mutates the offer directly — it asks through `OfferPublication`, so the version is frozen by the owner.
-- **RULE-4** `pricing` learns that an offer exists from `OfferVersionFrozen`, never by querying `offer` (RULE-1 consequence).
+- **RULE-4** `pricing` learns that an offer exists from the published **`Offer` snapshot**, never by querying `offer` (RULE-1 consequence,
+  D44): `OfferVersionFrozen` stays inside `offer`'s package-private `OfferEvent`, so it is not a cross-context wire.
 - **RULE-5** the draft screen's read-your-writes is guaranteed by the in-process listener: `OfferDraftUpdated` is handled inside the
   producer's transaction, so the projection cannot lag behind a `PATCH` reply (`integration.listener-joins-transaction`).
 - **RULE-6** visibility (11) is computed only in `reads`; `offer` carries `availabilityStart` and state, nothing else.
