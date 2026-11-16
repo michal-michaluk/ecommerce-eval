@@ -1,0 +1,96 @@
+{
+  "source": "docs/raw/goods-issue-note.png",
+  "sourceKind": "single document screenshot (612x864 px), generated PDF preview",
+  "documentType": "Wydanie Zewnętrzne (external goods issue note, WZ)",
+  "template": "FakturaXL.pl",
+  "note": "Every visible field is represented, including the summary, the amount in words, notes and signatures.",
+
+  "document": {
+    "title": "Wydanie Zewnętrzne",
+    "number": "WZ 1/10/2019",
+    "issuedAt": { "date": "2019-10-05", "place": "Katowice" },
+    "page": { "current": 1, "of": 1 },
+    "currency": "PLN",
+    "language": "pl"
+  },
+
+  "parties": {
+    "seller": {
+      "role": "Sprzedawca",
+      "name": "Firma ABC",
+      "address": { "street": "ul. Szeroka 2", "postalCode": "44-555", "city": "Katowice", "country": "PL" },
+      "taxId": { "type": "NIP", "value": "9720902729" },
+      "email": "firma@fakturaxl.pl"
+    },
+    "buyer": {
+      "role": "Nabywca",
+      "name": "Produkcja Sp. z o.o.",
+      "address": { "street": "ul. Stawowa 38", "postalCode": "00-967", "city": "Warszawa", "country": "PL" },
+      "taxId": { "type": "NIP", "value": "9372424178" }
+    },
+    "receiver": {
+      "role": "Odbiorca",
+      "name": "Handel s.c.",
+      "address": { "street": "ul. Prosta 8", "postalCode": "00-121", "city": "Warszawa", "country": "PL" },
+      "taxId": { "type": "NIP", "value": "5111625852" }
+    }
+  },
+
+  "lines": [
+    {
+      "position": 1,
+      "name": "Meble ogrodowe",
+      "quantity": { "value": 1, "unit": "szt." },
+      "unitNetPrice": 16200.00,
+      "netValue": 16200.00,
+      "vatRatePercent": 23,
+      "vatValue": 3726.00,
+      "grossValue": 19926.00
+    },
+    {
+      "position": 2,
+      "name": "Dostawa",
+      "quantity": { "value": 1, "unit": "szt." },
+      "unitNetPrice": 10.00,
+      "netValue": 10.00,
+      "vatRatePercent": 23,
+      "vatValue": 2.30,
+      "grossValue": 12.30
+    }
+  ],
+
+  "relatedDocuments": [
+    { "position": 1, "type": "FV", "number": "FV 1/09/2019", "date": "2019-09-28" }
+  ],
+
+  "summary": {
+    "netValue": 16210.00,
+    "vatRatePercent": 23,
+    "vatValue": 3728.30,
+    "grossValue": 19938.30,
+    "currency": "PLN",
+    "amountInWords": "dziewiętnaście tysięcy dziewięćset trzydzieści osiem i 0.30 PLN"
+  },
+
+  "notes": "Dostawa z magazynu głównego. Odbiór po godzinie 15.",
+
+  "signatures": {
+    "receivedBy": "Jan Kowalski",
+    "issuedBy": "Krzysztof Nowak"
+  },
+
+  "footer": {
+    "printSource": "Druk: www.fakturaXL.pl",
+    "notice": "Stosujemy opakowania recyclingowe!",
+    "pageLabel": "Strona: 1/1"
+  },
+
+  "modelConsequences": [
+    "the goods issue note is a legal/accounting document: three parties (seller, buyer, receiver) each with NIP",
+    "each line carries quantity+unit, unit net price, net value, VAT rate, VAT value, gross value — money rounds independently per line and the summary must reconcile with the line sum",
+    "VAT rate is part of the line, so one note may mix rates even though this sample only shows 23%",
+    "relatedDocuments link the note to an invoice, so the document is not standalone",
+    "amount in words and two handwritten-style signatures are print-time requirements",
+    "notes are free text attached to the document, not to a line"
+  ]
+}
