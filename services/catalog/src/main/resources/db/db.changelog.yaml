@@ -25,3 +25,18 @@ databaseChangeLog:
       changes:
         - tagDatabase:
             tag: template-generated
+
+  # One fragment per bounded context: a context owns its own file, so two nodes
+  # never edit the same changelog. Empty fragments are valid and ship first.
+  - include:
+      file: db/changelog/0003-offer.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/0004-pricing.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/0005-review.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/0006-reads.yaml
+      relativeToChangelogFile: false
