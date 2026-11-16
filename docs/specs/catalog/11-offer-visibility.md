@@ -22,6 +22,9 @@ R2 becomes R1 at local midnight of availabilityStart; no event is emitted by the
 itself — 13 ShoppingEvents already carried `availabilityStart` in `OfferPublished`.
 ```
 
+An **open review never changes the state**: a published offer stays `published` while its candidate is reviewed (02, D37), so
+re-reviewing does not hide it from customers. `pendingReview` only ever describes an offer that has not been published yet.
+
 ## Parameter and value-object origins
 
 | Value object | Values | Origin | Source |
