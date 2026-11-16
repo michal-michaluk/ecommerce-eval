@@ -1,4 +1,4 @@
-# Product catalog service
+# Product catalog: draft, review, publication, pricing
 
 **Stack:** Spring Boot 4 + Java 25 + PostgreSQL + Kafka + OAuth2/Keycloak
 **Architecture:** Vertical slices — bounded contexts as sub-packages

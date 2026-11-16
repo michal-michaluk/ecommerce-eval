@@ -2,9 +2,11 @@
 
 Element 12 · type: API we expose · actors: ContentAuthor, ContentReviewer, Photographer, Sales · accepted.
 
-Executable contract: [`prototypes/catalog-http-api.hurl`](prototypes/catalog-http-api.hurl) — 33 requests, 13 route shapes,
-`hurlfmt --check` clean, runnable with `hurl --test --variable BASE_URL=…`. This file carries what a hurl cannot: the auth
-matrix, the status ownership and the decisions behind the shape.
+Executable contract: [`prototypes/catalog-http-api.hurl`](prototypes/catalog-http-api.hurl) — 34 requests over 15 method+path
+shapes, `hurlfmt --check` clean. It is **not** yet self-contained (F16): it reads ten variables it never captures
+(`offer_id`, `offer_with_findings`, `offer_without_media`, `offer_without_review`, `scheduled_price_id`, `started_price_id`, the four
+tokens), so the implementation adds `[Captures]` plus the three fixture offers and recomputes this count. This file carries what a hurl
+cannot: the auth matrix, the status ownership and the decisions behind the shape.
 
 ## Shape — four resource shapes, one edit endpoint per family
 
@@ -23,6 +25,7 @@ matrix, the status ownership and the decisions behind the shape.
 | `/offers` | `GET` | list offers (paged) |
 | `/offers/{offerId}` | `GET` | offer state, current version, visibility |
 | `/offers/{offerId}` | `PATCH` | `{offerState: "removed"}` — removal is a state edit, not a draft edit |
+| `/offers/{offerId}/versions` | `GET` | publish history — versions, `publishedAt`, `publishedBy`, `copiedFrom` (paged, D31) |
 | `/offers/{offerId}/draft` | `GET` | draft: description, media, availability, `quality.findings` |
 | `/offers/{offerId}/draft` | `PATCH` | **the single draft edit**: `description`, `media`, `availabilityStart` |
 | `/offers/{offerId}/versions` | `POST` | revert — create a new published version from an older one |
@@ -30,7 +33,8 @@ matrix, the status ownership and the decisions behind the shape.
 | `/offers/{offerId}/pricing` | `PATCH` | **the single pricing edit**: `prices`, `discounts`, `removePriceIds`, `removeDiscountIds` |
 | `/offers/{offerId}/review` | `POST` | start the review (freezes the candidate); body `{override?: {findings[]}}` — the author's push past the gate, recorded on the candidate (04 RULE-8) |
 | `/offers/{offerId}/review` | `GET` | review with candidate and findings |
-| `/offers/{offerId}/review` | `PATCH` | **the single review edit**: `decision: accepted \| rejected \| withdrawn`, plus `reason` (required for `rejected`) and `override` (only for the **request**, never for acceptance — F15) |
+| `/offers/{offerId}/review` | `PATCH` | **the single review edit**: `decision: accepted \| rejected \| withdrawn`, plus `reason` (required for `rejected`). The `override` component belongs to the **request** (`POST`) only — acceptance never carries
+one (F15, D27) |
 | `/reviews` | `GET` | pending reviews list for reviewers (paged) |
 
 ## Authentication and authorization
@@ -45,6 +49,7 @@ the existing actuator paths. Scopes: `catalog-author`, `catalog-reviewer`, `cata
 | `/offers/{offerId}` | `PATCH` | `catalog-author`, `catalog-reviewer` (removal) |
 | `/offers/{offerId}/draft` | `PATCH` | `catalog-author`, `catalog-photographer` — **by component**, see below |
 | `/offers/{offerId}/draft` | `GET` | `catalog-author`, `catalog-reviewer`, `catalog-photographer` |
+| `/offers/{offerId}/versions` | `GET` | `catalog-author`, `catalog-reviewer` |
 | `/offers/{offerId}/versions` | `POST` | `catalog-reviewer` |
 | `/offers/{offerId}/pricing` | `GET`, `PATCH` | `catalog-sales` |
 | `/offers/{offerId}/review` | `POST` | `catalog-author` |
@@ -93,7 +98,8 @@ Per `http-adapter.md`, five failure classes plus authorization, one owner each; 
   `PATCH` answers with the draft plus `quality.findings`; `GET /reviews` answers from the projection only.
 - **D15 acceptance publishes** (D5) and is idempotent per review (09 R8): replaying `decision: accepted` returns the same
   `publishedOfferVersion`.
-- **D16 collections are paged with required `page` and `size`** (`http.required-paging`); a missing one is `400`.
+- **D16 collections are paged with required `page` and `size`** (`http.required-paging`); a missing one is `400`. `page >= 0`,
+  `1 <= size <= 100`, anything else `400` — the bound exists so a client cannot ask for the whole table.
 - **D17 media is referenced, not uploaded** — `{kind, format, position, primary, url}` appended in the `media` component. Q12 (formats,
   size limits) must be answered before implementation validates anything.
 - **D18 `PATCH` means "these components, nothing else"** — absent component = not part of the request (`http.null-means-absent`); an
@@ -105,5 +111,11 @@ Per `http-adapter.md`, five failure classes plus authorization, one owner each; 
 
 - **Q8** (1 product : 1 offer) — paths are `/offers/{offerId}`; a marketplace shape would need `/products/{productId}/offers/{offerId}`.
 - **Q11** removal is terminal: any later draft edit answers `409 OFFER_REMOVED` (asserted in the hurl).
+- **D31 identifiers** — the offer has one identifier. HTTP exposes it as `offerId` (`OFR-` + 8 uppercase alphanumerics, server
+  generated); the events of 13 and the instances of 01/02/03 call the same value `productId`. There is no second, derived product id.
+  `GET /offers/{offerId}/versions` is the missing publish-history read (F17), and it is also what a revert picks `copyFrom` from.
+- **D35 the clock is injected** — `Clock` is the only source of "now" (`AppConfiguration.clock()`); the business date is
+  `ZonedDateTime.now(clock).withZoneSameInstant(catalog.timezone)`. Tests and the hurl never depend on the wall clock: the harness
+  passes run-relative dates (`availabilityStart` in the future and in the past) as hurl variables (F9).
 - `PRICE_ALREADY_STARTED` is **03 RULE-8**, not RULE-7: a started entry may be edited (closed by a new one) but never deleted.
 - **Q12** media `format` is accepted as sent, unvalidated.

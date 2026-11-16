@@ -149,6 +149,14 @@ tasks.register("trivyScanImage", Exec) {
 
 jacocoTestCoverageVerification {
     dependsOn jacocoTestReport
+    // The skeleton ships no business context, so there is nothing to cover yet. A context is a package under the root
+    // that is neither `tools` nor `mediators`; while none exists the gate stays off instead of demanding 80% of nothing.
+    onlyIf {
+        fileTree("src/main/java") {
+            include "**/*.java"
+            exclude "**/tools/**", "**/mediators/**", "**/AppRunner.java", "**/AppConfiguration.java", "**/package-info.java"
+        }.files
+    }
     violationRules {
         rule {
             limit {

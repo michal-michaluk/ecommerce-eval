@@ -6,9 +6,10 @@ business materials the services are built from.
 ## Layout
 
 ```
-raw/        business materials — event storming summary, platform overview, per-slice features, document samples
-api/        external warehouse API — InvenTree OpenAPI spec + the endpoints in scope
-services/   one directory per microservice (bounded context)
+docs/raw/    business materials — event storming diagram, transcript, platform overview, per-slice features, document samples
+docs/api/    external warehouse API — InvenTree OpenAPI spec + the endpoints in scope
+docs/arch/   blueprint architecture docs — read before coding a service
+services/    one directory per microservice (bounded context)
 ```
 
 | Service | Bounded context | Stack |
@@ -19,29 +20,35 @@ services/   one directory per microservice (bounded context)
 
 | File | Content |
 | --- | --- |
-| `raw/ecommerce-eventstorming.md` | event storming summary of the platform walkthrough |
-| `raw/platform-overview.md` | domain spec — slices: catalog, shopping, fulfillment |
-| `raw/product-catalog.md` | catalog feature: creation, review, publication, pricing |
-| `raw/shopping.md` | shopping feature: browsing, basket, checkout, order creation |
-| `raw/fulfillment.md` | fulfillment feature: pick, pack, ship, track, issue handling |
-| `raw/product-description.json` | sample published product listing with competing offers |
-| `raw/consignment-note.json` | sample carrier consignment note |
-| `raw/goods-issue-note.json` | sample goods issue note |
-| `api/inventree-openapi.json` | InvenTree API 579 OpenAPI 3.0.3 (293 paths, 427 schemas) |
-| `api/warehouse-api.md` | warehouse endpoints in scope and the port they translate into |
+| `docs/raw/ecommerce-eventstorming.jpg` | event storming diagram (primary source) |
+| `docs/raw/ecommerce-eventstorming.improved.txt` | walkthrough transcript (primary source) |
+| `docs/raw/ecommerce-eventstorming.improved.srt` | walkthrough subtitles (primary source) |
+| `docs/raw/ecommerce-eventstorming.md` | event storming summary of the platform walkthrough |
+| `docs/raw/platform-overview.md` | domain spec — slices: catalog, shopping, fulfillment |
+| `docs/raw/product-catalog.md` | catalog feature: creation, review, publication, pricing |
+| `docs/raw/shopping.md` | shopping feature: browsing, basket, checkout, order creation |
+| `docs/raw/fulfillment.md` | fulfillment feature: pick, pack, ship, track, issue handling |
+| `docs/raw/product-description.json` | sample published product listing with competing offers |
+| `docs/raw/consignment-note.json` | sample carrier consignment note |
+| `docs/raw/goods-issue-note.json` | sample goods issue note |
+| `docs/api/inventree-openapi.json` | InvenTree API 579 OpenAPI 3.0.3 (293 paths, 427 schemas) |
+| `docs/api/warehouse-api.md` | warehouse endpoints in scope and the port they translate into |
+
+`.agents/blueprints/microservice-java-spring/` is the reference example the services are scaffolded from.
 
 ## Adding a service
 
-1. Scaffold it as `services/<name>/` from the `microservice-java-spring` blueprint.
-2. Read its `AGENTS.md` before writing code — build, quality gates and patterns live there.
-3. Add a row to the service table above.
+1. `scaffold generate microservice-java-spring services/<name> micro_name=<package> db_name=<name>`
+2. Run its `hooks/post-generate.sh <package>` (nests the dotted package directory).
+3. Read its `AGENTS.md` — build, quality gates and patterns live there — plus `docs/arch/microservice-java-spring/`.
+4. Add its row to the service table above.
 
 ## Running a service
 
 Each service is self-contained: its own Gradle wrapper, `k8s/` manifests and quality gates.
 
 ```bash
-cd services/catalog
+cd services/<name>
 ./gradlew build        # compile + tests + quality gates
 ./gradlew bootRun      # needs PostgreSQL, Kafka and a JWT issuer
 ```

@@ -19,9 +19,9 @@ scheduled:                        # future entries, soonest first
   - { priceId: P-2, amountMinor: 29900, validFrom: "2026-07-01T00:00:00Z" }
   - { priceId: P-3, amountMinor: 27900, validFrom: "2026-09-01T00:00:00Z" }
 discounts:
-  active:    [ { discountId: D-1, kind: percentage, basisPoints: 1000, validUntil: "2026-06-30T23:59:59Z" } ]
+  active:    [ { discountId: D-1, kind: percentage, basisPoints: 1000, validUntil: "2026-07-01T00:00:00Z" } ]
   scheduled: [ { discountId: D-2, kind: fixed, amountMinor: 2000, validFrom: "2026-07-01T00:00:00Z" } ]
-  expired:   [ { discountId: D-0, kind: percentage, basisPoints: 500, validUntil: "2026-05-31T23:59:59Z" } ]
+  expired:   [ { discountId: D-0, kind: percentage, basisPoints: 500, validUntil: "2026-06-01T00:00:00Z" } ]
 history:                          # closed entries, newest first, read-only
   - { priceId: P-0, amountMinor: 31900, validFrom: "2026-01-10T00:00:00Z", validUntil: "2026-05-01T00:00:00Z" }
 effectivePreview:                 # 10's output for the chosen date
@@ -37,7 +37,7 @@ actions:
 ## Rules
 
 - **RULE-1** the current price is never edited in place: a change closes the current entry and appends a new one (03 RULE-2).
-- **RULE-2** only future entries can be deleted; a started entry is closed by a new one instead (03 RULE-7).
+- **RULE-2** only future entries can be deleted; a started entry is closed by a new one instead (03 RULE-8).
 - **RULE-3** a fixed discount's currency is fixed to the price currency and cannot be typed freely (03 RULE-5).
 - **RULE-4** the screen shows `effectivePreview` from 10 for a date the user picks, so the effect of stacking (D3) is visible before saving.
 - **RULE-5** history rows are read-only, no action rendered.

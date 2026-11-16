@@ -36,6 +36,11 @@ discounts: []
 - **RULE-6** a discount never mutates a price entry; it is resolved at read time by 10 ActivePriceCalculation.
 - **RULE-7** editing a future entry is allowed at any time; editing an entry whose range already started closes it at now and appends the new one.
 - **RULE-8** a started entry cannot be deleted — only closed by a new one; only entries with `validFrom > now` may be removed (`409 PRICE_ALREADY_STARTED` in 12).
+- **RULE-9** activation is polled, not slept on: a scheduled task (`@Scheduled`, interval `catalog.pricing.activation-interval`, default
+  `PT60S`) asks the `Clock` for now and activates every entry whose `validFrom <= now` and that carries no activation marker yet, in
+  `validFrom` order. Activation is idempotent — the marker is written in the same transaction as the `*Activated` event — and it
+  catches up: entries that became due while the service was down activate at the first poll after start, emitted with `occurredAt` =
+  the moment of the poll and `effectiveFrom` = the entry's `validFrom` (13 RULE-8).
 
 ## Instance diff — schedule a price change
 

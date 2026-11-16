@@ -37,7 +37,7 @@ PricesChanged:
   productId: PRD-75423
   currency: PLN
   price: { amountMinor: 29900, scale: 2 }
-  discounts: [ {kind: percentage, basisPoints: 1000, validUntil: "2026-06-30T23:59:59Z"} ]
+  discounts: [ {kind: percentage, basisPoints: 1000, validUntil: "2026-07-01T00:00:00Z"} ]   # half-open, 03 RULE-2
   effectiveFrom: 2026-07-01T00:00:00Z
 ```
 
@@ -56,6 +56,26 @@ ProductRemoved:
 - **RULE-5** delivery is at-least-once; consumers deduplicate on `eventId`.
 - **RULE-6** `availabilityStart` travels in `OfferPublished`; whether the shop hides the offer until then is its own decision (11 is the reference behaviour, not a mandate).
 - **RULE-7** no event carries a price for a currency that has no open price entry; a product published without a price is legal (prices arrive later).
+- **RULE-8** activation is polled by 03 RULE-9: an entry that became due while the service was down still emits `PricesChanged` at the
+  first poll after start, with `occurredAt` = poll time and `effectiveFrom` = the entry's `validFrom`, so a consumer sees the same
+  ordering and the same effective date it would have seen had the service stayed up.
+- **RULE-9** `key` is the offer id: the same value 12 exposes as `offerId` and 01/02 call `productId` (D31).
+
+## Transport decision (D28)
+
+`13` is the one edge that leaves the process, and it is the single authoritative transport for the three public types: in-process Spring
+events stay inside the five contexts, and an outbound publisher adapter ships `OfferPublished`, `PricesChanged` and `ProductRemoved` to
+Kafka. This is the deliberate `integration.single-transport` decision the architecture docs demand, not a second transport.
+
+| Item | Decision |
+|---|---|
+| Topic | `catalog.offer.events.v1` (config `catalog.events.topic`) |
+| Producer | one adapter (`*Integration`), `KafkaTemplate`, JSON payload built from the frozen snapshot |
+| When | inside the producing transaction, after the write, from the adapter — never from an aggregate, service or projection |
+| Delivery | at-least-once (`acks=all`, producer retries); consumers dedupe on `eventId` (RULE-5) |
+| Ordering | one partition key = the offer id (RULE-4) |
+| Failure | a broker failure fails the write and rolls it back, so a published offer never exists without its event |
+| Tests | payload asserted against these schemas in a unit test; one testcontainers Kafka integration test proves the send |
 
 ## Parameter and value-object origins
 

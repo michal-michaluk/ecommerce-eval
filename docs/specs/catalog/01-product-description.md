@@ -2,7 +2,7 @@
 
 Element 01 · type: business concept · role: **Value Object** — immutable, published in the **shared kernel** · accepted.
 
-The content of a product listing: title, identifiers, parameters, description blocks. It has **no identity and no lifecycle of its own** —
+The content of a product listing: title, identifiers, brand, condition, category path, parameters, description blocks. It has **no identity and no lifecycle of its own** —
 two instances with equal components are the same value. Media lives in 02 Offer, not here.
 
 **Shared kernel.** `ProductDescription` and its nested records (`Identifiers`, `Parameter`, `DescriptionBlock` + sealed alternatives) are
@@ -65,6 +65,9 @@ Created from a title + identifiers → blank draft; edited by ContentAuthor any 
 - **RULE-7** equality is by value: every component participates in `equals`/`hashCode`, so two offers carrying equal content carry the
   same value and the published payload can be deduplicated by `descriptionHash` (13). Nothing identifies a description beyond its content.
 - **RULE-8** uniqueness of `productNumber`/`eanGtin` is **not** enforceable here (a value object cannot police a population) — 02 enforces it.
+- **RULE-9** `brand {name, verified}`, `condition ∈ {new, used, refurbished}` and `categoryPath` are components of the value, not of the
+  offer: 13 publishes them inside `OfferPublished`, so they freeze with the version exactly like the rest of the content (D30).
+  `categoryPath` is matched by 08's category rules; `brand.verified` is display metadata and carries no rule.
 
 ## Instance diff — draft v1 → published v2
 
