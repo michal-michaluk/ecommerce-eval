@@ -80,7 +80,7 @@ Per `http-adapter.md`, five failure classes plus authorization, one owner each; 
 | malformed JSON, invalid command record (bad GTIN, bad basisPoints), unknown PATCH component | `400` | framework `@Valid` | `errors[]` with `field` |
 | unknown offer / review | `404` | handler | empty |
 | caller lacks the scope, or the draft component is outside it | `403` | framework security / one advice | `{reason: "FIELD_NOT_IN_SCOPE"}` for the component case, empty body otherwise |
-| state forbids the command (`MEDIA_PRIMARY_REQUIRED`, `QUALITY_FINDINGS`, `PRICE_ALREADY_STARTED`, `REVIEW_ALREADY_OPEN`, `REVIEW_NOT_OPEN`, `OFFER_REMOVED`) | `409` | one advice | `{reason, findings?}` |
+| state forbids the command (`MEDIA_PRIMARY_REQUIRED`, `QUALITY_FINDINGS`, `PRICE_ALREADY_STARTED`, `DISCOUNT_ALREADY_STARTED`, `DISCOUNT_CURRENCY_NOT_PRICED`, `REVIEW_ALREADY_OPEN`, `REVIEW_NOT_OPEN`, `OFFER_REMOVED`, `AVAILABILITY_START_MISSING`, `REMOVAL_NEEDS_PUBLICATION`) | `409` | one advice | `{reason, findings?}` |
 | optimistic-lock loss | `409` | one advice | retry hint |
 | anything unexpected | `500` | framework | empty (`include-message: never`) |
 

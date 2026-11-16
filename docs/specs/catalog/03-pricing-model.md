@@ -34,7 +34,8 @@ discounts: []
 - **RULE-1** money is `amountMinor:int` + `currency`; scale comes from the currency (D1: PLN 2, JPY 0) — never a float, never a BigDecimal for storage.
 - **RULE-2** price validity ranges are half-open `[validFrom, validUntil)`; a price change closes the previous entry (`validUntil = newValidFrom`) and appends a new one — no in-place overwrite, so history is the table.
 - **RULE-3** at most one open price per `(productId, currency)` at any instant — enforced by closing the predecessor in the same operation.
-- **RULE-4** a scheduled price or discount is silent: no event until `validFrom` is reached (transcript 45–47, R3).
+- **RULE-4** a scheduled price or discount is silent **outside the context**: no `*Activated` fact and nothing leaves the context
+  until `validFrom` is reached (transcript 45–47, R3). The in-context `*Scheduled`/`*Removed` records are bookkeeping, not publication.
 - **RULE-5** percentage discount stores integer basis points, `0 < basisPoints ≤ 10000`; fixed discount stores `amountMinor` + `currency` and must match the price currency.
 - **RULE-6** a discount never mutates a price entry; it is resolved at read time by 10 ActivePriceCalculation.
 - **RULE-7** editing a future entry is allowed at any time; editing an entry whose range already started closes it at now and appends the new one.
@@ -58,6 +59,8 @@ discounts: []
 ```yaml
 - PriceScheduled:    { productId: PRD-75423, priceId: P-2, validFrom: "2026-07-01T00:00:00Z" }   # in-context
 - DiscountScheduled: { productId: PRD-75423, discountId: D-2, validFrom: "2026-07-01T00:00:00Z" } # in-context
+- PriceRemoved:      { productId: PRD-75423, priceId: P-2 }        # in-context, a never-started entry
+- DiscountRemoved:   { productId: PRD-75423, discountId: D-2 }     # in-context, a never-started entry
 - PriceActivated:    { productId: PRD-75423, currency: PLN, amountMinor: 29900 }                 # leaves the context
 - DiscountActivated: { productId: PRD-75423, discountId: D-2 }
 ```

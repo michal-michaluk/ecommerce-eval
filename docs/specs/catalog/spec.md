@@ -592,6 +592,15 @@ Plan tickets (both top level: #1 has no parent):
 - **D37 (open, needs the operator)** a review opened on a `published` offer: 09 R1 allows `draft, pendingReview` only, and 11 R3 hides
   `pendingReview`, so re-reviewing a live offer today would hide it from customers. Recommendation: the live version keeps serving until a
   new version is accepted — `published` stays visible while a review is open, and 09 R1 gains `published` as an allowed offerState
+- **D40 (open, needs the operator)** removing a *scheduled* price reopens the predecessor entry that it had closed, so a scheduling that never
+  took effect leaves no trace. This is a RULE-2/RULE-7 reading, and 12's hurl expects `200` for it. Confirm, or decide instead that removal
+  leaves the predecessor closed (history showing a closed range that never was)
+- **D41 (open, needs the operator)** a fixed discount bound to a currency the offer does not price is **refused** at write time
+  (`DISCOUNT_CURRENCY_NOT_PRICED`) rather than stored and ignored. Confirm, or accept-and-ignore so sales can prepare a EUR discount before
+  the EUR price exists
+- **gate gap (platform)** `aggregate.no-public-members` reads source text, so a Lombok-generated `public` constructor passed the gate; the
+  pricing node fixed its own case with `@AllArgsConstructor(access = PACKAGE)` and verified by `javap`. A `constructor_declaration`-based
+  check would close the class of defects, not one instance — belongs to the service's `.sqt.yaml`
 - **D38 (open, needs the operator)** 04 RULE-3 freezes the candidate at request time, while `OfferEditor.publish` freezes the *current*
   draft; the two disagree the moment the author edits after requesting. Recommendation: the freeze takes the candidate through
   `OfferPublication` (`publish(candidate, at, by, registry)`), so "what was reviewed" and "what was published" are the same content
