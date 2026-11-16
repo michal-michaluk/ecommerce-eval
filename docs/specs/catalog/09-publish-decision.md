@@ -10,8 +10,8 @@ Decides whether an accepted review freezes a new offer version.
 Decision: Publish(reviewState, blockingFindings, alreadyPublished(reviewId), offerState)
 | Rule | reviewState | blockingFindings | alreadyPublished | offerState           | outcome                       |
 |------|-------------|------------------|------------------|----------------------|-------------------------------|
-| R1   | accepted    | empty            | no               | draft, pendingReview          | PUBLISH                       |
-| R2   | accepted    | non-empty        | no               | draft, pendingReview          | BLOCK (reason: findings)      |
+| R1   | accepted    | empty            | no               | draft, pendingReview, published | PUBLISH                     |
+| R2   | accepted    | non-empty        | no               | draft, pendingReview, published | BLOCK (reason: findings)    |
 | R3   | requested   | any              | no               | draft, pendingReview          | BLOCK (reason: not accepted)  |
 | R4   | rejected    | any              | no               | any                           | BLOCK (reason: rejected)      |
 | R5   | withdrawn   | any              | no               | any                           | BLOCK (reason: withdrawn)     |
@@ -57,6 +57,7 @@ ignores every override, always. This element therefore has no variant of its own
 | Scenario | reviewState | findings | request override | alreadyPublished | offerState | expected outcome |
 |---|---|---|---|---|---|---|
 | S1 | accepted | empty | null | no | draft | PUBLISH |
+| S11 | accepted | empty | null | no | published | PUBLISH — re-review of a live offer creates the next version while the live one keeps serving (D37) |
 | S2 | accepted | 2 findings | present | no | pendingReview | BLOCK (findings) — an author override never unblocks acceptance |
 | S3 | accepted | 2 findings | null | no | pendingReview | BLOCK (findings) |
 | S4 | requested | empty | null | no | pendingReview | BLOCK (not accepted) |

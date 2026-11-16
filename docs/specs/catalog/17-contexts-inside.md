@@ -89,7 +89,7 @@ publication on acceptance. It is the pivot: responsibility for the offer moves f
 
 | Direction | Counterpart | Type | What crosses |
 |---|---|---|---|
-| → | `offer` | contract port + mediator | `OfferDraftSnapshot` (read the draft), `OfferPublication` (freeze a version) |
+| → | `offer` | contract port + mediator | `OfferDraftSnapshot` (read the draft), `OfferPublication` — freeze **the candidate captured at request**, not the live draft (D38) |
 | → | `quality` | contract port + mediator | `QualityFindings` (frozen with the candidate, and for the screen) |
 | → | `reads` | event | `ReviewRequested`, `ReviewAccepted`, `ReviewRejected`, `ReviewWithdrawn` |
 | → | `offer` | event | `ReviewAccepted` also lets `offer` mark its state without a second write |
