@@ -607,9 +607,10 @@ Plan tickets (both top level: #1 has no parent):
 
 ### Open Topics
 
-- **D37 (approved at review approval)** a review opened on a `published` offer: 09 R1 allows `draft, pendingReview` only, and 11 R3 hides
-  `pendingReview`, so re-reviewing a live offer today would hide it from customers. Recommendation: the live version keeps serving until a
-  new version is accepted — `published` stays visible while a review is open, and 09 R1 gains `published` as an allowed offerState
+- **D37 (approved, implemented)** a review opened on a `published` offer keeps it `published`: the aggregate carries an explicit `reviewOpen`
+  fact (the state alone cannot answer it once a live offer stops entering `pendingReview`), `OfferEditor.requestReview` only moves a `draft`
+  to `pendingReview`, and `revert` still refuses while `reviewOpen`. 09 R1/R2 accept `published` and S11 covers the re-review; 11 R3 hides
+  `pendingReview`, which now only ever describes an unpublished offer. Proven end to end by `ReadsLiveOfferUnderReviewTest`.
 - **D40 (approved at review approval — as implemented)** removing a *scheduled* price reopens the predecessor entry that it had closed, so a scheduling that never
   took effect leaves no trace. This is a RULE-2/RULE-7 reading, and 12's hurl expects `200` for it. Confirm, or decide instead that removal
   leaves the predecessor closed (history showing a closed range that never was)
