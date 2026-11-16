@@ -110,7 +110,11 @@ public class OfferFixture {
     }
 
     public static OfferEvent.OfferVersionFrozen versionFrozen(int offerVersion, ProductDescription description) {
-        return new OfferEvent.OfferVersionFrozen(OFFER_ID, offerVersion, description);
+        return versionFrozen(OFFER_ID, offerVersion, description);
+    }
+
+    public static OfferEvent.OfferVersionFrozen versionFrozen(String offerId, int offerVersion, ProductDescription description) {
+        return new OfferEvent.OfferVersionFrozen(offerId, offerVersion, description);
     }
 
     public static OfferEvent.OfferVersionReverted versionReverted(int offerVersion, int copiedFrom) {

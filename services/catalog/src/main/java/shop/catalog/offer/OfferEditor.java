@@ -141,6 +141,12 @@ class OfferEditor {
         events.add(new OfferEvent.OfferRemoved(offerId));
     }
 
+    /** The editing content no snapshot carries: the draft and its media, as the persistence adapter stores it ({@link OfferSurface}). */
+    OfferSurface toSurface() {
+        OfferSurface surface = new OfferSurface(draft, media);
+        return surface;
+    }
+
     /** The offer as the read side serves it: identity, state, the number of the version in force and the availability date. */
     Offer toOffer() {
         int currentVersion = versions.size();

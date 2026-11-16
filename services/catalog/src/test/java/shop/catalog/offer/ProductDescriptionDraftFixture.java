@@ -42,6 +42,10 @@ public class ProductDescriptionDraftFixture {
         return draftOfInstanceA().toBuilder().identifiers(identifiers).build();
     }
 
+    public static Draft draftWithIdentifiers(String productNumber, String eanGtin) {
+        return draftWithIdentifiers(new Identifiers(productNumber, eanGtin, "SMART Play X-Wing"));
+    }
+
     public static Draft draftWithoutIdentifiers() {
         return draftWithIdentifiers(null);
     }
