@@ -160,7 +160,7 @@ Every row is a command with an exit code — the `prove-dod` node executes each 
 | # | Property to prove | Command (from `services/catalog`) | Pass means |
 |---|---|---|---|
 | P1 | the service compiles, its tests pass, coverage and static analysis hold | `./gradlew build` | exit 0; `jacocoTestCoverageVerification` no longer `SKIPPED` (80 % instruction) |
-| P2 | five bounded contexts exist and no edge crosses them illegally | `./gradlew test --tests 'shop.catalog.ArchitectureOf*Test'` | 5 suites, one per context, every rule `allowEmptyShould(true)` and green |
+| P2 | five bounded contexts exist and no edge crosses them illegally | `./gradlew test --tests '*ArchitectureOf*Test'` | 5 suites, one per context, every rule `allowEmptyShould(true)` and green |
 | P3 | the code obeys the shape rules of the service | `sqt check .` | exit 0 over `src/main/java` + `src/test/java` |
 | P4 | 08/09/10/11 behave exactly as their scenario tables say | `./gradlew test --tests '*QualityPolicyTest' --tests '*PublishDecisionTest' --tests '*ActivePriceCalculationTest' --tests '*OfferVisibilityTest'` | 18 + 10 + 10 + 8 scenarios green |
 | P5 | the HTTP contract of 12 is real, including every error path and scope | `./gradlew e2eHurl` | exit 0, every request in `e2e/catalog-http-api.hurl` green |
@@ -304,7 +304,7 @@ Plan tickets (both top level: #1 has no parent):
 - **Docs:** `17-contexts-inside.md`; `docs/arch/microservice-java-spring/arch-unit.md:101-131` (template, two allow-lists), `code-structure.md:1-29`
 - **IN / OUT:** IN: nothing; OUT: `src/main/java/shop/catalog/{offer,pricing,review,quality,reads}/package-info.java`, `src/test/java/shop/catalog/ArchitectureOf{Offer,Pricing,Review,Quality,Reads}Test.java`, `mediators/package-info.java` javadoc. Does NOT touch `ArchitectureDescription.java`, `AppConfiguration.java`, `build.gradle`
 - **checks:**
-  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; ./gradlew test --tests 'shop.catalog.ArchitectureOf*Test'`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; ./gradlew test --tests '*ArchitectureOf*Test'`
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; sqt check .`
 - **review_prompt:** Review the work in `/Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog`; do not inspect any other repository; if a premise below is false, say so and stop. Premises: five contexts exist as packages with `package-info.java`; each has an `ArchitectureOf{Context}Test` that is `public`, analyses `shop.catalog`, excludes tests, declares `sharedKernelExposed`/`sharedKernelUsed` and instantiates all six rule factories from `ArchitectureDescription`; no rule was weakened or deleted; the deleted `ArchitectureTest.java` was not resurrected. Report every deviation with file:line; report only.
 
@@ -567,6 +567,7 @@ Plan tickets (both top level: #1 has no parent):
 | http-* | JaCoCo gate arms at 80 % the moment a context exists | each node carries `./gradlew build`, so coverage is enforced from node 1 |
 | offer-domain / pricing-domain | 02 and 03 were originally planned together with persistence, which hides the model behind adapters | split into `*-domain` (no Spring, no JPA, no Liquibase, secondary ports only) and `*-application` (service + adapter + schema) |
 | domain-review-hitl | the plan had no place to stop for the operator | a HALT node after the two domain slices; nothing after it runs before `status: approved` |
+| context-skeleton | the node put the five arch tests in `shop.catalog`, while `arch-unit.md` (`archunit.context-test-location`) and the reference app put each test inside its context package — and the plan's `--tests 'shop.catalog.ArchitectureOf*Test'` filter then matched nothing | tests moved to `shop.catalog.{offer,pricing,quality,reads,review}`; every arch gate now uses `--tests '*ArchitectureOf*Test'` (updated in §Prove of Done P2 and in the node) |
 | e2e-harness | the prototype reads 10 variables it never captures and asserts a wall-clock-dependent visibility | captures + fixture offers + run-relative dates (F9/F16/D32) |
 
 ### Open Topics
