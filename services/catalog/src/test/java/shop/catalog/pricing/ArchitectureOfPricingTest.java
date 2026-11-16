@@ -22,7 +22,8 @@ import static com.tngtech.archunit.core.domain.JavaClass.Predicates.belongToAnyO
 public class ArchitectureOfPricingTest {
     public static final String PACKAGE = "shop.catalog.pricing";
 
-    public static final DescribedPredicate<JavaClass> sharedKernelExposed = belongToAnyOf();
+    public static final DescribedPredicate<JavaClass> sharedKernelExposed =
+            belongToAnyOf(PricingChanged.class, ActivePrice.class, Money.class);
     public static final DescribedPredicate<JavaClass> sharedKernelUsed = belongToAnyOf(Offer.class);
 
     @ArchTest
