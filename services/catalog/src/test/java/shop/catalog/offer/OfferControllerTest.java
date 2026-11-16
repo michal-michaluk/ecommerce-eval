@@ -102,19 +102,36 @@ class OfferControllerTest {
 
     @Test
     void requiresBothPagingParameters() throws Exception {
-        assertThat(as(Scopes.AUTHOR, AUTHOR_CALLER, mvc, request(GET, "/offers")).getStatus()).isEqualTo(400);
-        assertThat(as(Scopes.AUTHOR, AUTHOR_CALLER, mvc, request(GET, "/offers?page=0")).getStatus()).isEqualTo(400);
-        assertThat(as(Scopes.AUTHOR, AUTHOR_CALLER, mvc, request(GET, "/offers?size=10")).getStatus()).isEqualTo(400);
+        MockHttpServletResponse neither = as(Scopes.AUTHOR, AUTHOR_CALLER, mvc, request(GET, "/offers"));
+        MockHttpServletResponse noSize = as(Scopes.AUTHOR, AUTHOR_CALLER, mvc, request(GET, "/offers?page=0"));
+        MockHttpServletResponse noPage = as(Scopes.AUTHOR, AUTHOR_CALLER, mvc, request(GET, "/offers?size=10"));
+
+        assertThat(neither.getStatus()).isEqualTo(400);
+        assertThat(neither.getContentAsString()).isEqualTo("{\"errors\":[{\"field\":\"page\"}]}");
+        assertThat(noSize.getContentAsString()).isEqualTo("{\"errors\":[{\"field\":\"size\"}]}");
+        assertThat(noPage.getContentAsString()).isEqualTo("{\"errors\":[{\"field\":\"page\"}]}");
+    }
+
+    /** A parameter that is there and is not a number is the same `400` in the same shape, naming the parameter. */
+    @Test
+    void refusesAPagingParameterThatIsNotANumber() throws Exception {
+        MockHttpServletResponse mistyped = as(Scopes.AUTHOR, AUTHOR_CALLER, mvc,
+                request(GET, "/offers?page=first&size=10"));
+
+        assertThat(mistyped.getStatus()).isEqualTo(400);
+        assertThat(mistyped.getContentAsString()).isEqualTo("{\"errors\":[{\"field\":\"page\"}]}");
     }
 
     @Test
     void refusesAPageOutsideTheBoundsOfD16() throws Exception {
-        assertThat(as(Scopes.AUTHOR, AUTHOR_CALLER, mvc, request(GET, "/offers?page=-1&size=10")).getStatus())
-                .isEqualTo(400);
-        assertThat(as(Scopes.AUTHOR, AUTHOR_CALLER, mvc, request(GET, "/offers?page=0&size=0")).getStatus())
-                .isEqualTo(400);
-        assertThat(as(Scopes.AUTHOR, AUTHOR_CALLER, mvc, request(GET, "/offers?page=0&size=101")).getStatus())
-                .isEqualTo(400);
+        MockHttpServletResponse negativePage = as(Scopes.AUTHOR, AUTHOR_CALLER, mvc, request(GET, "/offers?page=-1&size=10"));
+        MockHttpServletResponse emptyPage = as(Scopes.AUTHOR, AUTHOR_CALLER, mvc, request(GET, "/offers?page=0&size=0"));
+        MockHttpServletResponse tooWide = as(Scopes.AUTHOR, AUTHOR_CALLER, mvc, request(GET, "/offers?page=0&size=101"));
+
+        assertThat(negativePage.getStatus()).isEqualTo(400);
+        assertThat(negativePage.getContentAsString()).isEqualTo("{\"errors\":[{\"field\":\"page\"}]}");
+        assertThat(emptyPage.getContentAsString()).isEqualTo("{\"errors\":[{\"field\":\"size\"}]}");
+        assertThat(tooWide.getContentAsString()).isEqualTo("{\"errors\":[{\"field\":\"size\"}]}");
         assertThat(as(Scopes.AUTHOR, AUTHOR_CALLER, mvc, request(GET, "/offers?page=0&size=100")).getStatus())
                 .isEqualTo(200);
     }

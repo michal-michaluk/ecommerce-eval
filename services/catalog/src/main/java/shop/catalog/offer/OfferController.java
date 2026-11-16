@@ -3,6 +3,8 @@ package shop.catalog.offer;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.AssertTrue;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -55,9 +57,8 @@ class OfferController {
     }
 
     /** D16: both parameters are required, {@code page >= 0} and {@code 1 <= size <= 100}, and anything else is a `400`. */
-    @GetMapping(path = "/offers", params = {"page", "size"}, produces = APPLICATION_JSON_VALUE)
-    OffersPage list(@RequestParam int page, @RequestParam int size) {
-        refusePageOutsideItsBounds(page, size);
+    @GetMapping(path = "/offers", produces = APPLICATION_JSON_VALUE)
+    OffersPage list(@RequestParam @Min(0) int page, @RequestParam @Min(1) @Max(MAX_PAGE_SIZE) int size) {
         return OffersPage.of(offers.offers(page, size), page, size, offers.countOffers());
     }
 
@@ -99,12 +100,6 @@ class OfferController {
     private static HttpMessageNotReadableException unknownComponent(String component) {
         return new HttpMessageNotReadableException("unknown component " + component,
                 new UnrecognizedPropertyException(null, component, null, Object.class, component, List.of()), null);
-    }
-
-    private static void refusePageOutsideItsBounds(int page, int size) {
-        if (page < 0 || size < 1 || size > MAX_PAGE_SIZE) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
-        }
     }
 
     /**

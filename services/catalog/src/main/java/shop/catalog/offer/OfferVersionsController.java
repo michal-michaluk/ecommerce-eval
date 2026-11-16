@@ -2,6 +2,8 @@ package shop.catalog.offer;
 
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -48,10 +50,10 @@ class OfferVersionsController {
     private final OfferService offers;
     private final Clock clock;
 
-    @GetMapping(path = "/offers/{offerId}/versions", params = {"page", "size"}, produces = APPLICATION_JSON_VALUE)
-    VersionsPage versions(@PathVariable String offerId, @RequestParam int page, @RequestParam int size) {
+    @GetMapping(path = "/offers/{offerId}/versions", produces = APPLICATION_JSON_VALUE)
+    VersionsPage versions(@PathVariable String offerId, @RequestParam @Min(0) int page,
+                         @RequestParam @Min(1) @Max(MAX_PAGE_SIZE) int size) {
         List<OfferVersion> versions = offers.versionsOf(offerId).orElseThrow(OfferVersionsController::offerUnknown);
-        refusePageOutsideItsBounds(page, size);
         return VersionsPage.of(versions, page, size);
     }
 
@@ -94,13 +96,6 @@ class OfferVersionsController {
     private static HttpMessageNotReadableException unknownComponent(String component) {
         return new HttpMessageNotReadableException("unknown component " + component,
                 new UnrecognizedPropertyException(null, component, null, Object.class, component, List.of()), null);
-    }
-
-    /** D16: both parameters are required, {@code page >= 0} and {@code 1 <= size <= 100}, and anything else is a `400`. */
-    private static void refusePageOutsideItsBounds(int page, int size) {
-        if (page < 0 || size < 1 || size > MAX_PAGE_SIZE) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
-        }
     }
 
     /** D19: a revert names the version it copies and nothing else — the new number and the publisher are not a client's to choose. */

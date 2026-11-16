@@ -141,20 +141,28 @@ class OfferVersionsControllerTest {
     void requiresBothPagingParameters() throws Exception {
         String offerId = publishedOffer(offers);
 
-        assertThat(as(Scopes.AUTHOR, AUTHOR_CALLER, mvc, request(GET, "/offers/" + offerId + "/versions")).getStatus())
-                .isEqualTo(400);
-        assertThat(as(Scopes.AUTHOR, AUTHOR_CALLER, mvc, request(GET, "/offers/" + offerId + "/versions?page=0"))
-                .getStatus()).isEqualTo(400);
+        MockHttpServletResponse neither = as(Scopes.AUTHOR, AUTHOR_CALLER, mvc,
+                request(GET, "/offers/" + offerId + "/versions"));
+        MockHttpServletResponse noSize = as(Scopes.AUTHOR, AUTHOR_CALLER, mvc,
+                request(GET, "/offers/" + offerId + "/versions?page=0"));
+
+        assertThat(neither.getStatus()).isEqualTo(400);
+        assertThat(neither.getContentAsString()).isEqualTo("{\"errors\":[{\"field\":\"page\"}]}");
+        assertThat(noSize.getContentAsString()).isEqualTo("{\"errors\":[{\"field\":\"size\"}]}");
     }
 
     @Test
     void refusesAPageOutsideTheBoundsOfD16() throws Exception {
         String offerId = publishedOffer(offers);
 
-        assertThat(as(Scopes.AUTHOR, AUTHOR_CALLER, mvc,
-                request(GET, "/offers/" + offerId + "/versions?page=-1&size=10")).getStatus()).isEqualTo(400);
-        assertThat(as(Scopes.AUTHOR, AUTHOR_CALLER, mvc,
-                request(GET, "/offers/" + offerId + "/versions?page=0&size=101")).getStatus()).isEqualTo(400);
+        MockHttpServletResponse negativePage = as(Scopes.AUTHOR, AUTHOR_CALLER, mvc,
+                request(GET, "/offers/" + offerId + "/versions?page=-1&size=10"));
+        MockHttpServletResponse tooWide = as(Scopes.AUTHOR, AUTHOR_CALLER, mvc,
+                request(GET, "/offers/" + offerId + "/versions?page=0&size=101"));
+
+        assertThat(negativePage.getStatus()).isEqualTo(400);
+        assertThat(negativePage.getContentAsString()).isEqualTo("{\"errors\":[{\"field\":\"page\"}]}");
+        assertThat(tooWide.getContentAsString()).isEqualTo("{\"errors\":[{\"field\":\"size\"}]}");
     }
 
     @Test

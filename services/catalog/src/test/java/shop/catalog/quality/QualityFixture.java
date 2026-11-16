@@ -36,6 +36,9 @@ public class QualityFixture {
 
     public static final int COMPLETE_PROSE = 1626;
 
+    /** Far below 08's {@code minProseChars}, so QP-6 is the one finding a draft built from it carries. */
+    public static final int PROSE_BELOW_THE_MINIMUM = 100;
+
     private QualityFixture() {
     }
 
@@ -103,6 +106,13 @@ public class QualityFixture {
 
     public static ProductDescription.Draft draftWithParagraph(int length) {
         return draftWithBlocks(List.of(new Paragraph(text(length))));
+    }
+
+    /** One blocking finding and nothing else — QP-6 — on identifiers of the caller's choosing, so the offer stays unique too. */
+    public static ProductDescription.Draft draftWithProseBelowTheMinimum(String productNumber, String eanGtin) {
+        return draftWithParagraph(PROSE_BELOW_THE_MINIMUM).toBuilder()
+                .identifiers(new Identifiers(productNumber, eanGtin, null))
+                .build();
     }
 
     /** S3 and S6: prose without a single paragraph block, counted from bullet items only. */

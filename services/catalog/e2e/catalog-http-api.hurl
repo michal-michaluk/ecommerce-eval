@@ -764,26 +764,36 @@ jsonpath "$.errors" isEmpty
 GET {{BASE_URL}}/reviews
 Authorization: Bearer {{reviewer_token}}
 HTTP 400
+[Asserts]
+jsonpath "$.errors[0].field" == "page"
 
 # 400 — the offer list needs them too
 GET {{BASE_URL}}/offers
 Authorization: Bearer {{author_token}}
 HTTP 400
+[Asserts]
+jsonpath "$.errors[0].field" == "page"
 
 # 400 — so does the publish history
 GET {{BASE_URL}}/offers/{{offer_without_media}}/versions
 Authorization: Bearer {{author_token}}
 HTTP 400
+[Asserts]
+jsonpath "$.errors[0].field" == "page"
 
 # 400 — a page below zero is outside the bound D16 states
 GET {{BASE_URL}}/offers?page=-1&size=20
 Authorization: Bearer {{author_token}}
 HTTP 400
+[Asserts]
+jsonpath "$.errors[0].field" == "page"
 
 # 400 — and so is a size above the maximum, so no client can ask for the whole table
 GET {{BASE_URL}}/reviews?page=0&size=101
 Authorization: Bearer {{reviewer_token}}
 HTTP 400
+[Asserts]
+jsonpath "$.errors[0].field" == "size"
 
 # ══ Authorization — 403 on the route matrix of 12 ══════════════════════════════════════════════════════════════════════════════
 
