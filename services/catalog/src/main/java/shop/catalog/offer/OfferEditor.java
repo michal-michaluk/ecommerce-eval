@@ -26,7 +26,7 @@ import java.util.Objects;
  * <p>Instances are created through {@link #draftAnOffer(String, ProductDescription.Draft, OfferRegistry)}; the aggregate is
  * package-private and appends every accepted change to its {@code events} buffer, which the persistence adapter drains.
  */
-@AllArgsConstructor
+@AllArgsConstructor(access = lombok.AccessLevel.PACKAGE)
 class OfferEditor {
 
     private static final int FIRST_VERSION = 1;
@@ -40,13 +40,14 @@ class OfferEditor {
     private LocalDate availabilityStart;
     private State state;
     private List<OfferVersion> versions;
+    private boolean reviewOpen;
 
     /** Opens the draft of an offer under {@code offerId}: the first version of the listing, not yet reviewed and not yet published. */
     static OfferEditor draftAnOffer(String offerId, ProductDescription.Draft firstDraft, OfferRegistry offers) {
         requireValue(offerId, "offerId");
         requireValue(firstDraft, "description");
         var editor = new OfferEditor(offerId, new ArrayList<>(), firstDraft,
-                List.<Media>of(), null, State.DRAFT, new ArrayList<OfferVersion>());
+                List.<Media>of(), null, State.DRAFT, new ArrayList<OfferVersion>(), false);
         editor.ensureIdentifiersAreFree(firstDraft.identifiers(), offers);
         editor.events.add(new OfferEvent.OfferDraftUpdated(offerId));
         return editor;
@@ -89,14 +90,24 @@ class OfferEditor {
         }
     }
 
-    /** Asks the reviewer to look at the draft; the media rules of RULE-1 and RULE-2 are the price of entering the review. */
+    /**
+     * Asks the reviewer to look at the draft; the media rules of RULE-1 and RULE-2 are the price of entering the review.
+     *
+     * <p>A published offer stays {@link State#PUBLISHED} while its next version is reviewed (D37): moving it to
+     * {@link State#PENDING_REVIEW} would hide a live product from the shop, because 11 R3 hides that state. Only a draft enters the
+     * review state; a live offer keeps serving its current version until an acceptance freezes the next one.
+     */
     void requestReview() {
         ensureOfferIsNotRemoved();
         ensureMediaIsPublishable(media);
-        if (state != State.PENDING_REVIEW) {
-            this.state = State.PENDING_REVIEW;
-            events.add(new OfferEvent.OfferReviewRequested(offerId));
+        if (reviewOpen) {
+            return;
         }
+        if (state == State.DRAFT) {
+            this.state = State.PENDING_REVIEW;
+        }
+        this.reviewOpen = true;
+        events.add(new OfferEvent.OfferReviewRequested(offerId));
     }
 
     /**
@@ -133,6 +144,7 @@ class OfferEditor {
                 candidate.availabilityStart(), publishedAt, publishedBy, null);
         versions.add(frozen);
         this.state = State.PUBLISHED;
+        this.reviewOpen = false;
         events.add(new OfferEvent.OfferVersionFrozen(offerId, frozen.number(), frozen.description()));
     }
 
@@ -162,8 +174,7 @@ class OfferEditor {
 
     /** The editing content no snapshot carries: the draft and its media, as the persistence adapter stores it ({@link OfferSurface}). */
     OfferSurface toSurface() {
-        OfferSurface surface = new OfferSurface(draft, media);
-        return surface;
+        return new OfferSurface(draft, media, reviewOpen);
     }
 
     /**
@@ -178,10 +189,13 @@ class OfferEditor {
         return new OfferCandidate(draft.toDefinition(), media, availabilityStart);
     }
 
-    /** The offer as the read side serves it: identity, state, the number of the version in force and the availability date. */
+    /**
+     * The offer as the read side serves it: identity, state, the number of the version in force, the availability date and the
+     * surface the draft screen renders — the draft {@code reads} copies with its media (14).
+     */
     Offer toOffer() {
         int currentVersion = versions.size();
-        return new Offer(offerId, state, currentVersion, availabilityStart);
+        return new Offer(offerId, state, currentVersion, availabilityStart, draft, media);
     }
 
     /** The frozen version {@code number}; a revert reads its source through this query. */
@@ -209,7 +223,7 @@ class OfferEditor {
     }
 
     private void ensureNoReviewIsOpen() {
-        if (state == State.PENDING_REVIEW) {
+        if (reviewOpen) {
             throw new OfferException(OfferException.Error.REVIEW_OPEN, offerId);
         }
     }

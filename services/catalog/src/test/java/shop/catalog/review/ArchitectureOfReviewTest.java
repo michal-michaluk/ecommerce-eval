@@ -27,7 +27,7 @@ public class ArchitectureOfReviewTest {
     public static final DescribedPredicate<JavaClass> sharedKernelExposed = belongToAnyOf(
             OfferDraftSnapshot.class, OfferPublication.class, QualityFindings.class,
             OfferSnapshot.class, OfferContent.class, ReviewCandidate.class,
-            ReviewFinding.class, ReviewOverride.class);
+            ReviewFinding.class, ReviewOverride.class, Review.class);
     public static final DescribedPredicate<JavaClass> sharedKernelUsed =
             belongToAnyOf(ProductDescription.class, Media.class, Offer.class, Offer.State.class);
 

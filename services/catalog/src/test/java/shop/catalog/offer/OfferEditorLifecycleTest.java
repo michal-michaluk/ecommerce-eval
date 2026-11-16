@@ -123,12 +123,12 @@ class OfferEditorLifecycleTest {
     }
 
     @Test
-    void publishedOfferCanBeReviewedAgain() {
+    void publishedOfferCanBeReviewedAgainWithoutLeavingTheShop() {
         OfferEditor offer = publishedOffer();
 
         offer.requestReview();
 
-        assertThat(offer).hasState(State.PENDING_REVIEW).hasVersion(1);
+        assertThat(offer).hasState(State.PUBLISHED).hasVersion(1);
     }
 
     @Test
