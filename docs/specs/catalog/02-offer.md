@@ -99,7 +99,7 @@ catalogue — `OfferReviewRequested` had to be added, because 02's own `draft ->
 
 ## Implementation note
 
-Four files, one concept each, named as `domain-model-aggregate.md:33` prescribes — the **editor** aggregate carries the role
+Seven files, one concept each, named as `domain-model-aggregate.md:33` prescribes — the **editor** aggregate carries the role
 suffix, the bare business noun is the snapshot record:
 
 - `OfferEditor.java` — the package-private aggregate: draft surface, lifecycle commands, revert/removal, and the
@@ -107,6 +107,10 @@ suffix, the bare business noun is the snapshot record:
 - `Offer.java` — the public snapshot record published after a write: id, state, current version number, `availabilityStart`.
 - `OfferVersion.java` — the frozen version: version number, the embedded `ProductDescription` **by value** (RULE-4), media,
   `publishedAt`/`publishedBy`, `copiedFrom`.
+- `Media.java` — one picture or film, its `position` and `primary` flag: a value of this context, exported because a version embeds it
+  and the review edge has to name the shape it maps into (`sharedKernelExposed`).
+- `OfferCandidate.java` — the content a version would freeze (description + media + `availabilityStart`), handed over by 04 (D38).
+- `OfferDraft.java` — state + candidate as one read: what the review asks at request time and again at the decision.
 - `ProductDescription.java` — the Definition and its nested `Draft` (01).
 
 The draft reuses the components declared in `ProductDescription.java` — `Identifiers`, `Parameter`, `DescriptionBlock` (+ sealed
