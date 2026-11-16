@@ -150,9 +150,9 @@ draft:
     - { type: heading, text: "LEGO Star Wars SMART Play X-Wing Czerwona Piątka Luke'a 75423" }
     - { type: paragraph, text: "Odkryj nową galaktykę LEGO® Star Wars™ dzięki interaktywnej zabawce konstrukcyjnej …" }   # 620 chars
 media:
-  - { id: M-01, kind: image, position: 1, primary: true,  format: jpg }
-  - { id: M-02, kind: image, position: 2, primary: false, format: jpg }
-  - { id: M-03, kind: video, position: 3, primary: false, format: mp4 }
+  - { id: M-01, kind: image, position: 1, primary: true,  format: jpg, url: "https://cdn.example/M-01.jpg" }
+  - { id: M-02, kind: image, position: 2, primary: false, format: jpg, url: "https://cdn.example/M-02.jpg" }
+  - { id: M-03, kind: video, position: 3, primary: false, format: mp4, url: "https://cdn.example/M-03.mp4" }
 categoryPath: [Dziecko, Zabawki, Klocki, LEGO, Zestawy, Star Wars]
 ```
 

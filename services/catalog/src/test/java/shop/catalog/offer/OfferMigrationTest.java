@@ -33,7 +33,15 @@ class OfferMigrationTest {
     void appliesEveryOfferChangeSet() {
         assertThat(query("select id from databasechangelog where id like '0003-%'"))
                 .containsExactlyInAnyOrder("0003-offer-document", "0003-offer-version", "0003-offer-version-media",
-                        "0003-offer-history");
+                        "0003-offer-version-media-url", "0003-offer-history");
+    }
+
+    /** RULE-2a: a frozen version's media row carries the location of the file, so a read can never lose it. */
+    @Test
+    void storesTheLocationOfEveryFrozenMediaItem() {
+        assertThat(query("select column_name from information_schema.columns "
+                + "where table_name = 'offer_version_media' and is_nullable = 'NO'"))
+                .contains("url");
     }
 
     @Test

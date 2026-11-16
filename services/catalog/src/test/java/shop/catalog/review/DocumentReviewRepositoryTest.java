@@ -177,7 +177,7 @@ class DocumentReviewRepositoryTest {
 
         JsonAssert.assertThat(candidateOf(reviewId)).hasFieldsLike("""
                 { "description": { "title": "%s", "identifiers": { "productNumber": "%s" } },
-                  "media": [ { "mediaId": "M-01", "position": 1, "primary": true },
+                  "media": [ { "mediaId": "M-01", "position": 1, "primary": true, "url": "https://cdn.example/M-01.jpg" },
                              { "mediaId": "M-02", "position": 2, "primary": false },
                              { "mediaId": "M-03", "kind": "VIDEO", "position": 3 } ] }
                 """.formatted(ReviewCandidateFixture.TITLE, ReviewCandidateFixture.PRODUCT_NUMBER));

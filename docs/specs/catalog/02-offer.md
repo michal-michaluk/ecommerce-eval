@@ -26,7 +26,7 @@ availabilityStart: 2026-07-01
 productId: PRD-75423
 offerVersion: 1
 description: { title: "LEGO Star Wars SMART Play X-Wing Czerwona Piątka Luke'a 75423", … }   # the value object, embedded
-media: [ {id: M-01, position: 1, primary: true}, {id: M-02, position: 2}, {id: M-03, position: 3} ]
+media: [ {id: M-01, position: 1, primary: true, url: "https://cdn.example/M-01.jpg"}, {id: M-02, position: 2}, {id: M-03, position: 3} ]
 availabilityStart: 2026-07-01
 publishedAt: "2025-06-15T10:00:00+02:00"
 publishedBy: reviewer.kowalska
@@ -110,7 +110,7 @@ suffix, the bare business noun is the snapshot record:
 - `Offer.java` — the public snapshot record published after a write: id, state, current version number, `availabilityStart`.
 - `OfferVersion.java` — the frozen version: version number, the embedded `ProductDescription` **by value** (RULE-4), media,
   `publishedAt`/`publishedBy`, `copiedFrom`.
-- `Media.java` — one picture or film, its `position` and `primary` flag: a value of this context, exported because a version embeds it
+- `Media.java` — one picture or film, its location (`url`), its `position` and `primary` flag: a value of this context, exported because a version embeds it
   and the review edge has to name the shape it maps into (`sharedKernelExposed`).
 - `OfferCandidate.java` — the content a version would freeze (description + media + `availabilityStart`), handed over by 04 (D38).
 - `OfferDraft.java` — state + candidate as one read: what the review asks at request time and again at the decision.

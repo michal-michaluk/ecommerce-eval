@@ -135,7 +135,7 @@ class ShoppingEventsOfOfferTest {
                 OfferFixture.mediaOfInstanceA(), OfferFixture.AVAILABILITY_START);
 
         assertThat(instanceA).matches("sha256:[0-9a-f]{64}");
-        assertThat(instanceA).isEqualTo("sha256:919e2b9ffb5cfb5b32d3bc05340eec5d9f002cf3b27585fc9edce95f8503c332");
+        assertThat(instanceA).isEqualTo("sha256:b6dd7e2c0ddb6c11bb31575fcb3294180c27f48eeb777f8241b8dc331cb87a5e");
         assertThat(sameContent).isEqualTo(instanceA);
         assertThat(ShoppingEventsFixture.hashOf(ShoppingEventsFixture.EDITED_TITLE,
                 OfferFixture.mediaOfInstanceA(), OfferFixture.AVAILABILITY_START)).isNotEqualTo(instanceA);
@@ -143,5 +143,19 @@ class ShoppingEventsOfOfferTest {
                 List.of(OfferFixture.image("M-01", 1, true)), OfferFixture.AVAILABILITY_START)).isNotEqualTo(instanceA);
         assertThat(ShoppingEventsFixture.hashOf(ProductDescriptionFixture.INSTANCE_A_TITLE,
                 OfferFixture.mediaOfInstanceA(), OfferFixture.AVAILABILITY_START.plusDays(1))).isNotEqualTo(instanceA);
+    }
+
+    /** RULE-2a: the location is part of the value the hash promises over, so moving one file changes the hash (the pin above fixes the rest). */
+    @Test
+    void hashesTheLocationOfEveryMediaItem() {
+        List<Media> sameContent = OfferFixture.mediaOfInstanceA();
+        List<Media> oneFileMoved = List.of(
+                OfferFixture.locatedImage("M-01", 1, true, "https://cdn.example/M-01-preview.jpg"),
+                sameContent.get(1), sameContent.get(2));
+
+        assertThat(ShoppingEventsFixture.hashOf(ProductDescriptionFixture.INSTANCE_A_TITLE, oneFileMoved,
+                OfferFixture.AVAILABILITY_START))
+                .isNotEqualTo(ShoppingEventsFixture.hashOf(ProductDescriptionFixture.INSTANCE_A_TITLE, sameContent,
+                        OfferFixture.AVAILABILITY_START));
     }
 }

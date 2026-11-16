@@ -50,6 +50,8 @@ class KafkaOfferPublishedIntegrationTest {
         assertThat(payload.get("identifiers").get("eanGtin").asString()).isEqualTo(eanGtin);
         assertThat(payload.get("title").asString()).isEqualTo(ProductDescriptionFixture.INSTANCE_A_TITLE);
         assertThat(payload.get("media").size()).isEqualTo(3);
+        assertThat(payload.get("media").get(0).get("url").asString())
+                .isEqualTo(OfferFixture.image("M-01", 1, true).url());
         assertThat(payload.get("availabilityStart").asString()).isEqualTo(OfferFixture.AVAILABILITY_START.toString());
         assertThat(recomputedHashOf(payload)).isEqualTo(payload.get("descriptionHash").asString());
     }

@@ -33,7 +33,7 @@ view: ReviewDetail(reviewId)
 header: { title, productId, offerVersionCandidate: "nowa wersja", reviewer: reviewer.kowalska }
 preview:                    # the frozen candidate, read-only
   description: { … }
-  media: [ {id: M-01, position: 1, primary: true}, … ]
+  media: [ {id: M-01, position: 1, primary: true, url: "https://cdn.example/M-01.jpg"}, … ]
   availabilityStart: 2026-07-01
 findings:                   # 08 output, recomputed never — the value frozen at request
   - { rule: QP-5, field: media.primary, finding: "brak zdjęcia głównego", severity: blocking }

@@ -33,6 +33,7 @@ public class ReviewCandidateFixture {
             List.of("Dziecko", "Zabawki", "Klocki", "LEGO", "Zestawy", "Star Wars");
     public static final LocalDate AVAILABILITY_START = LocalDate.of(2026, 7, 1);
     public static final Instant OVERRIDE_AT = Instant.parse("2025-06-14T07:20:00Z");
+    public static final String LOCATION = "https://cdn.example/";
 
     private ReviewCandidateFixture() {
     }
@@ -51,9 +52,9 @@ public class ReviewCandidateFixture {
 
     public static List<Media> mediaOfInstanceA() {
         return List.of(
-                new Media("M-01", Media.Kind.IMAGE, 1, true, "jpg"),
-                new Media("M-02", Media.Kind.IMAGE, 2, false, "jpg"),
-                new Media("M-03", Media.Kind.VIDEO, 3, false, "mp4"));
+                new Media("M-01", Media.Kind.IMAGE, 1, true, "jpg", LOCATION + "M-01.jpg"),
+                new Media("M-02", Media.Kind.IMAGE, 2, false, "jpg", LOCATION + "M-02.jpg"),
+                new Media("M-03", Media.Kind.VIDEO, 3, false, "mp4", LOCATION + "M-03.mp4"));
     }
 
     public static OfferContent content() {
@@ -111,8 +112,8 @@ public class ReviewCandidateFixture {
     /** Two primaries, which 02 RULE-1 refuses when a version freezes — the content that makes a publication fail. */
     public static List<Media> mediaWithTwoPrimaries() {
         return List.of(
-                new Media("M-01", Media.Kind.IMAGE, 1, true, "jpg"),
-                new Media("M-02", Media.Kind.IMAGE, 2, true, "jpg"));
+                new Media("M-01", Media.Kind.IMAGE, 1, true, "jpg", LOCATION + "M-01.jpg"),
+                new Media("M-02", Media.Kind.IMAGE, 2, true, "jpg", LOCATION + "M-02.jpg"));
     }
 
     public static ReviewCandidate candidateWithUnpublishableMedia() {

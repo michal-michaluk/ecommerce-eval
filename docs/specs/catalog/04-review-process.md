@@ -16,7 +16,7 @@ reviewedBy: reviewer.kowalska
 reviewedAt: "2025-06-15T09:58:00+02:00"
 candidate:
   description: { title: "LEGO Star Wars SMART Play X-Wing…", ids: {productNumber: "75423", eanGtin: "5702017817705"}, blocks: [...] }   # the value, frozen
-  media: [ {id: M-01, position: 1, primary: true}, {id: M-02, position: 2}, {id: M-03, position: 3} ]
+  media: [ {id: M-01, position: 1, primary: true, url: "https://cdn.example/M-01.jpg"}, {id: M-02, position: 2}, {id: M-03, position: 3} ]
   availabilityStart: 2026-07-01
 findingsAtRequest: []
 override: null            # set only when the author pushed the review despite findings

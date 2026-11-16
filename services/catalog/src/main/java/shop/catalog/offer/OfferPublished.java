@@ -19,8 +19,8 @@ import java.util.Objects;
  *
  * <p>The hash is a promise over {@link Value}: the payload without {@code productId}, {@code offerVersion} and {@code descriptionHash}.
  * A consumer reads the payload, drops those three fields and hashes the rest — the declarations of {@link Value} are in the payload's own
- * order for exactly that reason. The mapping carries no {@code url} for a media item, because 02's {@link Media} holds no URL: the shop
- * resolves a file through its {@code id}, and {@code format} is the component the frozen value actually carries (D17).
+ * order for exactly that reason. A media item travels with its location ({@code url}) besides {@code id}, {@code kind}, {@code position},
+ * {@code primary} and {@code format}, because that is how the shop resolves a file (RULE-2a, D17, D47).
  *
  * <p>{@link #thin} is the documented variant for a consumer that prefers to pull the content: identity and version only, every other
  * component absent. Nothing of the draft, the review or the quality findings is reachable from either shape (RULE-1).
@@ -117,7 +117,8 @@ public record OfferPublished(
     }
 
     private static MediaItem mediaOf(Media media) {
-        return new MediaItem(media.mediaId(), word(media.kind()), media.position(), media.primary(), media.format());
+        return new MediaItem(media.mediaId(), word(media.kind()), media.position(), media.primary(), media.format(),
+                media.url());
     }
 
     private static String word(Enum<?> value) {
@@ -174,6 +175,6 @@ public record OfferPublished(
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    public record MediaItem(String id, String kind, int position, boolean primary, String format) {
+    public record MediaItem(String id, String kind, int position, boolean primary, String format, String url) {
     }
 }

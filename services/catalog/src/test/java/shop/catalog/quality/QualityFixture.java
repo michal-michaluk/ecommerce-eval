@@ -139,11 +139,11 @@ public class QualityFixture {
     }
 
     private static Media image(String mediaId, int position, boolean primary) {
-        return new Media(mediaId, Media.Kind.IMAGE, position, primary, "jpg");
+        return new Media(mediaId, Media.Kind.IMAGE, position, primary, "jpg", "https://cdn.example/" + mediaId + ".jpg");
     }
 
     private static Media video(String mediaId, int position) {
-        return new Media(mediaId, Media.Kind.VIDEO, position, false, "mp4");
+        return new Media(mediaId, Media.Kind.VIDEO, position, false, "mp4", "https://cdn.example/" + mediaId + ".mp4");
     }
 
     private static List<Parameter> legoParameters() {

@@ -101,11 +101,16 @@ public class OfferFixture {
     }
 
     public static Media image(String mediaId, int position, boolean primary) {
-        return new Media(mediaId, Media.Kind.IMAGE, position, primary, "jpg");
+        return locatedImage(mediaId, position, primary, "https://cdn.example/" + mediaId + ".jpg");
     }
 
     public static Media video(String mediaId, int position, boolean primary) {
-        return new Media(mediaId, Media.Kind.VIDEO, position, primary, "mp4");
+        return new Media(mediaId, Media.Kind.VIDEO, position, primary, "mp4", "https://cdn.example/" + mediaId + ".mp4");
+    }
+
+    /** The one image factory: a test that cares about the location itself names it here (RULE-2a). */
+    public static Media locatedImage(String mediaId, int position, boolean primary, String url) {
+        return new Media(mediaId, Media.Kind.IMAGE, position, primary, "jpg", url);
     }
 
     public static OfferEvent.OfferVersionFrozen versionFrozen(int offerVersion, ProductDescription description) {

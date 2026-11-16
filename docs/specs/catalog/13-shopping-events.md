@@ -30,7 +30,7 @@ OfferPublished:
   categoryPath: [Dziecko, Zabawki, Klocki, LEGO, Zestawy, Star Wars]
   parameters: [ {code: pieceCount, label: "Liczba elementów", value: 581, valueType: integer} ]
   description: { blocks: [ … ] }
-  media: [ {id: M-01, position: 1, primary: true, url: "…"}, {id: M-02, position: 2, kind: video} ]
+  media: [ {id: M-01, position: 1, primary: true, url: "…"}, {id: M-02, position: 2, kind: video, url: "…"} ]
 ```
 
 ```yaml
