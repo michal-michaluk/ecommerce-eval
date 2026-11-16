@@ -4,6 +4,9 @@ Element 03 · type: business concept · role: **Editor** (living configuration w
 
 Current price, scheduled future prices and discounts, and historical prices — kept apart from the current one.
 
+Named per `domain-model-aggregate.md:33`: the aggregate is `PricingModelEditor` (package-private, holds the
+`final List<PricingEvent> events` buffer), the published snapshot record is `PricingModel` (current, scheduled, history, discounts).
+
 ## Instance A — one active price + one scheduled change + two discounts
 
 ```yaml

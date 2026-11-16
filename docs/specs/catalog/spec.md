@@ -338,12 +338,12 @@ Plan tickets (both top level: #1 has no parent):
 - **Goal:** implement elements 03 and 10 as pure domain — price and discount history, the active-price calculation and the activation-due rule
 - **Executor:** general
 - **Docs:** `03-pricing-model.md` (RULE-1…RULE-9), `10-active-price-calculation.md` (S1–S10), D1/D2/D3/D29; `domain-model-aggregate.md`, `domain-model-policy.md`, `domain-model-value-object.md`
-- **IN / OUT:** IN: `context-skeleton` (no dependency on `offer` in this node); OUT: `src/main/java/shop/catalog/pricing/{Money,PriceEntry,Discount,PricingModel,ActivePriceCalculation,ActivationDue,PricingEvent,PricingException}.java`, `pricing/PricingRepository.java` (secondary port), fixtures + tests. No scheduler, no Spring, no persistence, no controller. Does NOT touch `offer/`, `application.yml`
+- **IN / OUT:** IN: `context-skeleton` (no dependency on `offer` in this node); OUT: `src/main/java/shop/catalog/pricing/{PricingModelEditor,PricingModel,Money,PriceEntry,Discount,ActivePriceCalculation,ActivationDue,PricingEvent,PricingException}.java`, `pricing/PricingRepository.java` (secondary port), fixtures + tests. No scheduler, no Spring, no persistence, no controller. Does NOT touch `offer/`, `application.yml`
 - **checks:**
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; ./gradlew test --tests 'shop.catalog.pricing.*'`
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; ./gradlew build`
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; sqt check .`
-  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; sqt explain src/main/java/shop/catalog/pricing/PricingModel.java | grep -qE 'is\.aggregate +true'`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; sqt explain src/main/java/shop/catalog/pricing/PricingModelEditor.java | grep -qE 'is\.aggregate +true'`
 - **review_prompt:** Review the work in `/Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog`; do not inspect other repositories; if a premise below is false, say so and stop. Premises: money is `amountMinor` + currency with the scale taken from the currency and no float or stored `BigDecimal`; ranges are half-open; a price change closes and appends and never overwrites; one open entry per (offer, currency); a started entry cannot be deleted but may be closed by a new one; stacking is fixed-then-percentage with a floor at 0 and a single half-up rounding; activation-due is a pure rule over (state, instant) and the scheduler is absent; all 10 scenarios of 10 exist as tests with an injected clock. Report each violated rule, each time-dependent test and each business rule placed outside the aggregate or the policy, with file:line; report only.
 
 #### 3. Human review — STOP
