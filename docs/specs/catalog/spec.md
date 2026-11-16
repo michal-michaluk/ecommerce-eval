@@ -670,6 +670,41 @@ Plan tickets (both top level: #1 has no parent):
 - The task statement says "the API returns a `Location` header from a created-response advice" (D19a) but no such advice exists yet — `error-and-security` owns it
 - `deploy`/`k8s` overlays were not exercised by any node; the Kafka topic is asserted in tests only
 
+### Closing review — findings carried, not fixed
+
+The all-aspects review of `feat/catalog-domain-model` (7 aspects, every finding with `file:line`) produced 5 High, 9 Medium and 6
+gate-honesty findings. Four were fixed before this record (H4 flaky build, H5 missing rollback proof, M5 second 400 shape, M7 stale
+javadoc). The rest are recorded here as follow-up work, with the smallest fix the review named:
+
+- **H1 read models without a route** — `OfferDraftReads`, `PricingReads`, `OfferVisibility` and two mediators have no production caller
+  while their projections still run inside every write's transaction; 17 claims reads serves every `GET`. Either move the two `GET`s onto
+  `reads`, or delete the unused models and restate 17. This is the largest single gap in the branch
+- **H2 the current price is chosen alphabetically** (`PricingController`, `min(comparing(currency))`): with a PLN and an EUR price open,
+  sales sees the EUR one because `E` sorts before `P`. The choice must move out of the adapter (per-currency answer or a required currency)
+- **H3 a policy is exported as a value** — `QualityPolicy` sits in `quality`'s `sharedKernelExposed` (`D42`) although
+  `context-boundaries.md:200` forbids naming a producer's policy; a `QualityAnswers` facade restores the rule
+- **M1** `PublishDecision`'s `alreadyPublished` argument is unreachable in production (the service short-circuits first); delete it and move
+  the replay assertion to `ReviewService.decide`
+- **M2** 03 RULE-7 still says an edit "closes at now" while the aggregate closes at the successor's `validFrom` — the one deviation the
+  spec edits did not smooth over
+- **M3** which price is open and which discount is active is decided inside `PricesIntegration`, a class PITest excludes
+- **M4** `OfferVersionsController` pre-checks `copyFrom`, shadowing `OfferEditor.version(int)`'s `OFFER_VERSION_MISSING`
+- **M6** `PricingService.schedulePrice`/`scheduleDiscount`/`removePrice`/`removeDiscount` never ask whether the offer exists
+- **M8** stored document JSON has no evolution story: `Media.url` (D47) is a non-null addition, so a row written by an earlier commit of
+  this branch fails to read (`MEDIA_URL_MISSING`); `reviewOpen` is safe because it binds `false`
+- **M9** `descriptionHash`'s canonical form (field order, `NON_NULL`, plain `BigDecimal`, no whitespace) is not written down, so a consumer
+  cannot reproduce it
+- **G1** `ScopeGuardTest` proves the chain against stub handlers it declares itself, not against the real controllers' mappings
+- **G2** the storybook flow assertions check that a story's own `href` equals the string in `flows.json`; the story sweep only proves
+  non-emptiness
+- **G3** only `build` is aggregated: `e2eHurl`, `pitest`, `sqt` and the storybook gate are separate commands and nothing fails a build for
+  them; one `verify` task over all five would make P3/P5/P7/P8 unmissable
+- **G4** PITest excludes `*Service*`, `*Controller*`, `*Integration*`, so the 89 % score is over the layer already covered by design
+- **G5** the prove table quotes the unfiltered JaCoCo ratio while the gate measures a filtered bundle
+- **G6** `toSurface()` carries a useless local variable only to satisfy `aggregate.no-raw-field-accessor`; narrow the rule instead
+- **Security** `/actuator/env` is exposed to any authenticated token and now renders `catalog.quality.*`/`catalog.pricing.*`; narrow to
+  `health,info,prometheus` or scope `/actuator/**`
+
 ### Verification Skill Gaps
 
 - No skill validates a hurl suite against a live testcontainers service — `e2e-harness` implements it ad hoc
