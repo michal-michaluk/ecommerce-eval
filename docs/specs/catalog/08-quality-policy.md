@@ -27,9 +27,9 @@ prose(draft) = sum(length(block.text) for paragraph blocks)
 | QP-7 | every `image` block references an existing media id | `description.blocks` | blocking |
 | QP-8 | media `position` contiguous from 1, at most one video | `media` | warning |
 | QP-9 | grammar / correctness validation | `description` | **out of scope** (Q1a: needs a new external technology; reserved as a `grammar-enabled` variant, unimplemented) |
-| QP-10 | every required parameter of the matched category is present | `description.parameters` | blocking |
-| QP-11 | a configured parameter's `valueType` matches the draft's | `description.parameters` | blocking |
-| QP-12 | a parameter is present that the category config does not name | `description.parameters` | warning |
+| QP-10 | every required parameter of the matched category is present | `parameters.<code>` | blocking |
+| QP-11 | a configured parameter's `valueType` matches the draft's | `parameters.<code>` | blocking |
+| QP-12 | a parameter is present that the category config does not name | `parameters.<code>` | warning |
 
 ### QP-6 threshold — derived from the LEGO sample (Q1b)
 
@@ -74,6 +74,9 @@ path is a list and a YAML map key cannot carry one (D33).
 
 - Ordering and matching: findings are ordered by rule number, then by the configuration's **declaration order** within one rule. The draft's `categoryPath` is matched against configured prefixes; the **longest matching prefix wins**;
   the first match is final (deterministic).- No match → no QP-10…QP-12 findings; universal rules still apply. One category (`LEGO`) is configured today.
+- A deeper prefix **inherits nothing**: the matched prefix's parameter set is the whole set. `[Dziecko, Zabawki, Klocki, LEGO, Star Wars]`
+  matches the LEGO entry only because that entry is its longest configured prefix, not because `Star Wars` adds rules. If a future category
+  needs the LEGO set plus its own, the configuration repeats the inherited parameters (binding composes, the policy does not).
 - Adding a category is a config change only — no code change, no migration.
 
 ## Parameter and value-object origins

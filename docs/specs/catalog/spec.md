@@ -598,6 +598,10 @@ Plan tickets (both top level: #1 has no parent):
 - **D41 (approved at review approval — as implemented)** a fixed discount bound to a currency the offer does not price is **refused** at write time
   (`DISCOUNT_CURRENCY_NOT_PRICED`) rather than stored and ignored. Confirm, or accept-and-ignore so sales can prepare a EUR discount before
   the EUR price exists
+- **D42 (decided)** quality's media input is the **consumer's own contract type** (`quality.MediaItem`), not a copy of a producer's exposed
+  snapshot: offer's media is package-private, and the mediator that wires `review`/`offer` to `quality` maps it (`contract.client-driven`).
+  The wiring node makes `QualityPolicy`, `QualityFindings`, `Finding`, `Rule`, `Severity`, `QualityConfig` and `MediaItem` public and lists them
+  in `sharedKernelExposed` of `quality` — until then nothing outside the package can call the policy
 - **OQ-1** `Draft.merge` treats `null` as "unchanged", so a scalar draft component (`title`, `identifiers`, `brand`, `condition`) cannot be
   cleared through it; 12's PATCH says "absent component = absent". The adapter must map PATCH-absent to "keep" and a future clear-request must
   be an explicit component, or the aggregate gains a `clear...` command
