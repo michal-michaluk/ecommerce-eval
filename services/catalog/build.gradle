@@ -100,9 +100,36 @@ jacocoTestReport {
     }
 }
 
+/**
+ * P8 of the spec's Prove Definition of Done. The suites that boot a container — the e2e contract and everything annotated
+ * `@IntegrationTest` — are proofs of 12's contract, not mutation targets: PIT replays the whole suite between mutants, so a suite
+ * that starts Postgres, Kafka and Keycloak and drives hurl against them costs minutes per mutant and aborts the coverage phase.
+ *
+ * <p>The exclusion list is derived from the annotation instead of a hand-kept glob list, so a new integration suite is excluded by
+ * declaring itself one — the match is on the annotation at the start of a line, so a suite that only mentions `@IntegrationTest` in
+ * a javadoc is still mutated. PIT is 1.30.2 and not 1.25.4 because 1.25.4 rewrites a record into a class file whose `Record`
+ * attribute the JVM cannot resolve: the minion died with `SIGSEGV` in `JVM_GetRecordComponents` the moment a test let Jackson
+ * introspect that record, and no mutation score existed at all.
+ */
+def containerSuites = fileTree('src/test/java') { include '**/*.java' }
+        .findAll { (it.text =~ /(?m)^@IntegrationTest\b/).find() }
+        .collect { it.path.replace(File.separator, '/').replaceAll('^.*src/test/java/', '').replaceFirst('\\.java$', '').replace('/', '.') }
+
 pitest {
     targetClasses = ["shop.catalog.*"]
-    pitestVersion = "1.25.4"
+    // The mutation targets are the domain and policy classes of the five contexts — the same bundle `jacocoTestCoverageVerification`
+    // measures. The edges of a context (controllers, repositories, read projections, messaging adapters, listeners, configuration,
+    // properties, the ports that name them) are proved by the container suites this task cannot run, and `tools`/`mediators` are
+    // infrastructure the coverage bundle excludes as well, so mutating any of them would measure missing coverage instead of the
+    // tests' strength.
+    excludedClasses = ["shop.catalog.tools.*", "shop.catalog.mediators.*", "shop.catalog.ApiErrorAdvice",
+                       "shop.catalog.CreatedResponseAdvice*", "shop.catalog.AppRunner",
+                       "shop.catalog.*Controller*", "shop.catalog.*Repository*", "shop.catalog.*Projection*",
+                       "shop.catalog.*Service*", "shop.catalog.*Integration*", "shop.catalog.*Listener*",
+                       "shop.catalog.*Configuration*", "shop.catalog.*Properties*", "shop.catalog.*ConfigAdapter*",
+                       "shop.catalog.*Snapshot*", "shop.catalog.*Registry*"]
+    excludedTestClasses = ["shop.catalog.e2e.*"] + containerSuites
+    pitestVersion = "1.30.2"
     threads = 4
     outputFormats = ["XML", "HTML"]
     timestampedReports = false
