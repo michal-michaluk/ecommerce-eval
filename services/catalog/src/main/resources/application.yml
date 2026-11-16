@@ -25,6 +25,19 @@ catalog:
     activation-interval: PT60S
     order: fixed-first
     stacking: stacked
+  quality:
+    min-prose-chars: 1000
+    grammar:
+      enabled: false
+    required-parameters:
+      - prefix: [Dziecko, Zabawki, Klocki, LEGO]
+        parameters:
+          condition: { value-type: text, required: true }
+          childAge: { value-type: rangeFrom, required: true }
+          pieceCount: { value-type: integer, required: true }
+          gender: { value-type: enumSet, required: true }
+          certificates: { value-type: list, required: true }
+          safetyInfo: { value-type: text, required: true }
 
 server:
   shutdown: graceful
