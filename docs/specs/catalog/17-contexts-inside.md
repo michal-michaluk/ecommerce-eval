@@ -53,7 +53,9 @@ by `review` through the port) · revert · remove.
 **Components:** *Editor* `OfferEditor` (aggregate, package-private); *Value Object in the shared kernel* `ProductDescription` (+ `Draft`, nested components); *Snapshot* `Offer` (exported — another context reads an offer without its editor); *Definition* `OfferVersion`;
 *Invariant* the offer aggregate — one primary image, contiguous positions, availability date shape, immutable versions (02 RULE-1…11).
 
-`ProductDescription` is exported from this context and listed in `sharedKernelExposed`; it carries no identity or lifecycle, so `pricing`,
+Exported values (`sharedKernelExposed`): `ProductDescription` (+ its nested `Draft`), `Media`, `OfferCandidate`, `OfferDraft` and the `Offer`
+snapshot. The media value moved out of `OfferVersion` so a mediator can name the shape it maps a reviewed candidate into; the review edge
+is the only consumer today. `ProductDescription` carries no identity or lifecycle, so `pricing`,
 `review`, `quality` and `reads` may all hold it as a value without an edge beyond the shared-kernel list.
 
 ## Subdomain: pricing

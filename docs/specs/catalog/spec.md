@@ -435,7 +435,10 @@ Plan tickets (both top level: #1 has no parent):
 - **Goal:** wire `review` to `offer` and `quality` through the only package allowed to name two contexts
 - **Executor:** general
 - **Docs:** `17-contexts-inside.md` (RULE-1, RULE-3, D34), `context-boundaries.md:330-400`, `ports.md`
-- **IN / OUT:** IN: `review-application`, `offer-application`, `quality-config`; OUT: `mediators/{ReviewToOfferMediator,ReviewToQualityMediator}.java`, `mediators` tests. Does NOT touch the ports, the aggregates or the adapters
+- **IN / OUT:** IN: `review-application`, `offer-application`, `quality-config`; OUT: `mediators/ReviewToQualityMediator.java` + its test
+  (`ReviewToOfferMediator` landed with `review-application`, because the accept→freeze path needed it), and the collapse of `review.ReviewMedia`
+  into the now-exported `offer.Media` (D45: two media records with two `Kind` enums is the local copy `contract.no-local-copy` forbids, and
+  the mediator currently bridges them by `valueOf(name())`). Does NOT touch the ports, the aggregates or the adapters
 - **checks:**
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; ./gradlew test --tests 'shop.catalog.mediators.*'`
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; ./gradlew build`
@@ -598,6 +601,9 @@ Plan tickets (both top level: #1 has no parent):
 - **D41 (approved at review approval — as implemented)** a fixed discount bound to a currency the offer does not price is **refused** at write time
   (`DISCOUNT_CURRENCY_NOT_PRICED`) rather than stored and ignored. Confirm, or accept-and-ignore so sales can prepare a EUR discount before
   the EUR price exists
+- **D45 (decided)** `offer.Media` is the single media value; `review.ReviewMedia` is deleted and the mediator passes the value through. It was
+  a legitimate consumer-side contract while offer's media was package-private (D42), but exporting `Media` made it a local copy with a second
+  `Kind` enum that only a `valueOf(name())` bridge keeps in sync
 - **D43 (decided)** `productNumber`/`eanGtin` are reserved **forever**, removal included: the uniqueness predicate and the two unique
   indexes drop the `state <> 'REMOVED'` exemption. Accepted consequence: a genuinely new product cannot reuse a retired GTIN
 - **D44 (decided)** pricing's `known_offer` fact is fed by offer's **public `Offer` snapshot**, not by `OfferVersionFrozen` (which sits in the
