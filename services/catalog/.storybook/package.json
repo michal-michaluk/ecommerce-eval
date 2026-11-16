@@ -4,8 +4,9 @@
   "version": "0.0.0",
   "description": "Isolated low-fi gallery for the catalog spec (services/catalog has no frontend of its own)",
   "scripts": {
-    "storybook": "storybook dev --config-dir . -p 6006 --host 0.0.0.0",
-    "build-storybook": "storybook build --config-dir ."
+    "storybook": "storybook dev --config-dir . -p 6010 --host 0.0.0.0",
+    "build-storybook": "storybook build --config-dir .",
+    "verify-storybook": "node verify-storybook.frames.cjs"
   },
   "devDependencies": {
     "@storybook/addon-essentials": "^8.6.14",
