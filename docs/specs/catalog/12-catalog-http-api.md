@@ -111,6 +111,12 @@ Per `http-adapter.md`, five failure classes plus authorization, one owner each; 
 
 - **Q8** (1 product : 1 offer) — paths are `/offers/{offerId}`; a marketplace shape would need `/products/{productId}/offers/{offerId}`.
 - **Q11** removal is terminal: any later draft edit answers `409 OFFER_REMOVED` (asserted in the hurl).
+- **D49 reasons must have a producer** — every `reason` in the table above is emitted by a real domain refusal; the wire vocabulary is
+  the domain's, never a second list. Concretely: `MEDIA_IMAGE_MISSING` and `MEDIA_PRIMARY_AMBIGUOUS` replace the invented
+  `MEDIA_PRIMARY_REQUIRED`, and `QUALITY_FINDINGS` is emitted by the review refusal that carries the blocking findings (D27/D38). The
+  prototype `catalog-http-api.hurl` must assert the produced names.
+- **D50 `WITHDRAWAL_NEEDS_REQUESTER` is `409`, not `403`** — it is an identity/state rule (04 RULE-6), not a scope rule; 12's auth matrix
+  lists it as a reviewer capability only because a reviewer happens to be the other party.
 - **D31 identifiers** — the offer has one identifier. HTTP exposes it as `offerId` (`OFR-` + 8 uppercase alphanumerics, server
   generated); the events of 13 and the instances of 01/02/03 call the same value `productId`. There is no second, derived product id.
   `GET /offers/{offerId}/versions` is the missing publish-history read (F17), and it is also what a revert picks `copyFrom` from.
