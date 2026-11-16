@@ -8,6 +8,68 @@
         { "click": "#next", "expect": "catalog-draftdescriptionview--ready" },
         { "click": "#request", "expect": "catalog-draftdescriptionview--review-requested" }
       ]
+    },
+    {
+      "name": "pending-reviews: list -> blocked review -> reject with reason -> list -> stale tab -> list -> own request filtered",
+      "start": "catalog-pendingreviewsview--pending-list",
+      "steps": [
+        { "click": "#open-RV-12", "expect": "catalog-pendingreviewsview--review-blocked" },
+        { "click": "#open-reject", "expect": "catalog-pendingreviewsview--reject-needs-reason" },
+        { "click": "#fill-reason" },
+        { "click": "#reject", "expect": "catalog-pendingreviewsview--review-rejected" },
+        { "click": "#back", "expect": "catalog-pendingreviewsview--list-after-decision" },
+        { "click": "#open-RV-13", "expect": "catalog-pendingreviewsview--review-decided-elsewhere" },
+        { "click": "#back", "expect": "catalog-pendingreviewsview--list-after-decision" },
+        { "click": "#show-own", "expect": "catalog-pendingreviewsview--own-request-filtered" },
+        { "click": "#back", "expect": "catalog-pendingreviewsview--pending-list" }
+      ]
+    },
+    {
+      "name": "pending-reviews: author override shown, accept still refused (15 RULE-3)",
+      "start": "catalog-pendingreviewsview--pending-list",
+      "steps": [{ "click": "#open-RV-13", "expect": "catalog-pendingreviewsview--review-with-author-override" }]
+    },
+    {
+      "name": "pending-reviews: ready review -> accept -> accepted -> fresh list -> empty list",
+      "start": "catalog-pendingreviewsview--pending-list",
+      "steps": [
+        { "click": "#open-RV-17", "expect": "catalog-pendingreviewsview--review-ready" },
+        { "click": "#accept", "expect": "catalog-pendingreviewsview--review-accepted" },
+        { "click": "#back", "expect": "catalog-pendingreviewsview--list-after-decision" },
+        { "click": "#refresh", "expect": "catalog-pendingreviewsview--list-empty" }
+      ]
+    },
+    {
+      "name": "pending-reviews: requester withdraws (visible for the requester only)",
+      "start": "catalog-pendingreviewsview--requester-withdraw",
+      "steps": [
+        { "click": "#withdraw", "expect": "catalog-pendingreviewsview--requester-withdrawn" },
+        { "click": "#back", "expect": "catalog-pendingreviewsview--pending-list" }
+      ]
+    },
+    {
+      "name": "pricing: current -> change -> after change -> schedule -> series -> delete scheduled (ABSENT) -> discount percentage / fixed -> back",
+      "start": "catalog-pricingview--current-only",
+      "steps": [
+        { "click": "#change-price", "expect": "catalog-pricingview--change-price" },
+        { "click": "#save-change", "expect": "catalog-pricingview--after-change" },
+        { "click": "#schedule", "expect": "catalog-pricingview--schedule-price" },
+        { "click": "#save-schedule", "expect": "catalog-pricingview--scheduled-history" },
+        { "click": "#remove-P-5" },
+        { "click": "#at-2026-07-02" },
+        { "click": "#add-discount", "expect": "catalog-pricingview--add-discount" },
+        { "click": "#kind-fixed", "expect": "catalog-pricingview--add-discount-fixed" },
+        { "click": "#save-discount", "expect": "catalog-pricingview--scheduled-history" },
+        { "click": "#back", "expect": "catalog-pricingview--current-only" }
+      ]
+    },
+    {
+      "name": "pricing: multi-currency switcher (two priced currencies)",
+      "start": "catalog-pricingview--multi-currency",
+      "steps": [
+        { "click": "#switch-EUR" },
+        { "click": "#back", "expect": "catalog-pricingview--scheduled-history" }
+      ]
     }
   ]
 }
