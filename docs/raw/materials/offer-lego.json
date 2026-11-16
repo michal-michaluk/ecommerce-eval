@@ -1,0 +1,221 @@
+{
+  "source": "docs/raw/offer-lego.png",
+  "sourceKind": "single full-page screenshot of a product page (3062x26298 px)",
+  "capturedUi": "Allegro product page, Poland, currency PLN, language pl",
+  "note": "Every visible piece of information is represented. `offer` is the product-description candidate; `pageFurniture` is everything that is not part of the product description.",
+
+  "offer": {
+    "offerNumber": "18319048965",
+    "title": "LEGO Star Wars SMART Play X-Wing Czerwona Piątka Luke'a 75423",
+    "brand": { "name": "LEGO", "verified": true },
+    "condition": "Nowy",
+    "conditionVerified": false,
+    "category": {
+      "breadcrumb": ["Allegro", "Dziecko", "Zabawki", "Klocki", "LEGO", "Zestawy", "Star Wars"],
+      "leaf": "Star Wars",
+      "pathDepth": 6
+    },
+    "identifiers": {
+      "offerNumber": "18319048965",
+      "productNumber": "75423",
+      "eanGtin": "5702017817705",
+      "setName": "SMART Play X-Wing Czerwona Piątka Luke'a",
+      "bdo": "000506289"
+    },
+    "variant": {
+      "dimension": "Kolor/Wzór",
+      "selectedIndex": 0,
+      "options": [
+        { "image": "swatch-01", "selected": true },
+        { "image": "swatch-02" },
+        { "image": "swatch-03" },
+        { "image": "swatch-04" },
+        { "image": "swatch-05" },
+        { "image": "swatch-06" },
+        { "image": "swatch-07" },
+        { "image": "swatch-08" }
+      ],
+      "showVariantsFromOtherSellers": true
+    },
+    "media": {
+      "gallery": {
+        "main": { "type": "image", "role": "primary" },
+        "thumbnails": [
+          { "index": 0, "type": "image", "selected": true },
+          { "index": 1, "type": "video", "badge": "play" },
+          { "index": 2, "type": "image" },
+          { "index": 3, "type": "image" },
+          { "index": 4, "type": "image" },
+          { "index": 5, "type": "image" },
+          { "index": 6, "type": "image" },
+          { "index": 7, "type": "image" },
+          { "index": 8, "type": "image" },
+          { "index": 9, "type": "image" }
+        ],
+        "count": 10,
+        "videoCount": 1
+      },
+      "descriptionMedia": {
+        "banner": { "image": "lego-banner", "copyright": "©2026 The LEGO Group" },
+        "inlineImages": 1,
+        "gridImages": 6,
+        "fullWidthImages": 2
+      }
+    },
+    "pricing": {
+      "price": { "amount": 309.89, "currency": "PLN" },
+      "priceBadges": ["SMART"],
+      "previousPrice": null,
+      "discountPercent": null,
+      "lowestPriceLast30Days": null,
+      "priceGuarantee": null,
+      "deferredPayment": { "provider": "PAY", "label": "zapłać później z PAY", "available": true },
+      "installments": null
+    },
+    "availability": {
+      "inStock": true,
+      "availableQuantity": 12,
+      "quantityLabel": "z 12 sztuk",
+      "maxOrderQuantity": 12,
+      "minOrderQuantity": 1
+    },
+    "delivery": {
+      "estimatedDelivery": {
+        "relativeDate": "jutro",
+        "cutoffTime": "17:00",
+        "cutoffLabel": "kup do 17:00",
+        "cost": { "amount": 10.49, "currency": "PLN" },
+        "freeWhen": "jeśli aktywujesz SMART",
+        "freeCost": { "amount": 0, "currency": "PLN" }
+      },
+      "methods": ["Przewidywana dostawa", "Metody płatności"],
+      "returns": {
+        "days": 14,
+        "free": true,
+        "label": "Zwrot za darmo – 14 dni",
+        "programs": ["Allegro Ochrona Kupujących", "Reklamacja", "Gwarancja"]
+      }
+    },
+    "payment": {
+      "sectionTitle": "Metody płatności",
+      "tagline": "Płać tak, jak lubisz",
+      "methods": []
+    },
+    "seller": {
+      "login": "jatu_eu",
+      "accountType": "Firma",
+      "superSeller": true,
+      "recommendationPercent": 99.4,
+      "brandOfSeller": "LEGO",
+      "links": ["Wszystkie przedmioty sprzedającego", "Inne przedmioty sprzedającego z kategorii Star Wars", "Zadaj pytanie sprzedającemu"]
+    },
+    "ratings": {
+      "average": 5.0,
+      "scale": 5,
+      "ratingsCount": 60,
+      "reviewsCount": 11,
+      "distribution": { "5": 60, "4": 0, "3": 0, "2": 0, "1": 0 },
+      "summaryLabel": "Rewelacyjny",
+      "allConfirmedByPurchase": true,
+      "mostHelpfulReview": {
+        "stars": 5,
+        "date": "2026-03-03",
+        "author": "K...R",
+        "source": "zakup od Allegro",
+        "body": "Bardzo fajny zestaw, dużo smaczków ukrytych w tagach. Sam smart brick dodaje dodatkowy wymiar zabawy, ale nie jest to epokowy wynalazek (efekty dźwiękowe mamy choćby w zestawach z pociągami). Polecam zwłaszcza rodzicom dzieci +10 lat, szybko docenicie wspólną zabawę 😊",
+        "pros": ["Smart brick dodaje efekty dźwiękowe i świetlne"],
+        "cons": []
+      }
+    },
+    "socialProof": { "boughtRecently": 301, "boughtThisOffer": 26 },
+    "parameters": [
+      { "uiLabel": "Stan", "key": "condition", "value": "Nowy" },
+      { "uiLabel": "Faktura", "key": "invoice", "value": "Wystawiam fakturę VAT" },
+      { "uiLabel": "Wiek dziecka", "key": "childAge", "value": "6 lat+", "type": "rangeFrom", "from": 6, "unit": "lat" },
+      { "uiLabel": "Nazwa zestawu", "key": "setName", "value": "SMART Play X-Wing Czerwona Piątka Luke'a" },
+      { "uiLabel": "Liczba elementów", "key": "pieceCount", "value": 581, "type": "integer" },
+      { "uiLabel": "Numer produktu", "key": "productNumber", "value": "75423" },
+      { "uiLabel": "EAN (GTIN)", "key": "eanGtin", "value": "5702017817705" },
+      { "uiLabel": "Informacje dot. bezpieczeństwa i zgodności produktu", "key": "safetyInfo", "value": "Nie nadaje się dla dzieci w wieku poniżej 36 miesięcy" },
+      { "uiLabel": "Płeć", "key": "gender", "value": ["chłopcy", "dziewczynki", "unisex"], "type": "enumSet" },
+      { "uiLabel": "Certyfikaty, opinie, atesty", "key": "certificates", "value": ["CE", "EN 71"], "type": "list" }
+    ],
+    "description": {
+      "title": "LEGO Star Wars SMART Play X-Wing Czerwona Piątka Luke'a 75423",
+      "blocks": [
+        { "type": "image", "role": "banner", "copyright": "©2026 The LEGO Group" },
+        { "type": "heading", "level": 3, "text": "LEGO Star Wars SMART Play X-Wing Czerwona Piątka Luke'a 75423" },
+        { "type": "paragraph", "text": "Odkryj nową galaktykę LEGO® Star Wars™ dzięki interaktywnej zabawce konstrukcyjnej X-Wing™ Czerwona Piątka Luke'a (75423). Ten zestaw Wszystko w jednym, będący częścią serii zestawów obsługiwanych przez system LEGO SMART Play™, zawiera wszystkie elementy SMART Play™ — SMART klocek i ładowarkę, dwie SMART minifigurki LEGO oraz pięć SMART Tagów, które umożliwiają responsywną zabawę, dynamiczne efekty dźwiękowe i świetlne oraz wiele innych funkcji." },
+        { "type": "paragraph", "text": "Posłuchaj ryku silnika podczas lotu myśliwca X-wing. Aktywuj dźwięki strzałów laserowych X-winga i wieżyczki imperialnej. Monitoruj komunikację z centrum dowodzenia. Ożyw SMART Luke'a Skywalkera i SMART Księżniczkę Leię. Zatankuj i napraw X-winga za pomocą transportera. Dodaj kompatybilne zestawy SMART Play (sprzedawane oddzielnie), aby uzyskać więcej interaktywnych opcji zabawy." },
+        { "type": "paragraph", "text": "Dzięki aplikacji LEGO SMART Assist możesz pomóc dzieciom rozpocząć zabawę, rozwiązywać problemy, kontrolować poziom głośności i pobierać aktualizacje, aby wykorzystać pełny potencjał SMART Play." },
+        { "type": "image", "role": "inline" },
+        { "type": "bulletList", "items": [
+          "Interaktywna zabawka konstrukcyjna ożywia X-winga poprzez zabawę aktywowaną ruchem",
+          "SMART klocek umożliwia korzystanie z systemu SMART Play™ ze światłami i dźwiękami",
+          "SMART minifigurki LEGO® Star Wars™: SMART Luke Skywalker i SMART Księżniczka Leia",
+          "Model emituje dźwięki i światła w reakcji na ruchy i zabawę dzieci",
+          "Innowacyjny prezent dla dzieci w wieku od sześciu lat, które są fanami Gwiezdnych Wojen",
+          "Odblokuj więcej funkcji systemu SMART Play™ dzięki aplikacji LEGO® SMART Assist",
+          "Zawiera wbudowany mikrofon, gotowy do późniejszej aktywacji za Twoją zgodą",
+          "Myśliwiec X-wing™ Czerwona Piątka ma 22 cm długości"
+        ] },
+        { "type": "image", "role": "fullWidth" },
+        { "type": "imageGrid", "columns": 2, "items": 6 },
+        { "type": "link", "label": "Odpowiedzialność za produkt", "target": "Bezpieczeństwo, zgodność i ostrzeżenia" }
+      ]
+    },
+    "otherSellers": {
+      "offerCount": 23,
+      "compareLabel": "PORÓWNAJ 23 OFERTY TEGO PRODUKTU",
+      "cheapest": { "price": 309.88, "currency": "PLN" },
+      "used": { "price": 333.19, "currency": "PLN", "badge": "SMART" },
+      "fastestDelivery": { "price": 309.89, "currency": "PLN", "delivery": "Dostawa jutro – kup do 17:00", "badge": "SMART" }
+    },
+    "bundle": {
+      "buildYourSet": { "title": "Zbuduj swój zestaw", "tab": "Do kompletu" },
+      "orderInOneParcel": { "title": "Zamów w jednej przesyłce", "searchPlaceholder": "znajdź i zamów w jednej przesyłce" }
+    }
+  },
+
+  "pageFurniture": {
+    "header": {
+      "logo": "allegro",
+      "search": { "placeholder": "czego szukasz?", "query": "Star Wars", "scopes": ["tytuł", "obraz"], "action": "SZUKAJ" },
+      "shortcuts": ["kategorie", "Allegro Days do -40%", "Allegro Wakacje", "Gwarancja najniższej ceny", "Sprzedawaj na Allegro", "bądź SMART"],
+      "icons": ["dostawa", "obserwowane", "wiadomości", "powiadomienia", "koszyk"],
+      "account": "Moje Allegro"
+    },
+    "actions": ["DODAJ DO KOSZYKA", "KUP I ZAPŁAĆ", "PORÓWNAJ 23 OFERTY TEGO PRODUKTU"],
+    "carousels": [
+      { "title": "Podobne oferty", "sponsored": true },
+      { "title": "Propozycje dla Ciebie", "filterTabs": ["LEGO"] },
+      { "title": "Inni klienci oglądali również" },
+      { "title": "Nasze serie produktów", "tiles": ["City", "Disney", "Dots", "Duplo", "Friends", "Harry Potter", "Minecraft", "Ninjago", "Speed Champions", "Star Wars", "Technic", "18+"] },
+      { "title": "Okazje cenowe dla Ciebie", "filterTabs": ["Gwarancja najniższej ceny", "Nowości"], "sponsored": true },
+      { "title": "Co powiesz na...?" },
+      { "title": "WSZYSTKIE PRZEDMIOTY SPRZEDAWCY" }
+    ],
+    "recommendationTileFields": [
+      "image",
+      "badge (SUPERCENA | Gwarancja najniższej ceny | -17%)",
+      "price (PLN)",
+      "strikethroughPrice + label 'cena z 30 dni'",
+      "SMART badge",
+      "title",
+      "soldCount label ('64 osoby kupiły', '87 osób kupiło')",
+      "deliveryPromise ('dostawa jutro – kup do 17:00' | 'dostawa pojutrze' | 'dostawa czw. 18 cze.' | 'dostawa za 10 dni')",
+      "favoriteHeart",
+      "addToCart",
+      "sponsored flag"
+    ],
+    "footer": {
+      "legal": ["Numer oferty: 18319048965", "BDO: 000506289", "Zgłoś ofertę błędnie powiązaną z produktem", "Zgłoś naruszenie", "Przykład reprezentatywny"],
+      "seoColumns": ["Rankingi", "Zestawy LEGO na prezent", "Moda dziecięca", "Komunia"],
+      "siteColumns": ["Allegro", "Centrum pomocy", "Serwis"],
+      "displaySettings": { "theme": "Motyw jasny", "country": "Polska", "deliveryCountry": "Polska", "language": "polski", "currency": "PLN" },
+      "apps": ["App Store", "Google Play", "AppGallery"],
+      "social": ["facebook", "linkedin", "instagram", "pinterest", "youtube", "tiktok"],
+      "groupServices": ["Allegro.cz", "Allegro.sk", "Allegro.hu", "Onedelivery.cz"]
+    }
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "source": "docs/raw/consignment-note.png",
+  "sourceKind": "single label screenshot (1024x586 px), photographed/scanned carrier label",
+  "documentType": "consignment note / parcel label (list przewozowy)",
+  "note": "Every visible field is represented. Empty label areas in the source contain no information.",
+
+  "carrier": {
+    "brand": "dpd",
+    "legalEntity": "DPD Polska sp. z o.o.",
+    "address": { "street": "ul. Mineralna 5", "postalCode": "02-274", "city": "Warszawa", "country": "PL" },
+    "website": "www.dpd.com.pl",
+    "branchNumber": "1305",
+    "routingCode": "N-6102",
+    "gdprNotice": "Państwa dane osobowe są przetwarzane przez DPD Polska sp. z o.o. z siedzibą w Warszawie 02-274 przy ul. Mineralnej 5, w celu i zakresie wskazanym na stronie internetowej: www.dpd.com.pl"
+  },
+
+  "sender": {
+    "role": "NADAWCA",
+    "companyName": "Firma Testowa",
+    "address": { "street": "Mineralna 5", "postalCode": "PL-02274", "city": "Warszawa", "country": "PL" },
+    "phones": ["+48 801400373", "+48 22 25775555"]
+  },
+
+  "recipient": {
+    "role": "Adres doręczenia",
+    "name": "Fir*** Tes***",
+    "contactPerson": "Ada*** Now***",
+    "anonymized": true,
+    "address": { "street": "Mineralna 5", "postalCode": "PL-02274", "city": "Warszawa", "country": "PL", "cityPrintedLarge": true }
+  },
+
+  "parcel": {
+    "sequence": 1,
+    "ofTotal": 1,
+    "label": "PACZKA:1/1",
+    "weight": { "value": 1.00, "unit": "kg", "label": "WAGA: 1.00 kg" },
+    "dimensions": null,
+    "cod": null,
+    "declaredValue": null,
+    "service": null,
+    "options": []
+  },
+
+  "labelLayout": {
+    "orientation": "landscape",
+    "zones": ["carrier branding + gdpr notice", "recipient block (large)", "sender block (rotated 90°)", "parcel/weight block", "carrier branch + routing code (rotated 90°)", "empty data area"]
+  },
+
+  "modelConsequences": [
+    "a consignment note is carrier-owned: carrier, branch, routing code and GDP R text are provider data, not ours",
+    "sender address is our warehouse/company address; recipient is the customer delivery address with contact person",
+    "parcel sequence i/n means one consignment may carry several parcels",
+    "weight is a required label field with 2-decimal precision and unit",
+    "no order reference, no barcode value and no parcel number are visible in this sample — provider ID lifecycle stays an open question"
+  ]
+}

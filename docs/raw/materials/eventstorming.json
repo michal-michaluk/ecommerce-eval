@@ -1,0 +1,190 @@
+{
+  "source": "docs/raw/ecommerce-eventstorming.jpg",
+  "sourceKind": "event storming board photograph (7961x2009 px), 5 lanes",
+  "readingRule": "lane boundaries are the purple bars (~boundary~) between lanes; stickies keep their original wording, typos included",
+  "colorLegend": {
+    "blue": "command",
+    "orange": "domain event",
+    "green": "read model (view)",
+    "purple": "policy / calculation",
+    "yellow-small": "actor or annotation",
+    "magenta": "hot spot / external system"
+  },
+  "goals": [
+    { "label": "straeamline creation process", "owner": "Business", "lane": "offer management" },
+    { "label": "high quality content", "owner": "Business", "lane": "offer management" }
+  ],
+
+  "lanes": [
+    {
+      "id": "offer-management",
+      "label": "offer management",
+      "proposedContext": "catalog",
+      "transcriptSegments": "1-48, 51",
+      "actors": ["content manager", "other content manager", "photographer", "sales"],
+      "commands": [
+        "create new product",
+        "edit description / title",
+        "add photo",
+        "request review",
+        "publish version to offer",
+        "set prices (discounts) in date range",
+        "revert to previous version",
+        "remove product from offer"
+      ],
+      "events": [
+        "blank draft created",
+        "description updated",
+        "photo added in right formats",
+        "description pending review",
+        "product version published to offer",
+        "product prices changed",
+        "product removed"
+      ],
+      "readModels": ["draft product description", "pending reviews"],
+      "policies": ["description quality policy"],
+      "hotSpots": [
+        "product description snapshot when published",
+        "product prices changed",
+        "product removed from offer"
+      ],
+      "annotations": [
+        { "text": "Event (?): PordutUpdated (całość informacji o produkcie)", "means": "open question whether one ProductUpdated event carries the whole product information" }
+      ]
+    },
+    {
+      "id": "browsing-offer",
+      "label": "browsing offer",
+      "proposedContext": "shopping",
+      "transcriptSegments": "49-52, 54-59",
+      "actors": ["customer"],
+      "commands": [],
+      "events": [],
+      "readModels": ["search", "product details", "current prices", "stock of product"],
+      "policies": [],
+      "hotSpots": [],
+      "annotations": [
+        { "text": "View: - product info with price and quantity", "attachedTo": "product details" },
+        { "text": "API: reserveProductQuantity, buyProduct(quantity)", "attachedTo": "Warehouse boundary" }
+      ]
+    },
+    {
+      "id": "basket-management",
+      "label": "basket management",
+      "proposedContext": "shopping",
+      "transcriptSegments": "61-75",
+      "actors": ["customer"],
+      "commands": ["add to basket", "remove from basket", "go to checkout"],
+      "events": ["added from basket", "removed from basket"],
+      "readModels": ["basket content"],
+      "policies": ["delivery time calculation policy", "current price of basket including dyscounts", "product out of stock (non blocking)"],
+      "hotSpots": [],
+      "annotations": [
+        { "text": "View: - product title, one picture, price", "attachedTo": "basket content" },
+        { "text": "product out of stock (non blocking) appears on the board twice", "attachedTo": "policies" }
+      ]
+    },
+    {
+      "id": "checkout-process",
+      "label": "checkout process",
+      "proposedContext": "shopping",
+      "transcriptSegments": "76-108",
+      "actors": ["customer"],
+      "commands": [
+        "choose payment method",
+        "choose delery method",
+        "customer delivery location invoicing data",
+        "update contact data",
+        "checkout"
+      ],
+      "events": ["payment method picked", "delivery setuped", "invoicing data picked", "ordered"],
+      "readModels": ["payment method options", "delivery method options", "previous invoicing data"],
+      "policies": ["payment methods policy", "delivery methods policy"],
+      "hotSpots": [],
+      "annotations": [
+        { "text": "API: getCustomerData (adres)", "attachedTo": "previous invoicing data" },
+        { "text": "API: updateCustomerData", "attachedTo": "update contact data" }
+      ]
+    },
+    {
+      "id": "fulfillment-order-processing",
+      "label": "fulfillment (order processing)",
+      "proposedContext": "fulfillment",
+      "transcriptSegments": "109-153",
+      "actors": ["employee", "customer"],
+      "commands": [
+        "assign to order",
+        "scan packed product",
+        "mark done / ready for delivery",
+        "mark problems with fulfillment",
+        "register parcel",
+        "ready for delivery",
+        "pick list of products on warehouse",
+        "reserve products"
+      ],
+      "events": [
+        "ordered",
+        "employee assigned to order fulfilment",
+        "delivery number generated",
+        "position packed",
+        "ready for delivery",
+        "issues",
+        "order is on hold",
+        "delivery state notification",
+        "stock changed"
+      ],
+      "readModels": [
+        "orders list",
+        "pick list",
+        "current state of order processing",
+        "current issues",
+        "order processing state"
+      ],
+      "policies": ["picklist calculation policy"],
+      "hotSpots": [],
+      "annotations": [
+        { "text": "locations of products on warehouse", "attachedTo": "pick list" },
+        { "text": "returns parcel number", "attachedTo": "register parcel" },
+        { "text": "packed product / scan packed product stickies overlap on the board", "attachedTo": "command" }
+      ]
+    }
+  ],
+
+  "boundaries": [
+    {
+      "from": "offer-management",
+      "to": "browsing-offer",
+      "crossings": ["product description snapshot when published", "product prices changed", "product removed from offer"]
+    },
+    {
+      "from": "browsing-offer",
+      "to": "basket-management",
+      "crossings": ["product out of stock (non blocking)", "current price of basket including dyscounts"]
+    },
+    {
+      "from": "basket-management",
+      "to": "checkout-process",
+      "crossings": ["go to checkout"]
+    },
+    {
+      "from": "checkout-process",
+      "to": "fulfillment-order-processing",
+      "crossings": ["ordered"]
+    }
+  ],
+
+  "externalSystems": [
+    { "name": "Warehouse", "kind": "off-the-shelf, has API", "lane": "browsing-offer / fulfillment", "interactions": ["reserveProductQuantity", "buyProduct(quantity)", "Warehouse stock of product changed", "pick list of products on warehouse", "reserve products", "stock changed"] },
+    { "name": "crm", "kind": "existing system", "lane": "checkout-process", "interactions": ["getCustomerData (adres)", "updateCustomerData", "ordered"] },
+    { "name": "dhl", "kind": "carrier", "lane": "fulfillment-order-processing", "interactions": ["register parcel", "returns parcel number", "ready for delivery", "delivery state notification"] }
+  ],
+
+  "verbatimTypos": [
+    { "onBoard": "straeamline creation process", "intended": "streamline creation process" },
+    { "onBoard": "added from basket", "intended": "added to basket" },
+    { "onBoard": "choose delery method", "intended": "choose delivery method" },
+    { "onBoard": "delivery setuped", "intended": "delivery set up" },
+    { "onBoard": "dyscounts", "intended": "discounts" },
+    { "onBoard": "PordutUpdated", "intended": "ProductUpdated" }
+  ]
+}
