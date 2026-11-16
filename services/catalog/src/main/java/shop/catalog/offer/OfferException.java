@@ -1,11 +1,18 @@
 package shop.catalog.offer;
 
+import shop.catalog.DomainRefusal;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-/** The only exception the offer context raises; the error type owns the message and carries the offending values. */
-class OfferException extends RuntimeException {
+/**
+ * The only exception the offer context raises; the error type owns the message and carries the offending values.
+ *
+ * <p>It is a {@link DomainRefusal} because a refused offer command is what 12 answers with `409 {reason}`: the transport reads the
+ * constant's name, never the message.
+ */
+class OfferException extends RuntimeException implements DomainRefusal {
 
     enum Error {
         TITLE_INVALID("title must be 1-200 characters, got '%s'"),
@@ -26,6 +33,7 @@ class OfferException extends RuntimeException {
         PRODUCT_NUMBER_TAKEN("productNumber '%s' is already carried by another offer"),
         EAN_GTIN_TAKEN("eanGtin '%s' is already carried by another offer"),
         MEDIA_IMAGE_MISSING("offer %s needs at least one image before a review can be requested"),
+        MEDIA_URL_MISSING("a media item needs its location (url), got '%s'"),
         MEDIA_PRIMARY_AMBIGUOUS("offer %s needs exactly one primary image, got %s"),
         MEDIA_POSITIONS_NOT_CONTIGUOUS("offer %s needs media positions contiguous from 1, got %s"),
         MEDIA_VIDEO_COUNT("offer %s allows at most one video, got %s"),
@@ -68,5 +76,10 @@ class OfferException extends RuntimeException {
 
     List<Object> details() {
         return details;
+    }
+
+    @Override
+    public String reason() {
+        return error.name();
     }
 }
