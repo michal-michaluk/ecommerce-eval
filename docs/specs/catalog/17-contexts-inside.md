@@ -18,7 +18,7 @@ flowchart LR
   end
   shopping["Shopping<br/>(other service)"]
 
-  offer -- "OfferDraftChanged / OfferVersionFrozen / OfferRemoved (event)" --> reads
+  offer -- "OfferDraftUpdated / OfferVersionFrozen / OfferRemoved (event)" --> reads
   review -- "ReviewRequested / Accepted / Rejected / Withdrawn (event)" --> reads
   pricing -- "PricingChanged (event)" --> reads
   review -- "QualityFindings (contract port, mediator)" --> quality
@@ -42,7 +42,7 @@ by `review` through the port) · revert · remove.
 
 | Direction | Counterpart | Type | What crosses |
 |---|---|---|---|
-| → | `reads` | event | `OfferDraftChanged`, `OfferVersionFrozen`, `OfferRemoved` |
+| → | `reads` | event | `OfferDraftUpdated`, `OfferVersionFrozen`, `OfferRemoved` |
 | → | `pricing` | event | `OfferVersionFrozen` (pricing keeps a local "offer exists" fact) |
 | ← | `review` | contract port + mediator | `OfferDraftSnapshot` (read), `OfferPublication` (command) |
 | → | Shopping | snapshot event | `OfferPublished`, `ProductRemoved` (13) |
@@ -129,7 +129,7 @@ rows live.
 
 | Direction | Counterpart | Type | What crosses |
 |---|---|---|---|
-| ← | `offer` | event | `OfferDraftChanged`, `OfferVersionFrozen`, `OfferRemoved` |
+| ← | `offer` | event | `OfferDraftUpdated`, `OfferVersionFrozen`, `OfferRemoved` |
 | ← | `review` | event | `ReviewRequested`, `ReviewAccepted`, `ReviewRejected`, `ReviewWithdrawn` |
 | ← | `pricing` | event | `PricingChanged` |
 | → | `tools` | dependency | `Clock` (visibility), clock for waiting time in 15 |
@@ -142,7 +142,7 @@ rows live.
 
 | Kind | Events | Scope | Why |
 |---|---|---|---|
-| **Domain event** | `OfferDraftChanged`, `PricingChanged`, `ReviewRequested` | in-process, inside catalog | consequences of a single business action, too granular for another service |
+| **Domain event** | `OfferDraftUpdated`, `PricingChanged`, `ReviewRequested` | in-process, inside catalog | consequences of a single business action, too granular for another service |
 | **Pivotal event** | `ReviewAccepted` | in-process, drives publication | the moment responsibility transfers from authoring to the shop |
 | **Snapshot event** (event-carried state transfer) | `OfferPublished`, `PricesChanged`, `ProductRemoved` | Kafka, to Shopping | the shop must render an offer without calling back; aligns with 13 R1 |
 
@@ -152,7 +152,7 @@ rows live.
 - **RULE-2** `quality` and `reads` own no aggregate and never write another context's tables.
 - **RULE-3** `review` never mutates the offer directly — it asks through `OfferPublication`, so the version is frozen by the owner.
 - **RULE-4** `pricing` learns that an offer exists from `OfferVersionFrozen`, never by querying `offer` (RULE-1 consequence).
-- **RULE-5** the draft screen's read-your-writes is guaranteed by the in-process listener: `OfferDraftChanged` is handled inside the
+- **RULE-5** the draft screen's read-your-writes is guaranteed by the in-process listener: `OfferDraftUpdated` is handled inside the
   producer's transaction, so the projection cannot lag behind a `PATCH` reply (`integration.listener-joins-transaction`).
 - **RULE-6** visibility (11) is computed only in `reads`; `offer` carries `availabilityStart` and state, nothing else.
 
