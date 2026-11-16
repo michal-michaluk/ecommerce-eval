@@ -1,1 +1,138 @@
 databaseChangeLog:
+
+  # The draft screen of 14: one row per offer, holding the surface the offer published (the description in builder form with its
+  # media, one JSONB document because nothing queries into it) and the two columns a list filters on. The findings of 08 and the
+  # visibility of 11 are not stored: both are answers about now, not facts about the last write.
+  - changeSet:
+      id: 0006-reads-offer-draft
+      author: michal.michaluk
+      changes:
+        - createTable:
+            tableName: offer_draft_reads
+            columns:
+              - column:
+                  name: offer_id
+                  type: varchar(64)
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: offer_draft_reads_pkey
+                    nullable: false
+              - column:
+                  name: version
+                  type: bigint
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+              - column:
+                  name: state
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: availability_start
+                  type: date
+              - column:
+                  name: content
+                  type: jsonb
+                  constraints:
+                    nullable: false
+
+  # The pending-reviews list of 15: one row per review attempt, dropped from the list by the state its decision recorded. The columns
+  # outside the row's facts are the ones the list filters and sorts on — state, requester (04 RULE-2), request instant (oldest
+  # first) — so the page is a real index scan and not a filter over a document.
+  - changeSet:
+      id: 0006-reads-pending-reviews
+      author: michal.michaluk
+      changes:
+        - createTable:
+            tableName: pending_reviews_reads
+            columns:
+              - column:
+                  name: review_id
+                  type: varchar(64)
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pending_reviews_reads_pkey
+                    nullable: false
+              - column:
+                  name: version
+                  type: bigint
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+              - column:
+                  name: offer_id
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: state
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: requested_by
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: requested_at
+                  type: timestamptz
+                  constraints:
+                    nullable: false
+              - column:
+                  name: title
+                  type: text
+              - column:
+                  name: findings_count
+                  type: int
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: pending_reviews_reads
+            indexName: pending_reviews_reads_awaiting_idx
+            columns:
+              - column:
+                  name: state
+              - column:
+                  name: requested_at
+        - createIndex:
+            tableName: pending_reviews_reads
+            indexName: pending_reviews_reads_requested_by_idx
+            columns:
+              - column:
+                  name: requested_by
+
+  # The pricing view of 16: one row per offer, the whole price series and every discount as two JSONB documents. The partition into
+  # current/scheduled/history and the preview of 10 are computed when the screen is served, because both are questions about the clock.
+  - changeSet:
+      id: 0006-reads-pricing
+      author: michal.michaluk
+      changes:
+        - createTable:
+            tableName: pricing_reads
+            columns:
+              - column:
+                  name: offer_id
+                  type: varchar(64)
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pricing_reads_pkey
+                    nullable: false
+              - column:
+                  name: version
+                  type: bigint
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+              - column:
+                  name: prices
+                  type: jsonb
+                  constraints:
+                    nullable: false
+              - column:
+                  name: discounts
+                  type: jsonb
+                  constraints:
+                    nullable: false

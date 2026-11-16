@@ -8,6 +8,13 @@ import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
 
 import shop.catalog.ArchitectureDescription;
+import shop.catalog.offer.Media;
+import shop.catalog.offer.Offer;
+import shop.catalog.offer.ProductDescription;
+import shop.catalog.pricing.PricingChanged;
+import shop.catalog.review.Review;
+import shop.catalog.review.ReviewCandidate;
+import shop.catalog.review.ReviewFinding;
 
 import static com.tngtech.archunit.core.domain.JavaClass.Predicates.belongToAnyOf;
 
@@ -21,8 +28,12 @@ import static com.tngtech.archunit.core.domain.JavaClass.Predicates.belongToAnyO
 public class ArchitectureOfReadsTest {
     public static final String PACKAGE = "shop.catalog.reads";
 
-    public static final DescribedPredicate<JavaClass> sharedKernelExposed = belongToAnyOf();
-    public static final DescribedPredicate<JavaClass> sharedKernelUsed = belongToAnyOf();
+    public static final DescribedPredicate<JavaClass> sharedKernelExposed =
+            belongToAnyOf(DraftFindings.class, QualityFinding.class, EffectivePrices.class);
+    public static final DescribedPredicate<JavaClass> sharedKernelUsed = belongToAnyOf(
+            Offer.class, ProductDescription.class, Media.class,
+            Review.class, ReviewCandidate.class, ReviewFinding.class,
+            PricingChanged.class);
 
     @ArchTest
     public static final ArchRule adaptersDependencies = ArchitectureDescription

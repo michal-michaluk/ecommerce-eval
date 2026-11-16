@@ -99,7 +99,7 @@ class DocumentOfferRepository implements OfferRepository {
         OfferSurface surface = read(entity.content(), OfferSurface.class);
         List<OfferVersion> frozen = frozenVersions(entity.offerId());
         return new OfferEditor(entity.offerId(), new ArrayList<>(), surface.description(), surface.media(),
-                entity.availabilityStart(), entity.state(), frozen);
+                entity.availabilityStart(), entity.state(), frozen, surface.reviewOpen());
     }
 
     /**
