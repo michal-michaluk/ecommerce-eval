@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: catalog
+  labels:
+    app: catalog
+data:
+  kafka-bootstrap-servers: "kafka:9092"
+  spring-profile-active: "prod"
