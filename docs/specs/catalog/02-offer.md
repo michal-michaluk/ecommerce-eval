@@ -77,10 +77,17 @@ version, not a state.
 ## Domain events
 
 ```yaml
-- OfferDraftUpdated:     { productId: PRD-75423 }          # in-context only
-- OfferVersionFrozen:    { productId: PRD-75423, offerVersion: 1, descriptionHash: "sha256:9f2c…" }
+- OfferDraftUpdated:     { productId: PRD-75423 }          # in-context only, ids only (01 RULE-4)
+- OfferReviewRequested:  { productId: PRD-75423, reviewId: RV-12 }   # D36: the draft -> pendingReview fact
+- OfferVersionFrozen:    { productId: PRD-75423, offerVersion: 1, description: { … } }   # the value itself
 - OfferRemoved:          { productId: PRD-75423 }
 - OfferVersionReverted:  { productId: PRD-75423, offerVersion: 3, copiedFrom: 1 }
+
+`descriptionHash` is **not** part of these in-context events: the model may not import a hashing tool
+(`model.no-tools-dependency`, and 01 says the frozen version "carries the value"). The hash promised by 13 is computed at
+the contract boundary by the outbound adapter, from the same value it serialises (D39). Five events is the whole
+catalogue — `OfferReviewRequested` had to be added, because 02's own `draft -> pendingReview` edge writes state and
+`aggregate.mutation-emits-event` forbids a state write without an event (D36).
 ```
 
 ## Implementation note

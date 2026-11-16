@@ -589,6 +589,12 @@ Plan tickets (both top level: #1 has no parent):
 
 ### Open Topics
 
+- **D37 (open, needs the operator)** a review opened on a `published` offer: 09 R1 allows `draft, pendingReview` only, and 11 R3 hides
+  `pendingReview`, so re-reviewing a live offer today would hide it from customers. Recommendation: the live version keeps serving until a
+  new version is accepted — `published` stays visible while a review is open, and 09 R1 gains `published` as an allowed offerState
+- **D38 (open, needs the operator)** 04 RULE-3 freezes the candidate at request time, while `OfferEditor.publish` freezes the *current*
+  draft; the two disagree the moment the author edits after requesting. Recommendation: the freeze takes the candidate through
+  `OfferPublication` (`publish(candidate, at, by, registry)`), so "what was reviewed" and "what was published" are the same content
 - `grammar-enabled` (QP-9) stays unimplemented — needs an external service and a `poc` (Q1a)
 - `q9` — no `docs/adr/01-strategic-software-architecture.md` for this SUD; workspace-level, outside this plan
 - 20 of 185 worktree paths are uncommitted and the spec itself is untracked; `git diff --exit-code` is unusable as a gate until the baseline is committed
