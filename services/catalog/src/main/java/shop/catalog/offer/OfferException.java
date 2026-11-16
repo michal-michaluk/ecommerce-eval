@@ -31,6 +31,7 @@ class OfferException extends RuntimeException {
         MEDIA_VIDEO_COUNT("offer %s allows at most one video, got %s"),
         OFFER_VERSION_MISSING("offer %s has no version %s"),
         OFFER_ALREADY_DRAFTED("offer %s is already drafted; an offer identity is opened once and its version numbering never restarts (RULE-6, Q11)"),
+        OFFER_UNKNOWN("offer %s does not exist"),
         AVAILABILITY_START_MISSING("offer %s needs an availabilityStart before a version can be frozen"),
         REVIEW_OPEN("offer %s is under review; published content cannot change until the review is decided"),
         OFFER_VERSION_NUMBER_INVALID("offer version numbers start at 1, got %s");

@@ -2,7 +2,6 @@ package shop.catalog.offer;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import shop.catalog.offer.OfferVersion.Media;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -24,8 +23,8 @@ import java.util.function.Consumer;
  * identity is opened once — removal is terminal and version numbering never restarts (RULE-6, Q11) — so drafting an {@code offerId}
  * that already exists is refused instead of overwriting the document of an offer that may already be published.
  *
- * <p>{@link #updateMedia} names {@link OfferVersion.Media}, which is still package-private, so that one command is reachable inside
- * this package only until the frozen media becomes part of the exposed model.
+ * <p>{@link #updateMedia} names {@link Media}, a value of this context like {@link ProductDescription}: a version embeds it by value
+ * and a mediator that hands a reviewed candidate over maps into it.
  */
 @Service
 @Transactional
@@ -69,6 +68,28 @@ public class OfferService {
 
     public Optional<Offer> publish(String offerId, Instant publishedAt, String publishedBy) {
         return apply(offerId, offer -> offer.publish(publishedAt, publishedBy, registry));
+    }
+
+    /**
+     * The draft as it stands and the state 09 decides on, read in one load — the answer of the {@code OfferDraftSnapshot} port its
+     * mediator implements (D38, 09 R6/R7). The content leaves the context as values: a candidate carries a frozen description, never a
+     * draft (01 RULE-4), and an offer that cannot produce one refuses here with this context's own failure.
+     */
+    @Transactional(readOnly = true)
+    public Optional<OfferDraft> draftOf(String offerId) {
+        return offers.get(offerId).map(offer -> new OfferDraft(offer.toOffer().state(), offer.toCandidate()));
+    }
+
+    /**
+     * Freezes the content 04 accepted as the next version — the candidate, never the live draft (RULE-4, D38) — additive to
+     * {@link #publish}, which freezes what the draft holds now. Its only caller is the {@code OfferPublication} mediator.
+     *
+     * <p>A command, so an unknown offer is a failure instead of an empty answer: an acceptance cannot be recorded without a version,
+     * and the refusal belongs to this context.
+     */
+    public Offer publishCandidate(String offerId, OfferCandidate candidate, Instant publishedAt, String publishedBy) {
+        return apply(offerId, offer -> offer.publishCandidate(candidate, publishedAt, publishedBy, registry))
+                .orElseThrow(() -> new OfferException(OfferException.Error.OFFER_UNKNOWN, offerId));
     }
 
     public Optional<Offer> revert(String offerId, int sourceVersion, Instant publishedAt, String publishedBy) {

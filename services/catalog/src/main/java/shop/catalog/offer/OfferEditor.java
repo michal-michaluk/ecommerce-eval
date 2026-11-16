@@ -2,7 +2,6 @@ package shop.catalog.offer;
 
 import lombok.AllArgsConstructor;
 import shop.catalog.offer.Offer.State;
-import shop.catalog.offer.OfferVersion.Media;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -93,7 +92,7 @@ class OfferEditor {
     /** Asks the reviewer to look at the draft; the media rules of RULE-1 and RULE-2 are the price of entering the review. */
     void requestReview() {
         ensureOfferIsNotRemoved();
-        ensureMediaIsPublishable();
+        ensureMediaIsPublishable(media);
         if (state != State.PENDING_REVIEW) {
             this.state = State.PENDING_REVIEW;
             events.add(new OfferEvent.OfferReviewRequested(offerId));
@@ -109,9 +108,29 @@ class OfferEditor {
      */
     void publish(Instant publishedAt, String publishedBy, OfferRegistry offers) {
         requirePublicationDetails(publishedAt, publishedBy);
-        ensureVersionCanBeFrozen(offers);
-        OfferVersion frozen = new OfferVersion(nextVersionNumber(), draft.toDefinition(), media, availabilityStart,
-                publishedAt, publishedBy, null);
+        ensureVersionCanBeFrozen(draft.identifiers(), media, availabilityStart, offers);
+        freeze(new OfferCandidate(draft.toDefinition(), media, availabilityStart), publishedAt, publishedBy);
+    }
+
+    /**
+     * Freezes the content 04 accepted: the candidate frozen at the request — its description by value, its media in the author's order
+     * and its availability date — never the draft, which may have changed since (RULE-4, D38).
+     *
+     * <p>The draft keeps the author's current work, exactly as a revert leaves it: what was reviewed and what is published are the same
+     * content, and an edit made after the request is a candidate for the <em>next</em> review. The invariants of RULE-1, RULE-2 and
+     * RULE-11 are asked of that same content, because the freeze is where a version's rules bite.
+     */
+    void publishCandidate(OfferCandidate candidate, Instant publishedAt, String publishedBy, OfferRegistry offers) {
+        requireValue(candidate, "candidate");
+        requirePublicationDetails(publishedAt, publishedBy);
+        ensureVersionCanBeFrozen(
+                candidate.description().identifiers(), candidate.media(), candidate.availabilityStart(), offers);
+        freeze(candidate, publishedAt, publishedBy);
+    }
+
+    private void freeze(OfferCandidate candidate, Instant publishedAt, String publishedBy) {
+        OfferVersion frozen = new OfferVersion(nextVersionNumber(), candidate.description(), candidate.media(),
+                candidate.availabilityStart(), publishedAt, publishedBy, null);
         versions.add(frozen);
         this.state = State.PUBLISHED;
         events.add(new OfferEvent.OfferVersionFrozen(offerId, frozen.number(), frozen.description()));
@@ -145,6 +164,18 @@ class OfferEditor {
     OfferSurface toSurface() {
         OfferSurface surface = new OfferSurface(draft, media);
         return surface;
+    }
+
+    /**
+     * The content a review candidate freezes at the request (D38), as the consumer's port reads it.
+     *
+     * <p>It refuses an offer whose description cannot be a value or whose availability date is not scheduled yet: a candidate carries
+     * both by value, and the refusal is this context's own — a draft that never published anything is exactly the case RULE-3 leaves
+     * undefined for a version.
+     */
+    OfferCandidate toCandidate() {
+        ensureAvailabilityIsScheduled(availabilityStart);
+        return new OfferCandidate(draft.toDefinition(), media, availabilityStart);
     }
 
     /** The offer as the read side serves it: identity, state, the number of the version in force and the availability date. */
@@ -183,11 +214,12 @@ class OfferEditor {
         }
     }
 
-    private void ensureVersionCanBeFrozen(OfferRegistry offers) {
+    private void ensureVersionCanBeFrozen(
+            ProductDescription.Identifiers identifiers, List<Media> media, LocalDate availabilityStart, OfferRegistry offers) {
         ensureOfferIsNotRemoved();
-        ensureMediaIsPublishable();
-        ensureAvailabilityIsScheduled();
-        ensureIdentifiersAreFree(draft.identifiers(), offers);
+        ensureMediaIsPublishable(media);
+        ensureAvailabilityIsScheduled(availabilityStart);
+        ensureIdentifiersAreFree(identifiers, offers);
     }
 
     private void ensureRevertIsAllowed(OfferVersion source, OfferRegistry offers) {
@@ -196,19 +228,19 @@ class OfferEditor {
         ensureIdentifiersAreFree(source.description().identifiers(), offers);
     }
 
-    private void ensureAvailabilityIsScheduled() {
+    private void ensureAvailabilityIsScheduled(LocalDate availabilityStart) {
         if (availabilityStart == null) {
             throw new OfferException(OfferException.Error.AVAILABILITY_START_MISSING, offerId);
         }
     }
 
-    private void ensureMediaIsPublishable() {
-        ensureMediaHasOnePrimaryImage();
-        ensurePositionsAreContiguous();
-        ensureAtMostOneVideo();
+    private void ensureMediaIsPublishable(List<Media> media) {
+        ensureMediaHasOnePrimaryImage(media);
+        ensurePositionsAreContiguous(media);
+        ensureAtMostOneVideo(media);
     }
 
-    private void ensureMediaHasOnePrimaryImage() {
+    private void ensureMediaHasOnePrimaryImage(List<Media> media) {
         if (media.stream().noneMatch(Media::isImage)) {
             throw new OfferException(OfferException.Error.MEDIA_IMAGE_MISSING, offerId);
         }
@@ -218,7 +250,7 @@ class OfferEditor {
         }
     }
 
-    private void ensurePositionsAreContiguous() {
+    private void ensurePositionsAreContiguous(List<Media> media) {
         List<Integer> positions = media.stream().map(Media::position).sorted().toList();
         for (int index = 0; index < positions.size(); index++) {
             if (positions.get(index) != index + 1) {
@@ -227,7 +259,7 @@ class OfferEditor {
         }
     }
 
-    private void ensureAtMostOneVideo() {
+    private void ensureAtMostOneVideo(List<Media> media) {
         long videos = media.stream().filter(Media::isVideo).count();
         if (videos > 1) {
             throw new OfferException(OfferException.Error.MEDIA_VIDEO_COUNT, offerId, videos);

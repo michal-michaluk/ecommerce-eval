@@ -21,6 +21,8 @@ class ReviewException extends RuntimeException {
         OVERRIDE_DISABLED("override of review %s is refused because the override is not enabled for this catalog (D27)"),
         PUBLICATION_NEEDS_ACCEPTANCE("review %s is %s, so no publication can be recorded for it (RULE-4)"),
         PUBLICATION_ALREADY_RECORDED("review %s already published offer version %s (RULE-4)"),
+        OFFER_UNKNOWN("offer %s does not exist, so this review cannot be published"),
+        DECISION_NOT_APPLICABLE("review %s was accepted now, so 09 has no completed acceptance to replay (D15)"),
         OFFER_VERSION_INVALID("offer version numbers start at 1, got %s"),
         DECISION_INCOMPLETE("%s must carry a reason when it blocks and nothing when it does not (09)");
 

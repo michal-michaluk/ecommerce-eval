@@ -1,6 +1,5 @@
 package shop.catalog.offer;
 
-import shop.catalog.offer.OfferVersion.Media;
 import shop.catalog.offer.ProductDescription.DescriptionBlock;
 import shop.catalog.offer.ProductDescription.Draft;
 

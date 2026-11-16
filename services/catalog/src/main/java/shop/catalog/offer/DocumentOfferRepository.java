@@ -16,7 +16,6 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import shop.catalog.offer.Offer.State;
-import shop.catalog.offer.OfferVersion.Media;
 import shop.catalog.tools.JsonConfiguration;
 import tools.jackson.databind.ObjectMapper;
 
@@ -103,13 +102,17 @@ class DocumentOfferRepository implements OfferRepository {
                 entity.availabilityStart(), entity.state(), frozen);
     }
 
+    /**
+     * The frozen versions as a mutable list: the aggregate appends to it on a publication or a revert, and a rehydrated editor must
+     * behave exactly like a freshly drafted one.
+     */
     private List<OfferVersion> frozenVersions(String offerId) {
         Map<Integer, List<Media>> mediaOfVersion = media.findByOfferIdOrderByVersionNumberAscMediaPositionAsc(offerId).stream()
                 .collect(Collectors.groupingBy(OfferVersionMediaEntity::versionNumber,
                         Collectors.mapping(OfferVersionMediaEntity::toMedia, Collectors.toList())));
-        return versions.findByOfferIdOrderByVersionNumber(offerId).stream()
+        return new ArrayList<>(versions.findByOfferIdOrderByVersionNumber(offerId).stream()
                 .map(frozen -> frozen.toVersion(mediaOfVersion.getOrDefault(frozen.versionNumber(), List.of())))
-                .toList();
+                .toList());
     }
 
     private OfferDocumentEntity documentOf(OfferEditor offer, Offer snapshot) {

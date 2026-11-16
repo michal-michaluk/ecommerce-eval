@@ -28,7 +28,7 @@ public class ArchitectureOfReviewTest {
             OfferSnapshot.class, OfferContent.class, ReviewCandidate.class,
             ReviewMedia.class, ReviewFinding.class, ReviewOverride.class);
     public static final DescribedPredicate<JavaClass> sharedKernelUsed =
-            belongToAnyOf(ProductDescription.class, Offer.class);
+            belongToAnyOf(ProductDescription.class, Offer.class, Offer.State.class);
 
     @ArchTest
     public static final ArchRule adaptersDependencies = ArchitectureDescription

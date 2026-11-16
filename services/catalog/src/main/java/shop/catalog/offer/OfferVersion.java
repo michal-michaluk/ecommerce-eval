@@ -36,29 +36,4 @@ record OfferVersion(
     OfferVersion copiedAs(int number, Instant publishedAt, String publishedBy) {
         return new OfferVersion(number, description, media, availabilityStart, publishedAt, publishedBy, this.number);
     }
-
-    /**
-     * One picture or film of the offer. A draft may carry a position gap or two primaries: RULE-1 and RULE-2 are enforced when a
-     * review is requested and again when a version is frozen, so the violating draft stays a legal draft (RULE-8).
-     */
-    record Media(String mediaId, Kind kind, int position, boolean primary, String format) {
-
-        Media {
-            mediaId = Objects.requireNonNull(mediaId, "mediaId");
-            kind = Objects.requireNonNull(kind, "kind");
-        }
-
-        boolean isImage() {
-            return kind == Kind.IMAGE;
-        }
-
-        boolean isVideo() {
-            return kind == Kind.VIDEO;
-        }
-
-        enum Kind {
-            IMAGE,
-            VIDEO
-        }
-    }
 }
