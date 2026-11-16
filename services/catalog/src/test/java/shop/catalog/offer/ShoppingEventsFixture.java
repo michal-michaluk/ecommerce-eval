@@ -154,6 +154,18 @@ public class ShoppingEventsFixture {
         }
 
         @Override
+        public List<OfferEditor> findAll(int page, int size) {
+            List<OfferEditor> all = List.copyOf(offers.values());
+            int from = Math.min(page * size, all.size());
+            return all.subList(from, Math.min(from + size, all.size()));
+        }
+
+        @Override
+        public long count() {
+            return offers.size();
+        }
+
+        @Override
         public void save(OfferEditor offer) {
             DocumentOfferRepository.eventsEmittedFrom(offer);
             offers.put(offer.offerId, offer);

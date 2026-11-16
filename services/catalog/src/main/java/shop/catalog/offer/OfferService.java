@@ -3,6 +3,7 @@ package shop.catalog.offer;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
@@ -30,6 +31,11 @@ import java.util.function.Consumer;
 @Transactional
 public class OfferService {
 
+    private static final String ID_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    private static final int ID_LENGTH = 8;
+    private static final int ID_ATTEMPTS = 3;
+    private static final SecureRandom RANDOM = new SecureRandom();
+
     private final OfferRepository offers;
     private final OfferRegistry registry;
 
@@ -43,11 +49,60 @@ public class OfferService {
         return offers.get(offerId).map(OfferEditor::toOffer);
     }
 
+    /** One page of the offers 12 lists: the same snapshot a write answers, because element 17 gives no read model to this resource. */
+    @Transactional(readOnly = true)
+    public List<Offer> offers(int page, int size) {
+        return offers.findAll(page, size).stream().map(OfferEditor::toOffer).toList();
+    }
+
+    /** How many offers the list spans, so a page can state what it is a page of (D16). */
+    @Transactional(readOnly = true)
+    public long countOffers() {
+        return offers.count();
+    }
+
+    /**
+     * The frozen versions of one offer in the order they were published — the publish history of 12 (D31). Empty for an offer
+     * nobody ever drafted, so the caller can answer `404` without a second load.
+     */
+    @Transactional(readOnly = true)
+    public Optional<List<OfferVersion>> versionsOf(String offerId) {
+        return offers.get(offerId).map(OfferEditor::frozenVersions);
+    }
+
+    /**
+     * Opens the draft of a new offer under an identity this context mints itself (D31): {@code OFR-} plus eight uppercase
+     * alphanumerics, never a client value, and a candidate another offer already holds is retried before the command refuses.
+     */
+    public Offer draftOffer(ProductDescription.Draft description) {
+        return draftOffer(freeOfferId(), description);
+    }
+
     public Offer draftOffer(String offerId, ProductDescription.Draft description) {
         ensureNoOfferExists(offerId);
         OfferEditor offer = OfferEditor.draftAnOffer(offerId, description, registry);
         offers.save(offer);
         return offer.toOffer();
+    }
+
+    /**
+     * The whole of 12's single draft edit: the components the caller sent move together, in the one transaction this method opens, so
+     * a refused media component cannot leave the description it travelled with already written (D13, D18). A {@code null} component is
+     * one the request did not carry and keeps its value.
+     */
+    public Optional<Offer> updateDraft(String offerId, ProductDescription.Draft change, List<Media> addedMedia,
+                                       LocalDate availabilityStart) {
+        return apply(offerId, offer -> {
+            if (change != null) {
+                offer.updateDescription(change, registry);
+            }
+            if (addedMedia != null) {
+                offer.addMedia(addedMedia);
+            }
+            if (availabilityStart != null) {
+                offer.scheduleAvailability(availabilityStart);
+            }
+        });
     }
 
     public Optional<Offer> updateDescription(String offerId, ProductDescription.Draft change) {
@@ -114,5 +169,22 @@ public class OfferService {
         if (offers.get(offerId).isPresent()) {
             throw new OfferException(OfferException.Error.OFFER_ALREADY_DRAFTED, offerId);
         }
+    }
+
+    /** A minted identity another offer already holds is drawn again; after the last attempt the command's own refusal answers. */
+    private String freeOfferId() {
+        String offerId = mintedOfferId();
+        for (int attempt = 1; attempt < ID_ATTEMPTS && offers.get(offerId).isPresent(); attempt++) {
+            offerId = mintedOfferId();
+        }
+        return offerId;
+    }
+
+    private static String mintedOfferId() {
+        StringBuilder offerId = new StringBuilder("OFR-");
+        for (int position = 0; position < ID_LENGTH; position++) {
+            offerId.append(ID_ALPHABET.charAt(RANDOM.nextInt(ID_ALPHABET.length())));
+        }
+        return offerId.toString();
     }
 }

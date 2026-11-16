@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import shop.catalog.offer.Offer.State;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -123,6 +124,18 @@ class OfferServiceTest {
         @Override
         public Optional<OfferEditor> get(String offerId) {
             return Optional.ofNullable(offers.get(offerId));
+        }
+
+        @Override
+        public List<OfferEditor> findAll(int page, int size) {
+            List<OfferEditor> all = List.copyOf(offers.values());
+            int from = Math.min(page * size, all.size());
+            return all.subList(from, Math.min(from + size, all.size()));
+        }
+
+        @Override
+        public long count() {
+            return offers.size();
         }
 
         @Override

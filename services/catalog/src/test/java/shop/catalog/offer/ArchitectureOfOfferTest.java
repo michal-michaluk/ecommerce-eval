@@ -8,6 +8,10 @@ import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
 
 import shop.catalog.ArchitectureDescription;
+import shop.catalog.CreatedResource;
+import shop.catalog.Scopes;
+import shop.catalog.reads.DraftFindings;
+import shop.catalog.reads.QualityFinding;
 
 import static com.tngtech.archunit.core.domain.JavaClass.Predicates.belongToAnyOf;
 
@@ -23,7 +27,14 @@ public class ArchitectureOfOfferTest {
 
     public static final DescribedPredicate<JavaClass> sharedKernelExposed =
             belongToAnyOf(ProductDescription.class, Offer.class, Media.class, OfferCandidate.class, OfferDraft.class);
-    public static final DescribedPredicate<JavaClass> sharedKernelUsed = belongToAnyOf();
+    /**
+     * What this context's adapters consume from elsewhere: the shared kernel of 12's transport ({@link CreatedResource} for
+     * D19a's {@code Location}, {@link Scopes} for D13a's field-level draft scope) and the read side's port the draft screen of 14
+     * declares ({@link DraftFindings} answering in {@link QualityFinding}). Each one is public and exposed by its owner precisely
+     * because this context consumes it ({@code structure.public-needs-edge}).
+     */
+    public static final DescribedPredicate<JavaClass> sharedKernelUsed =
+            belongToAnyOf(CreatedResource.class, Scopes.class, DraftFindings.class, QualityFinding.class);
 
     @ArchTest
     public static final ArchRule adaptersDependencies = ArchitectureDescription

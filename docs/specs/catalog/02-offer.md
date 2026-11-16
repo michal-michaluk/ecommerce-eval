@@ -107,7 +107,8 @@ suffix, the bare business noun is the snapshot record:
 
 - `OfferEditor.java` — the package-private aggregate: draft surface, lifecycle commands, revert/removal, and the
   `final List<OfferEvent> events` buffer (`domain-model-aggregate.md:35`). This is the only writer.
-- `Offer.java` — the public snapshot record published after a write: id, state, current version number, `availabilityStart`.
+- `Offer.java` — the public snapshot record published after a write: id, state, current version number, `availabilityStart`, and
+  the draft surface (`ProductDescription.Draft` + media) the draft screen of 14 renders from a copy.
 - `OfferVersion.java` — the frozen version: version number, the embedded `ProductDescription` **by value** (RULE-4), media,
   `publishedAt`/`publishedBy`, `copiedFrom`.
 - `Media.java` — one picture or film, its location (`url`), its `position` and `primary` flag: a value of this context, exported because a version embeds it

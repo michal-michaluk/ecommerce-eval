@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 /**
  * One offer being edited: its description draft, its media, its availability date, its lifecycle state and the versions it has
@@ -78,6 +79,16 @@ class OfferEditor {
             this.media = updated;
             events.add(new OfferEvent.OfferDraftUpdated(offerId));
         }
+    }
+
+    /**
+     * Appends the media the photographer sent to the draft as it stands (D17): the component of 12's draft edit that adds, and the
+     * only one — remove, reorder and primary are not commands of this aggregate yet, so a client asking for them is refused at the
+     * boundary instead of having the choice silently dropped.
+     */
+    void addMedia(List<Media> added) {
+        requireValue(added, "media");
+        updateMedia(Stream.concat(media.stream(), added.stream()).toList());
     }
 
     /** Records the date the product becomes available; it may lie in the future, and visibility decides what that means (RULE-3, 11). */
@@ -205,6 +216,14 @@ class OfferEditor {
                 .filter(candidate -> candidate.number() == number)
                 .findFirst()
                 .orElseThrow(() -> new OfferException(OfferException.Error.OFFER_VERSION_MISSING, offerId, number));
+    }
+
+    /**
+     * The publish history 12's {@code GET /offers/{offerId}/versions} renders (D31): every frozen version in the order it was
+     * published, so a revert can name the {@code copyFrom} it copies. A copy, because the aggregate stays the only writer.
+     */
+    List<OfferVersion> frozenVersions() {
+        return List.copyOf(versions);
     }
 
     private int nextVersionNumber() {
