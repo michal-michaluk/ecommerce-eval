@@ -1,0 +1,235 @@
+{
+  "realm": "catalog",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "resetPasswordAllowed": false,
+  "accessTokenLifespan": 3600,
+  "roles": {
+    "realm": [
+      {
+        "name": "catalog-author",
+        "description": "12: writes offers, drafts and review requests"
+      },
+      {
+        "name": "catalog-reviewer",
+        "description": "12: decides reviews, reverts, removes and lists pending reviews"
+      },
+      {
+        "name": "catalog-photographer",
+        "description": "12: edits the media component of the draft"
+      },
+      {
+        "name": "catalog-sales",
+        "description": "12: reads and edits prices and discounts"
+      }
+    ]
+  },
+  "users": [
+    {
+      "username": "author",
+      "enabled": true,
+      "email": "author@catalog.test",
+      "emailVerified": true,
+      "firstName": "Alicja",
+      "lastName": "Autor",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "author",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "catalog-author"
+      ]
+    },
+    {
+      "username": "reviewer",
+      "enabled": true,
+      "email": "reviewer@catalog.test",
+      "emailVerified": true,
+      "firstName": "Robert",
+      "lastName": "Recenzent",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "reviewer",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "catalog-reviewer"
+      ]
+    },
+    {
+      "username": "photographer",
+      "enabled": true,
+      "email": "photographer@catalog.test",
+      "emailVerified": true,
+      "firstName": "Piotr",
+      "lastName": "Fotograf",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "photographer",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "catalog-photographer"
+      ]
+    },
+    {
+      "username": "sales",
+      "enabled": true,
+      "email": "sales@catalog.test",
+      "emailVerified": true,
+      "firstName": "Sara",
+      "lastName": "Sprzedawca",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "sales",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "catalog-sales"
+      ]
+    }
+  ],
+  "clientScopes": [
+    {
+      "name": "basic",
+      "description": "Keycloak's standard basic claims (12 needs `sub`: it names the caller in requestedBy / reviewedBy)",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "false",
+        "display.on.consent.screen": "false"
+      },
+      "protocolMappers": [
+        {
+          "name": "sub",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-sub-mapper",
+          "config": {
+            "access.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "name": "catalog-author",
+      "description": "12: catalog-author",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "false"
+      }
+    },
+    {
+      "name": "catalog-reviewer",
+      "description": "12: catalog-reviewer",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "false"
+      }
+    },
+    {
+      "name": "catalog-photographer",
+      "description": "12: catalog-photographer",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "false"
+      }
+    },
+    {
+      "name": "catalog-sales",
+      "description": "12: catalog-sales",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "false"
+      }
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "catalog-author-client",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "secret",
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "standardFlowEnabled": false,
+      "protocol": "openid-connect",
+      "attributes": {
+        "access.token.lifespan": "3600"
+      },
+      "defaultClientScopes": [
+        "basic",
+        "catalog-author"
+      ],
+      "optionalClientScopes": []
+    },
+    {
+      "clientId": "catalog-reviewer-client",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "secret",
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "standardFlowEnabled": false,
+      "protocol": "openid-connect",
+      "attributes": {
+        "access.token.lifespan": "3600"
+      },
+      "defaultClientScopes": [
+        "basic",
+        "catalog-reviewer"
+      ],
+      "optionalClientScopes": []
+    },
+    {
+      "clientId": "catalog-photographer-client",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "secret",
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "standardFlowEnabled": false,
+      "protocol": "openid-connect",
+      "attributes": {
+        "access.token.lifespan": "3600"
+      },
+      "defaultClientScopes": [
+        "basic",
+        "catalog-photographer"
+      ],
+      "optionalClientScopes": []
+    },
+    {
+      "clientId": "catalog-sales-client",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "secret",
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "standardFlowEnabled": false,
+      "protocol": "openid-connect",
+      "attributes": {
+        "access.token.lifespan": "3600"
+      },
+      "defaultClientScopes": [
+        "basic",
+        "catalog-sales"
+      ],
+      "optionalClientScopes": []
+    }
+  ]
+}

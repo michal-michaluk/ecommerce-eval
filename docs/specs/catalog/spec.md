@@ -64,7 +64,7 @@ product content. The context owns the offer document; it does not own customers,
 | F13 | Fact | `specification/references/verify-storybook.cdp.js` fails every story on Storybook 8 — it reads `#storybook-root` from the manager page while SB8 renders the preview in an `iframe` | open | local adaptation `services/catalog/.storybook/verify-storybook.frames.cjs` resolves the preview frame; upstream fix worthwhile |
 | F14 | Fact | port 6006 is held by another project's Storybook (`/Users/michal/workspace/hamster-games`) | accepted | the catalog gallery runs on 6010 in this session |
 | F15 | Fact | the flow has exactly one override — at the review *request* (04 RULE-8); acceptance cannot be forced (transcript seg. 33) | accepted | 09's S2/S4/S10 contradicted it; D27 rewrites 09 |
-| F16 | Fact | `prototypes/catalog-http-api.hurl` reads ten variables it never captures (`offer_id`, `offer_with_findings`, `offer_without_media`, `offer_without_review`, `scheduled_price_id`, `started_price_id`, four tokens), so `hurl --test` cannot run it as shipped | accepted | the e2e node adds `[Captures]` + three fixture offers and recomputes 12's count |
+| F16 | Fact | `prototypes/catalog-http-api.hurl` reads ten variables it never captures (`offer_id`, `offer_with_findings`, `offer_without_media`, `offer_without_review`, `scheduled_price_id`, `started_price_id`, four tokens), so `hurl --test` cannot run it as shipped | resolved | `services/catalog/e2e/catalog-http-api.hurl` captures every variable and creates every fixture in-protocol (106 requests, 14 shapes); the prototype stays as the design sketch |
 | F17 | Fact | 12 declared the offer resource carries "publish history" but exposed no route for it, while revert takes a version number | accepted | D31 adds `GET /offers/{offerId}/versions` |
 | F18 | Fact | `09` referenced "R1–R9" with seven rules, put `override` into acceptance scenarios and required `offerState = published` in R1 while S1 said `published` — the decision table was not implementable as written | accepted | D27 rewrites the rules, the variant row and the scenarios |
 | D27 | Decision | the override exists **only** at the review request; acceptance is BLOCKed by any blocking finding, always — `catalog.publish.override.enabled` governs 04 (may a request carry findings), never 09 | accepted | F15; 09 has no variant of its own |
@@ -233,7 +233,7 @@ Step-5 files land as `NN-<element>.md` in this folder.
 | 09 | PublishDecision | [09-publish-decision.md](09-publish-decision.md) | accepted |
 | 10 | ActivePriceCalculation | [10-active-price-calculation.md](10-active-price-calculation.md) | accepted |
 | 11 | OfferVisibility | [11-offer-visibility.md](11-offer-visibility.md) | accepted |
-| 12 | CatalogHttpApi | [12-catalog-http-api.md](12-catalog-http-api.md) + [prototypes/catalog-http-api.hurl](prototypes/catalog-http-api.hurl) | accepted |
+| 12 | CatalogHttpApi | [12-catalog-http-api.md](12-catalog-http-api.md) + `services/catalog/e2e/catalog-http-api.hurl` ([prototype](prototypes/catalog-http-api.hurl) kept as the design sketch) | accepted |
 | 13 | ShoppingEvents | [13-shopping-events.md](13-shopping-events.md) | accepted |
 | 14 | DraftDescriptionView | [14-draft-description-view.md](14-draft-description-view.md) + [prototypes/draft-description-view.html](prototypes/draft-description-view.html) | accepted |
 | 15 | PendingReviewsView | [15-pending-reviews-view.md](15-pending-reviews-view.md) | accepted |

@@ -2,11 +2,16 @@
 
 Element 12 · type: API we expose · actors: ContentAuthor, ContentReviewer, Photographer, Sales · accepted.
 
-Executable contract: [`prototypes/catalog-http-api.hurl`](prototypes/catalog-http-api.hurl) — 34 requests over 15 method+path
-shapes, `hurlfmt --check` clean. It is **not** yet self-contained (F16): it reads ten variables it never captures
-(`offer_id`, `offer_with_findings`, `offer_without_media`, `offer_without_review`, `scheduled_price_id`, `started_price_id`, the four
-tokens), so the implementation adds `[Captures]` plus the three fixture offers and recomputes this count. This file carries what a hurl
-cannot: the auth matrix, the status ownership and the decisions behind the shape.
+Executable contract: [`services/catalog/e2e/catalog-http-api.hurl`](../../../services/catalog/e2e/catalog-http-api.hurl) — **106 requests over 14
+method+path shapes**, `hurlfmt --check` clean, self-contained (F16 closed): every fixture offer is created in-protocol and every
+variable it reads is either captured there or handed in by the harness (`CatalogE2eVariables`), which runs the whole file with
+`hurl --test` over a booted service and a Keycloak realm of the four scopes (`./gradlew e2eHurl`, P5). What it pins: every row of the
+auth matrix (allowed and refused role, and the `403 FIELD_NOT_IN_SCOPE` component rule), every `reason` of the status table, the
+`errors[field]` body of the invalid commands, the empty body of `401`/`403`/`404`, the `Location` of each create, and both
+run-relative availability dates. What it cannot pin: the optimistic-lock row (no client can lose a lock on purpose) and the `500` row
+(no request may fail unexpectedly) — so "every error path" means every path a client can reach. The design prototype
+it grew from stays at [`prototypes/catalog-http-api.hurl`](prototypes/catalog-http-api.hurl) — 34 requests, the shapes without the
+fixtures. This file carries what a hurl cannot: the auth matrix, the status ownership and the decisions behind the shape.
 
 ## Shape — four resource shapes, one edit endpoint per family
 
@@ -125,5 +130,17 @@ Per `http-adapter.md`, five failure classes plus authorization, one owner each; 
 - **D35 the clock is injected** — `Clock` is the only source of "now" (`AppConfiguration.clock()`); the business date is
   `ZonedDateTime.now(clock).withZoneSameInstant(catalog.timezone)`. Tests and the hurl never depend on the wall clock: the harness
   passes run-relative dates (`availabilityStart` in the future and in the past) as hurl variables (F9).
+- **B4 (open) the offer read serves no `visible`** — the intent table above says `GET /offers/{offerId}` answers "state, current
+  version, visibility", and the served `OfferView` is `offerId, offerState, offerVersion, availabilityStart`. Element 11's policy is
+  wired to `reads.OfferDraftReads.visibility`, which no route serves (`GET /offers/{offerId}/draft` answers from the aggregate). The
+  executable suite therefore asserts the two run-relative dates reaching two frozen versions, not a `visible` flag, and this row needs
+  a decision: serve `visible`, or drop "visibility" from the table.
+- **B5 (open) the draft edit has one media command, not four** — the auth matrix above gives the photographer
+  `media (add / remove / reorder / primary)`, and `MediaChange` declares `add` only: `remove`, `reorder` and `primary` are `400` unknown
+  components (02 has no command for them yet). Either the row or the command changes; the suite proves `add` and the `400`.
+- **B6 the 409 table is illustrative, not exhaustive** — it lists the refusals a client of these routes meets most often, while D49
+  makes the wire vocabulary the domain's: `POST /offers/{offerId}/review` can also answer `BRAND_MISSING` or `TITLE_INVALID` (the
+  offer's `Draft.toDefinition()` refuses before 08 reports), pricing answers `PRICE_NOT_FOUND`/`PRICE_VALID_FROM_IN_PAST`, review
+  answers `FINDINGS_NEED_OVERRIDE`/`OVERRIDE_INCOMPLETE`. The suite asserts the table's names plus those three, one producer each.
 - `PRICE_ALREADY_STARTED` is **03 RULE-8**, not RULE-7: a started entry may be edited (closed by a new one) but never deleted.
 - **Q12** media `format` is accepted as sent, unvalidated.

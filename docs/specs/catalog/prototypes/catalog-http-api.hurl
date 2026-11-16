@@ -6,7 +6,9 @@
 #   /offers/{offerId}/review     — review process
 # POST = start / init / create · PATCH = edit · GET = read
 #
-# Usage: hurl --test --variable BASE_URL=http://localhost:8080 prototypes/catalog-http-api.hurl
+# DESIGN SKETCH — not runnable as shipped: it reads ten variables it never captures (F16) and two of its assertions predate the
+# served shapes (the `visible` field of the offer read, and the order that makes REVIEW_ALREADY_OPEN reachable). The executable
+# contract is services/catalog/e2e/catalog-http-api.hurl, run by `cd services/catalog && ./gradlew e2eHurl`.
 # Scopes: catalog-author, catalog-reviewer, catalog-photographer, catalog-sales
 
 # ── 0. Unauthenticated is refused ───────────────────────────────────────────────────────────────
