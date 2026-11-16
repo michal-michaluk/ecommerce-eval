@@ -607,6 +607,14 @@ Plan tickets (both top level: #1 has no parent):
 
 ### Open Topics
 
+- **D51 (decided)** the offer's review fact has a second end: `OfferEditor.closeReview(reviewId)` clears `reviewOpen` and returns a
+  `pendingReview` offer to `draft`, while a `published` or `removed` one keeps its state — the review ended without a version, so nothing
+  the shop sees may change (D37, 02 RULE-6). It emits one `OfferReviewClosed` fact, is reached through `OfferReview.closeReview`, and
+  `ReviewService` calls it on rejection, on withdrawal and on an acceptance 09 blocks, in the decision's transaction (D34); acceptance
+  that publishes still clears through the freeze. Chosen over "refuse removal while a review is open" because a review's decision must stay
+  recordable on an offer the shop already delisted, and over an outcome-carrying port because the offer's rule is identical for all three
+  ends. Known limit: the aggregate stores no `reviewId`, so the closure names an attempt it cannot verify (unreachable today — `reject`,
+  `withdraw` and `decide` all require the review to be open, and 04 RULE-1 forbids a second open attempt)
 - **D37 (approved, implemented)** a review opened on a `published` offer keeps it `published`: the aggregate carries an explicit `reviewOpen`
   fact (the state alone cannot answer it once a live offer stops entering `pendingReview`), `OfferEditor.requestReview` only moves a `draft`
   to `pendingReview`, and `revert` still refuses while `reviewOpen`. 09 R1/R2 accept `published` and S11 covers the re-review; 11 R3 hides

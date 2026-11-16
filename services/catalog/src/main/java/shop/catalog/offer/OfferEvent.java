@@ -5,7 +5,8 @@ package shop.catalog.offer;
  *
  * <p>{@link OfferDraftUpdated} is the in-context draft fact and stays inside the context (01 RULE-4); {@link OfferVersionFrozen}
  * carries the description by value, which is what makes the freeze independent of any later edit of the draft (RULE-4);
- * {@link OfferVersionReverted} names the older version it reproduced (RULE-5).
+ * {@link OfferVersionReverted} names the older version it reproduced (RULE-5); {@link OfferReviewRequested} and
+ * {@link OfferReviewClosed} are the two ends of one review attempt, and the closure names the attempt 04 decided.
  */
 sealed interface OfferEvent {
 
@@ -13,6 +14,9 @@ sealed interface OfferEvent {
     }
 
     record OfferReviewRequested(String offerId) implements OfferEvent {
+    }
+
+    record OfferReviewClosed(String offerId, String reviewId) implements OfferEvent {
     }
 
     record OfferVersionFrozen(String offerId, int offerVersion, ProductDescription description) implements OfferEvent {

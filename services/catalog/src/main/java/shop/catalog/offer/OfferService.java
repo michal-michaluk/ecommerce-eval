@@ -121,6 +121,18 @@ public class OfferService {
         return apply(offerId, OfferEditor::requestReview);
     }
 
+    /**
+     * Ends the offer's review because 04 rejected or withdrew the attempt — the second half of {@link #requestReview}, and the
+     * only caller is the {@code OfferReview} mediator.
+     *
+     * <p>A command, like {@link #publishCandidate}: a decision is being recorded, so an unknown offer is this context's failure
+     * instead of an empty answer nobody would read.
+     */
+    public Offer closeReview(String offerId, String reviewId) {
+        return apply(offerId, offer -> offer.closeReview(reviewId))
+                .orElseThrow(() -> new OfferException(OfferException.Error.OFFER_UNKNOWN, offerId));
+    }
+
     public Optional<Offer> publish(String offerId, Instant publishedAt, String publishedBy) {
         return apply(offerId, offer -> offer.publish(publishedAt, publishedBy, registry));
     }

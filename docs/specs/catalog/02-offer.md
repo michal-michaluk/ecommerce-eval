@@ -51,6 +51,13 @@ version, not a state. A review opened on a **published** offer does not move it 
 serving its current version while the candidate is reviewed (D37 — otherwise re-reviewing a live product would take it off the shop,
 because 11 R3 hides `pendingReview`).
 
+A review ends on the offer in exactly two ways (D51): a freeze clears the fact because a version was published, and
+`closeReview(reviewId)` clears it because the attempt ended without one — 04 rejected or withdrew it, or 09 blocked the
+publication. Only a `draft` returns to `draft` (04 RULE-5) — a `published` offer is left exactly as it was, because a candidate that
+froze no version changes nothing the shop sees — and a `removed` offer stays `removed` (RULE-6). A removed offer accepts the closure
+on purpose: the shop may delist a product while a candidate is under review, the review's decision must stay recordable, and a removed
+offer gates nothing (no edit, no review, no revert, no second removal is reachable there).
+
 ## Domain rules
 
 - **RULE-1** ≥1 image required before a review can be requested; exactly one `primary: true`.
@@ -89,15 +96,18 @@ because 11 R3 hides `pendingReview`).
 ```yaml
 - OfferDraftUpdated:     { productId: PRD-75423 }          # in-context only, ids only (01 RULE-4)
 - OfferReviewRequested:  { productId: PRD-75423, reviewId: RV-12 }   # D36: the draft -> pendingReview fact
+- OfferReviewClosed:     { productId: PRD-75423, reviewId: RV-12 }   # D51: the attempt ended without a version
 - OfferVersionFrozen:    { productId: PRD-75423, offerVersion: 1, description: { … } }   # the value itself
 - OfferRemoved:          { productId: PRD-75423 }
 - OfferVersionReverted:  { productId: PRD-75423, offerVersion: 3, copiedFrom: 1 }
 
 `descriptionHash` is **not** part of these in-context events: the model may not import a hashing tool
 (`model.no-tools-dependency`, and 01 says the frozen version "carries the value"). The hash promised by 13 is computed at
-the contract boundary by the outbound adapter, from the same value it serialises (D39). Five events is the whole
+the contract boundary by the outbound adapter, from the same value it serialises (D39). Six events is the whole
 catalogue — `OfferReviewRequested` had to be added, because 02's own `draft -> pendingReview` edge writes state and
-`aggregate.mutation-emits-event` forbids a state write without an event (D36).
+`aggregate.mutation-emits-event` forbids a state write without an event (D36); `OfferReviewClosed` for the same reason, on the
+other end of that edge (D51), and it is emitted once per closed attempt — a replay of a decision the offer no longer holds emits
+nothing.
 ```
 
 ## Implementation note

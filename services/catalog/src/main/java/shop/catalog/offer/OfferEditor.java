@@ -122,6 +122,29 @@ class OfferEditor {
     }
 
     /**
+     * Ends the review of the draft without a version, because 04 rejected or withdrew the attempt, or 09 blocked the publication:
+     * the offer is no longer under review and a draft returns to {@link State#DRAFT} (04 RULE-5), while a published offer keeps
+     * serving the version in force (D37) and a removed one stays removed (RULE-6) — a decision that froze no version changes nothing
+     * the shop sees.
+     *
+     * <p>The attempt is what the command ends, not its outcome, so a rejection, a withdrawal and a block are the same fact here and
+     * the offer needs no vocabulary for which one it was. It emits one event per closure and nothing on a replay, because a second
+     * closure of an attempt this offer does not hold is not a fact.
+     *
+     * <p>It accepts an offer 04 or the shop removed while the attempt was open: the review's decision must stay recordable even when
+     * the product is gone, and a removed offer gates nothing — no edit, no review, no revert, no second removal is reachable there.
+     */
+    void closeReview(String reviewId) {
+        requireValue(reviewId, "reviewId");
+        if (!reviewOpen) {
+            return;
+        }
+        this.reviewOpen = false;
+        this.state = state == State.PENDING_REVIEW ? State.DRAFT : state;
+        events.add(new OfferEvent.OfferReviewClosed(offerId, reviewId));
+    }
+
+    /**
      * Freezes the draft into the next version and makes the offer published.
      *
      * <p>{@code draft.toDefinition()} is the only producer of the frozen value and it throws on a violated invariant, and the
@@ -176,7 +199,13 @@ class OfferEditor {
         events.add(new OfferEvent.OfferVersionReverted(offerId, reverted.number(), sourceVersion));
     }
 
-    /** Withdraws the product for good: only a published offer can be removed and nothing can follow it (RULE-6, Q11). */
+    /**
+     * Withdraws the product for good: only a published offer can be removed and nothing can follow it (RULE-6, Q11).
+     *
+     * <p>An open review does not block the removal, because the shop may delist a product while a candidate is being reviewed and
+     * nothing here would make the review's decision unrecordable: {@link #closeReview} accepts a removed offer and leaves its state
+     * alone, so 04 keeps owning rejection and withdrawal (RULE-5, RULE-6) over a product that is already gone.
+     */
     void remove() {
         ensureOfferIsPublished();
         this.state = State.REMOVED;

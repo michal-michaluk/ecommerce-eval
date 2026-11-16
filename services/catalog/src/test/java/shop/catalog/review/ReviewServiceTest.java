@@ -94,12 +94,15 @@ class ReviewServiceTest {
 
     @Test
     void blocksAnAcceptanceThatCarriesABlockingFindingDespiteItsOverride() {
-        service.request(request(candidatePushedWithAnOverride(AUTHOR)));
+        FakeOfferReview offerReview = FakeOfferReview.accepting();
+        ReviewService blocking = serviceWith(offerReview);
+        blocking.request(request(candidatePushedWithAnOverride(AUTHOR)));
 
-        Review accepted = service.decide(REVIEW_ID, REVIEWER).orElseThrow();
+        Review accepted = blocking.decide(REVIEW_ID, REVIEWER).orElseThrow();
 
         ReviewAssert.assertThat(accepted).hasState(Review.State.ACCEPTED).hasNoPublishedVersion();
         assertThat(publications.publications()).isZero();
+        assertThat(offerReview.closures()).containsExactly(REVIEW_ID);
     }
 
     @Test
@@ -173,6 +176,39 @@ class ReviewServiceTest {
     }
 
     @Test
+    void closesTheOffersReviewWhenTheReviewIsRejected() {
+        FakeOfferReview offerReview = FakeOfferReview.accepting();
+        ReviewService closing = serviceWith(offerReview);
+        closing.request(request(candidate()));
+
+        closing.reject(REVIEW_ID, REVIEWER, REASON);
+
+        assertThat(offerReview.closures()).containsExactly(REVIEW_ID);
+    }
+
+    @Test
+    void closesTheOffersReviewWhenTheReviewIsWithdrawn() {
+        FakeOfferReview offerReview = FakeOfferReview.accepting();
+        ReviewService closing = serviceWith(offerReview);
+        closing.request(request(candidate()));
+
+        closing.withdraw(REVIEW_ID, AUTHOR);
+
+        assertThat(offerReview.closures()).containsExactly(REVIEW_ID);
+    }
+
+    @Test
+    void leavesTheOffersReviewToTheFreezeWhenTheReviewIsAccepted() {
+        FakeOfferReview offerReview = FakeOfferReview.accepting();
+        ReviewService accepting = serviceWith(offerReview);
+        accepting.request(request(candidate()));
+
+        accepting.decide(REVIEW_ID, REVIEWER);
+
+        assertThat(offerReview.closures()).isEmpty();
+    }
+
+    @Test
     void refusesAReviewRequestTheOfferRejectsBeforeItFreezesAnything() {
         RuntimeException refused = new IllegalStateException("the offer refused the review");
         ReviewService refusing = ReviewServiceFixture.service(
@@ -210,6 +246,12 @@ class ReviewServiceTest {
         ReviewAssert.assertRefused(ReviewException.Error.REVIEW_NOT_OPEN,
                 () -> service.reject(REVIEW_ID, REVIEWER, REASON));
         assertThat(publications.publications()).isZero();
+    }
+
+    /** A service wired to the offer's port a test can read, over the one review map this test's repositories share. */
+    private ReviewService serviceWith(FakeOfferReview offerReview) {
+        return ReviewServiceFixture.service(
+                new FakeReviewRepository(), offers, publications, offerReview, ReviewFixture.OVERRIDE_ENABLED);
     }
 
     class FakeReviewRepository implements ReviewRepository {

@@ -5,7 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * The offer side of {@link OfferReview}: it records the attempts it was asked to open, and answers with the failure a test handed it.
+ * The offer side of {@link OfferReview}: it records the attempts it was asked to open and to close, and answers with the failure a
+ * test handed it.
  *
  * <p>In production the refusals are the offer's own; here the fake only carries one a test already decided on, so "asked before
  * frozen" is read off the answers the other ports never gave.
@@ -13,6 +14,8 @@ import java.util.List;
 class FakeOfferReview implements OfferReview {
 
     private final List<String> attempts = new ArrayList<>();
+
+    private final List<String> closures = new ArrayList<>();
 
     private RuntimeException refusal;
 
@@ -28,10 +31,14 @@ class FakeOfferReview implements OfferReview {
 
     @Override
     public void requestReview(String offerId, String reviewId, Instant at) {
-        if (refusal != null) {
-            throw refusal;
-        }
+        ensureAccepting();
         attempts.add(reviewId);
+    }
+
+    @Override
+    public void closeReview(String offerId, String reviewId) {
+        ensureAccepting();
+        closures.add(reviewId);
     }
 
     int asks() {
@@ -40,5 +47,15 @@ class FakeOfferReview implements OfferReview {
 
     String lastAttempt() {
         return attempts.get(attempts.size() - 1);
+    }
+
+    List<String> closures() {
+        return List.copyOf(closures);
+    }
+
+    private void ensureAccepting() {
+        if (refusal != null) {
+            throw refusal;
+        }
     }
 }

@@ -97,7 +97,7 @@ publication on acceptance. It is the pivot: responsibility for the offer moves f
 | → | `offer` | contract port + mediator | `OfferDraftSnapshot` (read the draft), `OfferReview` (ask the offer to enter review, so 02 RULE-1 and removal decide the request), `OfferPublication` — freeze **the candidate captured at request**, not the live draft (D38) |
 | → | `quality` | contract port + mediator | `QualityFindings` (frozen with the candidate, and for the screen) |
 | → | `reads` | event | `ReviewRequested`, `ReviewAccepted`, `ReviewRejected`, `ReviewWithdrawn` |
-| → | `offer` | contract port + mediator | `OfferReview` (enter review) and `OfferPublication` (freeze) — the offer learns a decision by being asked, there is no listener on `ReviewAccepted` yet (R6) |
+| → | `offer` | contract port + mediator | `OfferReview` (enter review, and close it when the attempt ends without a version — D51) and `OfferPublication` (freeze) — the offer learns a decision by being asked, there is no listener on `ReviewAccepted` |
 
 **Actors:** ContentAuthor (request, withdraw own), ContentReviewer (read, decide).
 
@@ -162,7 +162,7 @@ holds for both.
 
 - **RULE-1** only `mediators/` may name two contexts; every other edge is an event or a port (`context-boundaries.md`).
 - **RULE-2** `quality` and `reads` own no aggregate and never write another context's tables.
-- **RULE-3** `review` never mutates the offer directly — it asks through `OfferReview` to enter review and through `OfferPublication` to freeze the version, so the offer stays the only writer of its own state (02 RULE-1, D49).
+- **RULE-3** `review` never mutates the offer directly — it asks through `OfferReview` to enter review and to close it again, and through `OfferPublication` to freeze the version, so the offer stays the only writer of its own state (02 RULE-1, D49, D51).
 - **RULE-4** `pricing` learns that an offer exists from the published **`Offer` snapshot**, never by querying `offer` (RULE-1 consequence,
   D44): `OfferVersionFrozen` stays inside `offer`'s package-private `OfferEvent`, so it is not a cross-context wire.
 - **RULE-5** the draft screen's read-your-writes is guaranteed by the in-process listener: `OfferDraftUpdated` is handled inside the
@@ -175,11 +175,13 @@ holds for both.
   record and the freeze commit or roll back together, so an accepted review always has its version. The retry is safe because the
   publication is idempotent per `reviewId` (09 R6). No compensating action, no saga, no second write path.
 - **R5** the visibility rule must stay in one context (RULE-6); duplicating it in `offer`'s query path would drift.
-- **R6 (open)** the ask has **no counterpart**: `OfferReview` makes the offer enter review, and only a successful freeze clears
-  `reviewOpen` (`OfferEditor.freeze`). A rejection or a withdrawal therefore leaves the offer believing a review is still open — a
-  `published` one refuses a revert with `REVIEW_OPEN`, a `draft` one stays `pendingReview` although 04 RULE-5 returns the product to
-  draft. Closing it needs the offer's own command ("the review ended") and a second review → offer port; until then the next
-  acceptance is the only way out, and the round trip is not symmetric.
+- **R6 → D51 (resolved)** the ask has its counterpart: `OfferReview` carries `closeReview(offerId, reviewId)`, decided by the offer's
+  own command (`OfferEditor.closeReview`), which clears `reviewOpen` and returns a `pendingReview` offer to `draft` (04 RULE-5) while a
+  `published` or `removed` offer keeps its state — a rejected candidate must not take a live product off the shop (D37) and a removed
+  one gates nothing (02 RULE-6). The command appends one `OfferReviewClosed` fact per closure, so `aggregate.mutation-emits-event`
+  holds, and `ReviewService` calls it on rejection, on withdrawal and on an acceptance 09 blocks, in the decision's own transaction
+  (D34). Acceptance that publishes closes through the freeze instead: one fact, two ways in, and no path — rejected, withdrawn,
+  blocked or accepted — where the offer believes a review is open after the review ended.
 - **A4** `quality` is a separate context rather than a policy inside `offer`, because it carries per-category configuration and two
   consumers (14 and 04) — worth the port.
 - **A5** `reads` serves all three views from one context instead of one per view: they share the same event sources and the same deployable;
