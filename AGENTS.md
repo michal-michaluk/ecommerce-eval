@@ -66,9 +66,10 @@ hard constraints. Read it first; the table below is the entry index.
 
 | Service | Bounded context | Gate |
 | --- | --- | --- |
-| `services/catalog` | product catalog — draft, review, publication, pricing | `cd services/catalog && ./gradlew build` |
+| `services/catalog` | product catalog — draft, review, publication, pricing | `cd services/catalog && ./gradlew build` · `./gradlew e2eHurl` (P5, needs `hurl`) |
 
-`./gradlew build` is the proof of done: compile, tests, jacoco, spotbugs. A change is finished when it is green
+`./gradlew build` is the proof of done: compile, tests, jacoco, spotbugs. `e2eHurl` is the separate proof of P5 (the HTTP contract
+of 12 over a booted service); `build` excludes it, because it boots Docker, Keycloak and the application. A change is finished when it is green
 and the touched docs above still match the code.
 
 New service: `scaffold generate microservice-java-spring services/<name> micro_name=<package> db_name=<name>`,

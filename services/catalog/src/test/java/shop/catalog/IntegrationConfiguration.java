@@ -36,16 +36,29 @@ class IntegrationConfiguration {
         System.setProperty("spring.datasource.password", postgreSQLContainer.getPassword());
     }
 
-    /** The topic D28 names, created once with the broker: a producer without it cannot ship the first record. */
+    /**
+     * The topic D28 names, created once with the broker: a producer without it cannot ship the first record.
+     *
+     * <p>One partition and one replica, hosted by the broker the cluster actually has. Naming the replica set by a literal broker id —
+     * {@code Map.of(0, List.of(0))}, partition 0 on broker 0 — named a broker this container never is: it runs with
+     * {@code KAFKA_BROKER_ID=1}, so the topic was accepted with an assignment that can never produce a leader, {@code createTopics}
+     * answered only after its request timeout, and the first publication then waited out the producer's {@code max.block.ms} inside
+     * its transaction. A machine that already carried a topic an earlier producer auto-created never noticed; a clean one failed.
+     */
     private static void createEventsTopic(String bootstrapServers) {
         try (Admin admin = Admin.create(Map.of(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers))) {
-            admin.createTopics(List.of(new NewTopic(EVENTS_TOPIC, Map.of(0, List.of(0))))).all().get();
+            admin.createTopics(List.of(new NewTopic(EVENTS_TOPIC, Map.of(0, List.of(soleBrokerId(admin)))))).all().get();
         } catch (ExecutionException failed) {
             ensureTopicAlreadyExisted(failed);
         } catch (InterruptedException interrupted) {
             Thread.currentThread().interrupt();
             throw new IllegalStateException("interrupted while creating " + EVENTS_TOPIC, interrupted);
         }
+    }
+
+    /** The one broker this container runs, asked of the cluster so no replica set names an id that does not exist. */
+    private static int soleBrokerId(Admin admin) throws ExecutionException, InterruptedException {
+        return admin.describeCluster().nodes().get().iterator().next().id();
     }
 
     private static void ensureTopicAlreadyExisted(ExecutionException failed) {

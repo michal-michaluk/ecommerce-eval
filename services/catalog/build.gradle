@@ -66,6 +66,27 @@ configurations {
 test {
     useJUnitPlatform()
     finalizedBy jacocoTestReport
+    // P5 is its own task: the e2e suite boots the application and runs the whole prototype of 12, which costs minutes and
+    // needs hurl — `./gradlew build` stays the second-scale gate of P1.
+    exclude "**/e2e/**"
+}
+
+/**
+ * P5 of the spec's Prove Definition of Done: the HTTP contract of 12 over a booted application.
+ *
+ * It is a Test task so the suite gets the same classpath, test runtime and Testcontainers config as every integration test: the
+ * harness starts Postgres, Kafka and Keycloak itself, and `hurl --test` exits non-zero on any failing request, which fails this
+ * task and therefore the build.
+ */
+tasks.register("e2eHurl", Test) {
+    description = "Runs the element 12 contract (e2e/catalog-http-api.hurl) against the booted service"
+    group = "verification"
+    useJUnitPlatform()
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    include "**/e2e/**"
+    systemProperty "catalog.e2e.suite", layout.projectDirectory.file("e2e/catalog-http-api.hurl").asFile.absolutePath
+    outputs.upToDateWhen { false }
 }
 
 jacoco {
