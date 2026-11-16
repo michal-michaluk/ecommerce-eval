@@ -1,11 +1,18 @@
 package shop.catalog.pricing;
 
+import shop.catalog.DomainRefusal;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-/** The only exception the pricing context raises; the error type owns the message and carries the offending values. */
-class PricingException extends RuntimeException {
+/**
+ * The only exception the pricing context raises; the error type owns the message and carries the offending values.
+ *
+ * <p>It is a {@link DomainRefusal} because a refused pricing command is what 12 answers with `409 {reason}`: the transport reads the
+ * constant's name, never the message.
+ */
+class PricingException extends RuntimeException implements DomainRefusal {
 
     enum Error {
         CURRENCY_UNKNOWN("currency '%s' is not an ISO 4217 code"),
@@ -62,5 +69,10 @@ class PricingException extends RuntimeException {
 
     List<Object> details() {
         return details;
+    }
+
+    @Override
+    public String reason() {
+        return error.name();
     }
 }
