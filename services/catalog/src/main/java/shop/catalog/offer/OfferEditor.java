@@ -174,7 +174,8 @@ class OfferEditor {
 
     /** The editing content no snapshot carries: the draft and its media, as the persistence adapter stores it ({@link OfferSurface}). */
     OfferSurface toSurface() {
-        return new OfferSurface(draft, media, reviewOpen);
+        OfferSurface surface = new OfferSurface(draft, media, reviewOpen);
+        return surface;
     }
 
     /**
