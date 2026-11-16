@@ -25,6 +25,10 @@ index.scip
 !.codecov.yml
 !.agents/
 !.agents/skills/
+!.storybook/
+!.storybook/**
+.storybook/node_modules/
+.storybook/storybook-static/
 *~
 
 
