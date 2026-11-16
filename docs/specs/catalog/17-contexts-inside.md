@@ -42,7 +42,7 @@ by `review` through the port) · revert · remove.
 
 | Direction | Counterpart | Type | What crosses |
 |---|---|---|---|
-| → | `reads` | event | `OfferDraftUpdated`, `OfferVersionFrozen`, `OfferRemoved` |
+| → | `reads` | event | `OfferDraftUpdated`, `OfferReviewRequested`, `OfferVersionFrozen`, `OfferRemoved` |
 | → | `pricing` | event | `OfferVersionFrozen` (pricing keeps a local "offer exists" fact) |
 | ← | `review` | contract port + mediator | `OfferDraftSnapshot` (read), `OfferPublication` (command) |
 | → | Shopping | snapshot event | `OfferPublished`, `ProductRemoved` (13) |
@@ -50,7 +50,7 @@ by `review` through the port) · revert · remove.
 
 **Actors:** ContentAuthor, ContentReviewer (revert, removal), Photographer (media component only).
 
-**Components:** *Editor* `OfferEditor` (aggregate, package-private); *Value Object in the shared kernel* `ProductDescription` (+ `Draft`, nested components); *Snapshot* `Offer`; *Definition* `OfferVersion`;
+**Components:** *Editor* `OfferEditor` (aggregate, package-private); *Value Object in the shared kernel* `ProductDescription` (+ `Draft`, nested components); *Snapshot* `Offer` (exported — another context reads an offer without its editor); *Definition* `OfferVersion`;
 *Invariant* the offer aggregate — one primary image, contiguous positions, availability date shape, immutable versions (02 RULE-1…11).
 
 `ProductDescription` is exported from this context and listed in `sharedKernelExposed`; it carries no identity or lifecycle, so `pricing`,
