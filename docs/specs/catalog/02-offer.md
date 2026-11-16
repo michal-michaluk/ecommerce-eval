@@ -47,14 +47,18 @@ removedAt: "2026-06-01T09:12:00+02:00"
 ## Lifecycle
 
 `draft → pendingReview (04) → published → removed`. `removed` is reachable only from `published`; revert is a new
-version, not a state.
+version, not a state. A review opened on a **published** offer does not move it back: the offer stays `published` and keeps
+serving its current version while the candidate is reviewed (D37 — otherwise re-reviewing a live product would take it off the shop,
+because 11 R3 hides `pendingReview`).
 
 ## Domain rules
 
 - **RULE-1** ≥1 image required before a review can be requested; exactly one `primary: true`.
 - **RULE-2** `position` explicit and contiguous from 1; at most one video per offer.
 - **RULE-3** `availabilityStart` is a date, may lie in the future; publication with a future date leaves the offer hidden (11 OfferVisibility).
-- **RULE-4** publication embeds the description **by value** in the frozen offer version; the frozen version never re-reads a draft, so a later edit cannot change what was published.
+- **RULE-4** publication embeds the description **by value** in the frozen offer version; the frozen version never re-reads a draft, so a later
+  edit cannot change what was published. The content frozen is the **candidate 04 froze at request time**, handed over through
+  `OfferPublication` — never the live draft, which may have changed since the request (D38: `publish(candidate, at, by, registry)`).
 - **RULE-5** revert = create a new offer version copying an older version's content; the old version number is never reused (01 RULE-3).
 - **RULE-6** `removed` is terminal for that product's offer (Q11).
 - **RULE-7** the editor holds the description in builder form (`ProductDescription.Draft`): same components, nullable fields, no invariants. It never holds a frozen `ProductDescription`, and a frozen `OfferVersion` embeds the value — there is no `descriptionVersion` reference to resolve (D24/D25).
