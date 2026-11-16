@@ -69,7 +69,9 @@ public class OfferFixture {
     }
 
     public static Draft aDifferentDraft() {
-        return ProductDescriptionDraftFixture.draftWithBlocks(List.of(new DescriptionBlock.Paragraph("Wersja druga opisu.")));
+        return ProductDescription.Draft.builder()
+                .blocks(List.of(new DescriptionBlock.Paragraph("Wersja druga opisu.")))
+                .build();
     }
 
     public static List<Media> mediaOfInstanceA() {

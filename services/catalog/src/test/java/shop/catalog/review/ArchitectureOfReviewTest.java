@@ -31,7 +31,7 @@ public class ArchitectureOfReviewTest {
     public static final String PACKAGE = "shop.catalog.review";
 
     public static final DescribedPredicate<JavaClass> sharedKernelExposed = belongToAnyOf(
-            OfferDraftSnapshot.class, OfferPublication.class, QualityFindings.class,
+            OfferDraftSnapshot.class, OfferPublication.class, OfferReview.class, QualityFindings.class,
             OfferSnapshot.class, OfferContent.class, ReviewCandidate.class,
             ReviewFinding.class, ReviewOverride.class, Review.class);
     public static final DescribedPredicate<JavaClass> sharedKernelUsed =

@@ -373,10 +373,10 @@ Plan tickets (both top level: #1 has no parent):
 - **review_prompt:** Review the work in `/Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog`; do not inspect other repositories; if a premise below is false, say so and stop. Premises: the policy is a stateless calculation taking `QualityConfig` as a value, all 18 scenarios exist as tests, prose counts paragraphs + bullet items and excludes headings, `minProseChars` is a total, findings are ordered by rule then declaration order, longest configured prefix wins deterministically, QP-9 is absent with no dead code, severity override promotes QP-8 only. Report every scenario missing or wrongly asserted, with file:line; report only.
 
 ##### review-domain
-- **Goal:** implement elements 04 and 09 as pure domain — the review lifecycle, the publish decision, and the three contract ports the review consumes
+- **Goal:** implement elements 04 and 09 as pure domain — the review lifecycle, the publish decision, and the contract ports the review consumes
 - **Executor:** general
 - **Docs:** `04-review-process.md` (RULE-1…RULE-8), `09-publish-decision.md` (R1–R7, S1–S10, D27), `17-contexts-inside.md`, `context-boundaries.md:250-330` (port styles), `ports.md`
-- **IN / OUT:** IN: `offer-domain` (only exposed value types), `quality-domain`; OUT: `src/main/java/shop/catalog/review/{ReviewProcess,ReviewCandidate,PublishDecision,ReviewEvent,ReviewException}.java`, the public ports `OfferDraftSnapshot`, `OfferPublication`, `QualityFindings`, fakes + tests. No mediator, no persistence, no controller
+- **IN / OUT:** IN: `offer-domain` (only exposed value types), `quality-domain`; OUT: `src/main/java/shop/catalog/review/{ReviewProcess,ReviewCandidate,PublishDecision,ReviewEvent,ReviewException}.java`, the public ports `OfferDraftSnapshot`, `OfferPublication`, `QualityFindings`, fakes + tests. No mediator, no persistence, no controller. (`OfferReview` joined the same edge later, closing the element-12 defect that let a review start without the offer's gate — element 12's node, not this one.)
 - **checks:**
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; ./gradlew test --tests 'shop.catalog.review.*'`
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; ./gradlew build`

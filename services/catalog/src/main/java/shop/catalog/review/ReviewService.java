@@ -22,6 +22,10 @@ import java.util.UUID;
  * offer version can never disagree. The offer is read through {@link OfferDraftSnapshot} for the state 09 R6/R7 ask about — never
  * for the content, which the candidate already froze at the request (RULE-3, D38).
  *
+ * <p>Both ends of the lifecycle go through the offer's own ports: {@link OfferReview} asks it to enter review before anything is
+ * frozen, and {@link OfferPublication} hands the frozen candidate back to be published — the offer stays the only writer of its
+ * state.
+ *
  * <p>{@code Optional} is the whole "not found" vocabulary for a review: a command on an unknown review answers with
  * {@code Optional.empty()} and invents no second one. An offer this service cannot find is a different matter — an accepted review
  * cannot be recorded without its version — so it is refused with this context's failure instead of a fabricated offer state.
@@ -39,20 +43,27 @@ public class ReviewService {
     private final ReviewRepository reviews;
     private final OfferDraftSnapshot offers;
     private final OfferPublication publications;
+    private final OfferReview offerReviews;
     private final QualityFindings quality;
     private final ReviewConfiguration.OverrideSettings settings;
     private final Clock clock;
 
-    ReviewService(ReviewRepository reviews, OfferDraftSnapshot offers, OfferPublication publications,
+    ReviewService(ReviewRepository reviews, OfferDraftSnapshot offers, OfferPublication publications, OfferReview offerReviews,
                   QualityFindings quality, ReviewConfiguration.OverrideSettings settings, Clock clock) {
         this.reviews = reviews;
         this.offers = offers;
         this.publications = publications;
+        this.offerReviews = offerReviews;
         this.quality = quality;
         this.settings = settings;
         this.clock = clock;
     }
 
+    /**
+     * Opens the review of a candidate the caller already froze — the seam 04 is tested and replayed through, so 17 keeps it public.
+     * 12 never reaches it: a transport asks the offer for the content it holds, which is {@link #requestFor}, and only that path asks
+     * the offer's own gate first ({@link OfferReview}). A second adapter must use {@code requestFor} for the same reason.
+     */
     public Review request(ReviewRequest request) {
         ReviewProcess review = ReviewProcess.requestReview(
                 request, reviews.reviewsOf(request.offerId()), settings.allowsOverride());
@@ -61,8 +72,12 @@ public class ReviewService {
     }
 
     /**
-     * 12's `POST /offers/{offerId}/review`: freezes the candidate from what the offer holds now and from 08's report on exactly that
-     * content (RULE-3, D38) and opens the review the author asked for.
+     * 12's `POST /offers/{offerId}/review`: asks the offer to enter review, then freezes the candidate from what the offer holds now
+     * and from 08's report on exactly that content (RULE-3, D38) and opens the review the author asked for.
+     *
+     * <p>The ask comes first and through the owner (17 RULE-3, {@link OfferReview}): 02 RULE-1 and the removal rule are the price of
+     * entering a review, and an offer that refuses it leaves this context with no candidate to freeze and no review to save. Both the
+     * ask and the freeze run in this method's transaction (D34), so the offer is under review exactly when the review exists.
      *
      * <p>The capture belongs here and not to the transport: it is two questions to two contract ports, and the override records the
      * requester as its actor, which is a fact only this context can state (RULE-8). An offer this service cannot find is refused with
@@ -70,9 +85,11 @@ public class ReviewService {
      */
     public Review requestFor(String offerId, String requestedBy, List<String> overriddenRules) {
         Instant now = Instant.now(clock);
+        String reviewId = nextReviewId();
+        offerReviews.requestReview(offerId, reviewId, now);
         OfferContent content = contentOf(offerId);
         List<ReviewFinding> findings = quality.findingsFor(content);
-        return request(new ReviewRequest(nextReviewId(), offerId, requestedBy, now,
+        return request(new ReviewRequest(reviewId, offerId, requestedBy, now,
                 new ReviewCandidate(content.description(), content.media(), content.availabilityStart(), findings,
                         overrideOf(requestedBy, findings, overriddenRules, now))));
     }

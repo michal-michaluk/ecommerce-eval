@@ -26,6 +26,7 @@ flowchart LR
   reads -- "EffectivePrices (contract port, mediator)" --> pricing
   review -- "OfferPublication (contract port, mediator)" --> offer
   review -- "OfferDraftSnapshot (contract port, mediator)" --> offer
+  review -- "OfferReview (contract port, mediator)" --> offer
   offer -- "OfferVersionFrozen (event)" --> pricing
   offer -- "OfferPublished / ProductRemoved (snapshot event, Kafka)" --> shopping
   pricing -- "PricesChanged (snapshot event, Kafka)" --> shopping
@@ -46,7 +47,7 @@ by `review` through the port) · revert · remove.
 |---|---|---|---|
 | → | `reads` | event | `OfferDraftUpdated`, `OfferReviewRequested`, `OfferVersionFrozen`, `OfferRemoved` |
 | → | `pricing` | event | `OfferVersionFrozen` (pricing keeps a local "offer exists" fact) |
-| ← | `review` | contract port + mediator | `OfferDraftSnapshot` (read), `OfferPublication` (command) |
+| ← | `review` | contract port + mediator | `OfferDraftSnapshot` (read), `OfferReview` (command — ask to enter review) `OfferPublication` (command) |
 | → | Shopping | snapshot event | `OfferPublished`, `ProductRemoved` (13) |
 | → | `tools` | dependency | `Clock`, JSON mapper |
 
@@ -87,16 +88,16 @@ where stacking (D3) and currency precision (D1) live.
 **Responsibilities:** owns the review lifecycle of a candidate — freezes what is being reviewed, records the decision, and triggers
 publication on acceptance. It is the pivot: responsibility for the offer moves from authoring to the shop at this point.
 
-**Core capabilities:** request review (freeze candidate) · read pending reviews · accept (publishes) · reject with reason · withdraw.
+**Core capabilities:** request review (ask the offer to enter review, then freeze the candidate) · read pending reviews · accept (publishes) · reject with reason · withdraw.
 
 **Integrations**
 
 | Direction | Counterpart | Type | What crosses |
 |---|---|---|---|
-| → | `offer` | contract port + mediator | `OfferDraftSnapshot` (read the draft), `OfferPublication` — freeze **the candidate captured at request**, not the live draft (D38) |
+| → | `offer` | contract port + mediator | `OfferDraftSnapshot` (read the draft), `OfferReview` (ask the offer to enter review, so 02 RULE-1 and removal decide the request), `OfferPublication` — freeze **the candidate captured at request**, not the live draft (D38) |
 | → | `quality` | contract port + mediator | `QualityFindings` (frozen with the candidate, and for the screen) |
 | → | `reads` | event | `ReviewRequested`, `ReviewAccepted`, `ReviewRejected`, `ReviewWithdrawn` |
-| → | `offer` | event | `ReviewAccepted` also lets `offer` mark its state without a second write |
+| → | `offer` | contract port + mediator | `OfferReview` (enter review) and `OfferPublication` (freeze) — the offer learns a decision by being asked, there is no listener on `ReviewAccepted` yet (R6) |
 
 **Actors:** ContentAuthor (request, withdraw own), ContentReviewer (read, decide).
 
@@ -161,7 +162,7 @@ holds for both.
 
 - **RULE-1** only `mediators/` may name two contexts; every other edge is an event or a port (`context-boundaries.md`).
 - **RULE-2** `quality` and `reads` own no aggregate and never write another context's tables.
-- **RULE-3** `review` never mutates the offer directly — it asks through `OfferPublication`, so the version is frozen by the owner.
+- **RULE-3** `review` never mutates the offer directly — it asks through `OfferReview` to enter review and through `OfferPublication` to freeze the version, so the offer stays the only writer of its own state (02 RULE-1, D49).
 - **RULE-4** `pricing` learns that an offer exists from the published **`Offer` snapshot**, never by querying `offer` (RULE-1 consequence,
   D44): `OfferVersionFrozen` stays inside `offer`'s package-private `OfferEvent`, so it is not a cross-context wire.
 - **RULE-5** the draft screen's read-your-writes is guaranteed by the in-process listener: `OfferDraftUpdated` is handled inside the
@@ -174,6 +175,11 @@ holds for both.
   record and the freeze commit or roll back together, so an accepted review always has its version. The retry is safe because the
   publication is idempotent per `reviewId` (09 R6). No compensating action, no saga, no second write path.
 - **R5** the visibility rule must stay in one context (RULE-6); duplicating it in `offer`'s query path would drift.
+- **R6 (open)** the ask has **no counterpart**: `OfferReview` makes the offer enter review, and only a successful freeze clears
+  `reviewOpen` (`OfferEditor.freeze`). A rejection or a withdrawal therefore leaves the offer believing a review is still open — a
+  `published` one refuses a revert with `REVIEW_OPEN`, a `draft` one stays `pendingReview` although 04 RULE-5 returns the product to
+  draft. Closing it needs the offer's own command ("the review ended") and a second review → offer port; until then the next
+  acceptance is the only way out, and the round trip is not symmetric.
 - **A4** `quality` is a separate context rather than a policy inside `offer`, because it carries per-category configuration and two
   consumers (14 and 04) — worth the port.
 - **A5** `reads` serves all three views from one context instead of one per view: they share the same event sources and the same deployable;

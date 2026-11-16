@@ -1,5 +1,10 @@
 spring:
   application.name: catalog
+  # 12 D18 — a request body is the components its command declares: an unknown component is `400 {errors[]}`. Service-wide, because
+  # the servlet stack reads every body with Boot's mapper; the documents keep the lenient one (tools.JsonConfiguration).
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
   datasource:
     driverClassName: org.postgresql.Driver
     hikari:
