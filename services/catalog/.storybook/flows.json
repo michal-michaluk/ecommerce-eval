@@ -1,0 +1,13 @@
+{
+  "flows": [
+    {
+      "name": "draft-empty -> in-progress -> ready",
+      "start": "catalog-draftdescriptionview--empty",
+      "steps": [
+        { "click": "#next", "expect": "catalog-draftdescriptionview--in-progress" },
+        { "click": "#next", "expect": "catalog-draftdescriptionview--ready" },
+        { "click": "#request", "expect": "catalog-draftdescriptionview--review-requested" }
+      ]
+    }
+  ]
+}

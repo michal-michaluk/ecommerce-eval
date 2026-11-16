@@ -12,3 +12,7 @@
 # agent runtime state
 **/.opencode/
 **/.pi/
+
+# isolated storybook gallery (spec prototype) — deps and static build stay out of git
+**/.storybook/node_modules/
+**/.storybook/storybook-static/
