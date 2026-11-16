@@ -4,12 +4,16 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 import shop.catalog.IntegrationTest;
 import shop.catalog.Scopes;
 import shop.catalog.offer.CatalogHttpFixture;
+import shop.catalog.offer.Offer;
 import shop.catalog.offer.OfferDocumentFixture;
 import shop.catalog.offer.OfferFixture;
 import shop.catalog.offer.OfferService;
@@ -18,6 +22,7 @@ import shop.catalog.quality.QualityFixture;
 import java.time.Instant;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -26,17 +31,19 @@ import static shop.catalog.offer.CatalogHttpFixture.as;
 import static shop.catalog.review.ReviewFixture.REVIEWER;
 
 /**
- * The two refusals 12's `POST /offers/{offerId}/review` answers with `409 {reason}` over the real servlet stack: the offer's own
- * vocabulary reaches the client unchanged, because the advice reads the enum name of whichever context refused (D49) and the review
- * adapter adds no second list.
+ * 12's `POST /offers/{offerId}/review` over the real servlet stack, one `409 {reason}` at a time: the offer's own vocabulary reaches the
+ * client unchanged, because the advice reads the enum name of whichever context refused (D49) and the review adapter adds no second
+ * list — and the last of them is D34's rollback, the one refusal only the transaction can undo.
  */
 @IntegrationTest
 class ReviewRequestRefusalTest {
 
     @Autowired
     WebApplicationContext context;
-    @Autowired
+    @MockitoSpyBean
     OfferService offers;
+    @Autowired
+    ReviewService reviews;
 
     MockMvc mvc;
 
@@ -61,6 +68,26 @@ class ReviewRequestRefusalTest {
         assertThat(response.getContentAsString()).isEqualTo("{\"reason\":\"OFFER_REMOVED\"}");
     }
 
+    /**
+     * D34's rollback, which no refusal above reaches: the offer enters review before 04's own admission rules run, so a refusal raised
+     * after that first write must leave the offer where it was and no review behind. The test runs outside the test-managed transaction
+     * on purpose — only the service's own boundary can undo that write, and an enclosing test transaction would hide its absence — and the
+     * spy pins that the offer really was asked before the refusal, so the state it leaves behind is an undone write and not one never made.
+     */
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void rollsTheOfferBackOutOfReviewWhenTheReviewsOwnAdmissionRefuses() throws Exception {
+        String offerId = anOfferWithMediaAndBlockingFindings();
+
+        MockHttpServletResponse response = startsReviewOf(offerId);
+
+        assertThat(response.getStatus()).isEqualTo(409);
+        assertThat(response.getContentAsString()).isEqualTo("{\"reason\":\"FINDINGS_NEED_OVERRIDE\"}");
+        verify(offers).requestReview(offerId);
+        assertThat(offers.getOffer(offerId).orElseThrow().state()).isEqualTo(Offer.State.DRAFT);
+        assertThat(reviews.latestReviewOf(offerId)).isEmpty();
+    }
+
     private MockHttpServletResponse startsReviewOf(String offerId) throws Exception {
         return as(Scopes.AUTHOR, AUTHOR_CALLER, mvc, post("/offers/" + offerId + "/review")
                 .contentType(APPLICATION_JSON).content("{}"));
@@ -70,6 +97,16 @@ class ReviewRequestRefusalTest {
         String offerId = ReviewFixture.aNewOfferId();
         offers.draftOffer(offerId, QualityFixture.draftWithIdentifiers(
                 OfferDocumentFixture.uniqueProductNumber(), OfferDocumentFixture.uniqueEanGtin()));
+        offers.scheduleAvailability(offerId, ReviewCandidateFixture.AVAILABILITY_START);
+        return offerId;
+    }
+
+    /** The one draft that passes the offer's media gate and still has a blocking finding: 08 reports QP-6 on prose this short. */
+    private String anOfferWithMediaAndBlockingFindings() {
+        String offerId = ReviewFixture.aNewOfferId();
+        offers.draftOffer(offerId, QualityFixture.draftWithProseBelowTheMinimum(
+                OfferDocumentFixture.uniqueProductNumber(), OfferDocumentFixture.uniqueEanGtin()));
+        offers.updateMedia(offerId, OfferFixture.mediaOfInstanceA());
         offers.scheduleAvailability(offerId, ReviewCandidateFixture.AVAILABILITY_START);
         return offerId;
     }

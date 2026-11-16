@@ -95,6 +95,7 @@ class ReviewsControllerTest {
         MockHttpServletResponse refused = mvc.perform(get("/reviews")).andReturn().getResponse();
 
         assertThat(refused.getStatus()).isEqualTo(400);
+        assertThat(refused.getContentAsString()).isEqualTo("{\"errors\":[{\"field\":\"page\"}]}");
     }
 
     @Test
@@ -103,7 +104,8 @@ class ReviewsControllerTest {
         MockHttpServletResponse noRoom = mvc.perform(get("/reviews?page=0&size=0")).andReturn().getResponse();
 
         assertThat(tooWide.getStatus()).isEqualTo(400);
-        assertThat(noRoom.getStatus()).isEqualTo(400);
+        assertThat(tooWide.getContentAsString()).isEqualTo("{\"errors\":[{\"field\":\"size\"}]}");
+        assertThat(noRoom.getContentAsString()).isEqualTo("{\"errors\":[{\"field\":\"size\"}]}");
     }
 
     @Test
@@ -111,6 +113,7 @@ class ReviewsControllerTest {
         MockHttpServletResponse refused = mvc.perform(get("/reviews?page=-1&size=20")).andReturn().getResponse();
 
         assertThat(refused.getStatus()).isEqualTo(400);
+        assertThat(refused.getContentAsString()).isEqualTo("{\"errors\":[{\"field\":\"page\"}]}");
     }
 
     private void givenPendingRows(Review review) {

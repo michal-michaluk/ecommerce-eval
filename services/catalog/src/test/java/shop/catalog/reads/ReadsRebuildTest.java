@@ -61,6 +61,10 @@ class ReadsRebuildTest {
         assertThat(drafts.findDraft(offerId).orElseThrow()).isEqualTo(before);
     }
 
+    /**
+     * Every stored component of the row is replayed; {@code waitingFor} is the one the list computes per render from the clock
+     * (15 RULE-1), so it is compared by {@link PendingReviewsReadsTest} with an injected {@code now} instead of across two renders.
+     */
     @Test
     void rebuildsThePendingListFromTheReviewsOwnState() {
         String offerId = ReviewFixture.aNewOfferId();
@@ -73,7 +77,10 @@ class ReadsRebuildTest {
 
         pendingReviews.handle(reviews.openReviewOf(offerId).orElseThrow());
 
-        assertThat(listedReview(reviewId)).isEqualTo(before);
+        assertThat(listedReview(reviewId))
+                .usingRecursiveComparison()
+                .ignoringFields("waitingFor")
+                .isEqualTo(before);
     }
 
     private void drop(String table, String keyColumn, String key) {

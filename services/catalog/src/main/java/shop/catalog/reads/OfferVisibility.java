@@ -26,9 +26,9 @@ import java.util.Objects;
  * <p>R3 hides {@code pendingReview}, and this policy reads nothing beyond the state it is given: an offer presented as
  * {@code pendingReview} is hidden whether or not it ever published a version. That is deliberate — inferring "it published once,
  * so it is still live" would need a copy of the offer's version history here, and a second place the visibility rule could drift
- * (17 RULE-6, R5). It is also why 02's lifecycle owes D37: an open review of a live offer must leave the state {@code published}.
- * That half is still open upstream ({@code spec.md} Open Topics D37, 09 R1), and {@code ReadsLiveOfferUnderReviewTest} pins what
- * the two contexts answer together until it is decided.
+ * (17 RULE-6, R5). A live offer is never presented as {@code pendingReview}: D37 keeps a {@code published} offer {@code published}
+ * while its next version is reviewed (02 lifecycle), so {@code pendingReview} only ever describes an unpublished offer and the shop
+ * keeps serving the version in force.
  *
  * <p>It answers, it never fails and it reads no configuration of its own: the timezone and the variant arrive as values, which is
  * what lets the test supply {@code today} instead of the wall clock.

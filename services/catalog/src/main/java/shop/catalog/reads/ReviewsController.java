@@ -1,14 +1,13 @@
 package shop.catalog.reads;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -23,7 +22,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
  *
  * <p>The list excludes the caller's own requests in the query itself (15 RULE-4) — a reviewer must not see a review they cannot decide —
  * and {@code waitingFor} is computed per render (15 RULE-1). Paging is D16's: both parameters are required and every value outside
- * {@code page >= 0} and {@code 1 <= size <= 100} is the request's own `400`, never a silently clamped page.
+ * {@code page >= 0} and {@code 1 <= size <= 100} is the request's own `400 {errors[{field}]}`, never a silently clamped page.
  */
 @RestController
 @RequiredArgsConstructor
@@ -33,16 +32,10 @@ class ReviewsController {
 
     private final PendingReviewsProjection reviews;
 
-    @GetMapping(path = "/reviews", params = {"page", "size"}, produces = APPLICATION_JSON_VALUE)
-    PendingReviewsPage pendingReviews(@RequestParam int page, @RequestParam int size) {
-        return PendingReviewsPage.of(reviews.findAllPending(caller(), paged(page, size)));
-    }
-
-    private static Pageable paged(int page, int size) {
-        if (page < 0 || size < 1 || size > MAX_PAGE_SIZE) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
-        }
-        return PageRequest.of(page, size);
+    @GetMapping(path = "/reviews", produces = APPLICATION_JSON_VALUE)
+    PendingReviewsPage pendingReviews(@RequestParam @Min(0) int page,
+                                     @RequestParam @Min(1) @Max(MAX_PAGE_SIZE) int size) {
+        return PendingReviewsPage.of(reviews.findAllPending(caller(), PageRequest.of(page, size)));
     }
 
     /** The reviewer the token authenticates as; the query drops their own requests before this adapter sees a row. */
