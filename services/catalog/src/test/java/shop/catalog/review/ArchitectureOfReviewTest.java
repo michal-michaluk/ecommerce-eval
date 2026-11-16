@@ -8,6 +8,7 @@ import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
 
 import shop.catalog.ArchitectureDescription;
+import shop.catalog.offer.Media;
 import shop.catalog.offer.Offer;
 import shop.catalog.offer.ProductDescription;
 
@@ -26,9 +27,9 @@ public class ArchitectureOfReviewTest {
     public static final DescribedPredicate<JavaClass> sharedKernelExposed = belongToAnyOf(
             OfferDraftSnapshot.class, OfferPublication.class, QualityFindings.class,
             OfferSnapshot.class, OfferContent.class, ReviewCandidate.class,
-            ReviewMedia.class, ReviewFinding.class, ReviewOverride.class);
+            ReviewFinding.class, ReviewOverride.class);
     public static final DescribedPredicate<JavaClass> sharedKernelUsed =
-            belongToAnyOf(ProductDescription.class, Offer.class, Offer.State.class);
+            belongToAnyOf(ProductDescription.class, Media.class, Offer.class, Offer.State.class);
 
     @ArchTest
     public static final ArchRule adaptersDependencies = ArchitectureDescription

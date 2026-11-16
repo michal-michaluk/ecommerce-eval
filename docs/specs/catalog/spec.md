@@ -438,7 +438,8 @@ Plan tickets (both top level: #1 has no parent):
 - **IN / OUT:** IN: `review-application`, `offer-application`, `quality-config`; OUT: `mediators/ReviewToQualityMediator.java` + its test
   (`ReviewToOfferMediator` landed with `review-application`, because the accept→freeze path needed it), and the collapse of `review.ReviewMedia`
   into the now-exported `offer.Media` (D45: two media records with two `Kind` enums is the local copy `contract.no-local-copy` forbids, and
-  the mediator currently bridges them by `valueOf(name())`). Does NOT touch the ports, the aggregates or the adapters
+  the mediator currently bridges them by `valueOf(name())`). The collapse is a type change in the frozen candidate, the port's content and the
+  document adapter that stores them — no port signature, aggregate rule or adapter behaviour changes with it
 - **checks:**
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; ./gradlew test --tests 'shop.catalog.mediators.*'`
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; ./gradlew build`
@@ -609,10 +610,11 @@ Plan tickets (both top level: #1 has no parent):
 - **D44 (decided)** pricing's `known_offer` fact is fed by offer's **public `Offer` snapshot**, not by `OfferVersionFrozen` (which sits in the
   package-private `OfferEvent`): a price may therefore be set before the first publication (13 RULE-7 already allows a published offer without
   a price), and a removed offer stays in `known_offer` — harmless, and it keeps the consumer on an exported type (17 RULE-4 updated below)
-- **D42 (decided)** quality's media input is the **consumer's own contract type** (`quality.MediaItem`), not a copy of a producer's exposed
-  snapshot: offer's media is package-private, and the mediator that wires `review`/`offer` to `quality` maps it (`contract.client-driven`).
-  The wiring node makes `QualityPolicy`, `QualityFindings`, `Finding`, `Rule`, `Severity`, `QualityConfig` and `MediaItem` public and lists them
-  in `sharedKernelExposed` of `quality` — until then nothing outside the package can call the policy
+- **D42 (decided, amended by D45 and by the wiring node)** quality's answer crosses the edge as values its consumer names: the wiring node makes
+  `QualityPolicy`, `QualityFindings`, `Finding`, `Rule` (with its published `label()`) and `Severity` public and lists them in
+  `sharedKernelExposed` of `quality` — until then nothing outside the package can call the policy. Quality's media input is no longer a local
+  contract type: D45 deleted `quality.MediaItem` and the policy takes `offer.Media`. `QualityConfig` stays internal, because the mediator
+  injects the policy bean and names no configuration, so exporting it would widen the boundary for nobody
 - **OQ-1** `Draft.merge` treats `null` as "unchanged", so a scalar draft component (`title`, `identifiers`, `brand`, `condition`) cannot be
   cleared through it; 12's PATCH says "absent component = absent". The adapter must map PATCH-absent to "keep" and a future clear-request must
   be an explicit component, or the aggregate gains a `clear...` command

@@ -15,6 +15,9 @@ import shop.catalog.quality.QualityConfig.SeverityOverride;
  * value: QP-9 is out of scope (D29). A configuration that names no category produces the shipped prose threshold and no category
  * set — 08's "no match" variant, which is the same value as {@link QualityConfig#defaultConfig()} and not a fallback invented
  * here: the LEGO category 08 ships lives in {@code application.yml}, because a category set is configuration, not behaviour.
+ *
+ * <p>The policy itself is a bean here too, because this is the only place that knows the configuration the policy reads: the
+ * mediator of the {@code review → quality} edge injects {@link QualityPolicy} and never the {@link QualityConfig} behind it.
  */
 @Configuration(proxyBeanMethods = false)
 class QualityConfigAdapter {
@@ -27,6 +30,11 @@ class QualityConfigAdapter {
                 properties.severity().entrySet().stream()
                         .map(configured -> new SeverityOverride(configured.getKey(), configured.getValue()))
                         .toList());
+    }
+
+    @Bean
+    QualityPolicy qualityPolicy(QualityConfig config) {
+        return QualityPolicy.withConfig(config);
     }
 
     private static CategoryParameters category(QualityProperties.CategoryRule rule) {

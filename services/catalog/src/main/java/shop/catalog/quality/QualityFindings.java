@@ -11,10 +11,13 @@ import java.util.List;
  * <p>Findings are ordered by rule number and, inside one rule, by the configuration's declaration order, which is exactly the
  * order a reviewer reads them in. {@code blocking} is what 09 turns into a rejection; a draft carrying warnings only stays
  * publishable (S18).
+ *
+ * <p>It is public together with {@link Finding}, {@link Rule} and {@link Severity} because the mediator of the {@code review →
+ * quality} edge names them to answer 04's port (D42, 17 RULE-1).
  */
-record QualityFindings(List<Finding> findings, int prose, List<String> matchedCategory) {
+public record QualityFindings(List<Finding> findings, int prose, List<String> matchedCategory) {
 
-    QualityFindings {
+    public QualityFindings {
         findings = List.copyOf(findings);
         matchedCategory = List.copyOf(matchedCategory);
     }
@@ -25,7 +28,7 @@ record QualityFindings(List<Finding> findings, int prose, List<String> matchedCa
     }
 
     /** The two severities of 08; a rule's default comes from the table, {@link QualityConfig} may override it per rule. */
-    enum Severity {
+    public enum Severity {
         BLOCKING,
         WARNING
     }
@@ -36,7 +39,7 @@ record QualityFindings(List<Finding> findings, int prose, List<String> matchedCa
      * <p>QP-9 (grammar and correctness validation) is deliberately absent: it needs a new external technology, so it is reserved
      * as the unimplemented {@code grammar-enabled} variant and carries neither a constant nor a dead check.
      */
-    enum Rule {
+    public enum Rule {
         QP_1(1, Severity.BLOCKING),
         QP_2(2, Severity.BLOCKING),
         QP_3(3, Severity.BLOCKING),
@@ -61,13 +64,18 @@ record QualityFindings(List<Finding> findings, int prose, List<String> matchedCa
             return number;
         }
 
+        /** The published label of the rule as 08's table and every message name it, {@code QP-8} for {@link #QP_8}. */
+        public String label() {
+            return "QP-" + number;
+        }
+
         Severity severity() {
             return severity;
         }
     }
 
     /** One finding: the rule, the draft field it names, the severity in force and the message a reviewer reads. */
-    record Finding(Rule rule, String field, Severity severity, String message) {
+    public record Finding(Rule rule, String field, Severity severity, String message) {
 
         static Finding titleNotAccepted(String title, int maxLength) {
             return of(Rule.QP_1, "description.title",

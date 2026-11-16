@@ -2,6 +2,7 @@ package shop.catalog.review;
 
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
+import shop.catalog.offer.Media;
 import shop.catalog.offer.Offer;
 
 import java.util.ArrayList;
@@ -59,7 +60,7 @@ class ReviewCandidateFreezeTest {
 
     @Test
     void theCandidateCopiesTheContentItFreezesInsteadOfViewingItLive() {
-        List<ReviewMedia> media = new ArrayList<>(mediaOfInstanceA());
+        List<Media> media = new ArrayList<>(mediaOfInstanceA());
 
         ReviewCandidate candidate = candidateOf(contentWithMedia(descriptionOfInstanceA(), media));
         media.clear();

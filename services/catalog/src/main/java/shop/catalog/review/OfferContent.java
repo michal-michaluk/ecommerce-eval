@@ -1,5 +1,6 @@
 package shop.catalog.review;
 
+import shop.catalog.offer.Media;
 import shop.catalog.offer.ProductDescription;
 
 import java.time.LocalDate;
@@ -17,7 +18,7 @@ import java.util.List;
  * ({@code context-boundaries.md}). It is also the answer {@code OfferDraftSnapshot} gives and the question
  * {@code QualityFindings} is asked about: 08 judges exactly the content a candidate will freeze.
  */
-public record OfferContent(ProductDescription description, List<ReviewMedia> media, LocalDate availabilityStart) {
+public record OfferContent(ProductDescription description, List<Media> media, LocalDate availabilityStart) {
 
     public OfferContent {
         ReviewException.ensureValue(description, "description");

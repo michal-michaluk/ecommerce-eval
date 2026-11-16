@@ -1,5 +1,6 @@
 package shop.catalog.quality;
 
+import shop.catalog.offer.Media;
 import shop.catalog.offer.ProductDescription;
 import shop.catalog.offer.ProductDescription.DescriptionBlock;
 import shop.catalog.offer.ProductDescription.DescriptionBlock.BulletList;
@@ -121,28 +122,28 @@ public class QualityFixture {
                 new Paragraph(text(194))));
     }
 
-    public static List<MediaItem> imagesWithSinglePrimary() {
+    public static List<Media> imagesWithSinglePrimary() {
         return List.of(image("M-01", 1, true), image("M-02", 2, false), image("M-03", 3, false));
     }
 
-    public static List<MediaItem> imagesWithTwoPrimaries() {
+    public static List<Media> imagesWithTwoPrimaries() {
         return List.of(image("M-01", 1, true), image("M-02", 2, true), image("M-03", 3, false));
     }
 
-    public static List<MediaItem> imagesWithPositionGap() {
+    public static List<Media> imagesWithPositionGap() {
         return List.of(image("M-01", 1, true), image("M-02", 3, false));
     }
 
-    public static List<MediaItem> workedExampleMedia() {
+    public static List<Media> workedExampleMedia() {
         return List.of(image("M-01", 1, true), image("M-02", 2, false), video("M-03", 3));
     }
 
-    private static MediaItem image(String mediaId, int position, boolean primary) {
-        return new MediaItem(mediaId, MediaItem.Kind.IMAGE, position, primary);
+    private static Media image(String mediaId, int position, boolean primary) {
+        return new Media(mediaId, Media.Kind.IMAGE, position, primary, "jpg");
     }
 
-    private static MediaItem video(String mediaId, int position) {
-        return new MediaItem(mediaId, MediaItem.Kind.VIDEO, position, false);
+    private static Media video(String mediaId, int position) {
+        return new Media(mediaId, Media.Kind.VIDEO, position, false, "mp4");
     }
 
     private static List<Parameter> legoParameters() {

@@ -1,5 +1,6 @@
 package shop.catalog.review;
 
+import shop.catalog.offer.Media;
 import shop.catalog.offer.ProductDescription;
 
 import java.time.LocalDate;
@@ -12,14 +13,15 @@ import java.util.List;
  *
  * <p>Freezing is what makes "what was reviewed" and "what gets published" the same content: drafts carry no version number, so a
  * candidate that re-read the offer would drift the moment the author edits after requesting. The value components are immutable
- * and the lists are copied, so no later edit of the offer can reach this object.
+ * and the lists are copied, so no later edit of the offer can reach this object. The media is the offer's own value: one
+ * {@link Media} in the service, carried through the edge by the mediator instead of mapped into a copy (D45).
  *
  * <p>{@code findings} are the frozen report, not a re-evaluation: 09 R2 reads them unchanged at acceptance, so a rule or a
  * configuration that changed in between cannot turn an accepted review into a different decision.
  */
 public record ReviewCandidate(
         ProductDescription description,
-        List<ReviewMedia> media,
+        List<Media> media,
         LocalDate availabilityStart,
         List<ReviewFinding> findings,
         ReviewOverride override) {
