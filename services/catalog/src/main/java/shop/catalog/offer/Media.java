@@ -9,12 +9,23 @@ import java.util.Objects;
  * <p>It is a value of this context like {@link ProductDescription}, and public for the same reason: a version embeds it by value, and
  * a mediator that hands a reviewed candidate over has to name the shape it maps into ({@code mediator.mapping}). It carries no
  * identity of its own — {@code mediaId} names the file, not the item — so two versions may share one.
+ *
+ * <p>{@code url} is the item's location: the shop resolves a file through it and never fetches it, so a media item without one is
+ * unusable and refused here rather than at the freeze (RULE-2a, D17, D47).
  */
-public record Media(String mediaId, Kind kind, int position, boolean primary, String format) {
+public record Media(String mediaId, Kind kind, int position, boolean primary, String format, String url) {
 
     public Media {
         mediaId = Objects.requireNonNull(mediaId, "mediaId");
         kind = Objects.requireNonNull(kind, "kind");
+        url = checkedUrl(url);
+    }
+
+    private static String checkedUrl(String url) {
+        if (url == null || url.isBlank()) {
+            throw new OfferException(OfferException.Error.MEDIA_URL_MISSING, url);
+        }
+        return url;
     }
 
     boolean isImage() {

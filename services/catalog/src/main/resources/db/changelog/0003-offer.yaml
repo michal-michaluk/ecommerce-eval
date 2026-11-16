@@ -160,7 +160,21 @@ databaseChangeLog:
             columnNames: offer_id, version_number, media_position
             constraintName: offer_version_media_offer_id_version_number_media_position_key
 
-  # One row per emitted domain event: the facts a write produced, drained from the aggregate's buffer (persistence.drain-events).
+  # RULE-2a (D47): the location of the file is part of the media value, so a frozen version's media row remembers it too — the shop
+  # resolves a file through it and a version without one would be unusable.
+  - changeSet:
+      id: 0003-offer-version-media-url
+      author: michal.michaluk
+      changes:
+        - addColumn:
+            tableName: offer_version_media
+            columns:
+              - column:
+                  name: url
+                  type: text
+                  constraints:
+                    nullable: false
+
   - changeSet:
       id: 0003-offer-history
       author: michal.michaluk

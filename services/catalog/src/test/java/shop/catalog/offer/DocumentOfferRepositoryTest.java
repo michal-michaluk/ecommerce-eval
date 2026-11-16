@@ -40,7 +40,21 @@ class DocumentOfferRepositoryTest {
         OfferEditor read = transactional(() -> repository.get(saved.offerId)).orElseThrow();
 
         assertThat(read.toSurface()).isEqualTo(saved.toSurface());
+        assertThat(read.toSurface().media()).extracting(Media::url)
+                .containsExactlyElementsOf(locationsOfInstanceA());
         OfferAssert.assertThat(read).hasState(State.DRAFT).hasVersion(0).hasNoAvailabilityStart();
+    }
+
+    /** RULE-2a: the location is part of the stored media array, so the JSONB round trip returns the same value. */
+    @Test
+    void keepsTheLocationOfEveryMediaItemTheDraftCarries() {
+        OfferEditor saved = OfferDocumentFixture.draftOfferWithMedia();
+        transactional(() -> repository.save(saved));
+
+        assertThat(contentOf(saved.offerId)).contains("https://cdn.example/M-01.jpg");
+        assertThat(transactional(() -> repository.get(saved.offerId)).orElseThrow().toSurface().media())
+                .extracting(Media::url)
+                .containsExactlyElementsOf(locationsOfInstanceA());
     }
 
     @Test
@@ -62,6 +76,7 @@ class DocumentOfferRepositoryTest {
         OfferEditor read = transactional(() -> repository.get(saved.offerId)).orElseThrow();
 
         assertThat(read.version(1)).isEqualTo(saved.version(1));
+        assertThat(read.version(1).media()).extracting(Media::url).containsExactlyElementsOf(locationsOfInstanceA());
         OfferAssert.assertThat(read)
                 .hasState(State.PUBLISHED)
                 .hasVersion(1)
@@ -195,6 +210,25 @@ class DocumentOfferRepositoryTest {
         assertThat(read).isEmpty();
     }
 
+    /** RULE-2a: a document that predates `url` has no location to read, so the migration refuses it (0003-offer-document-media-url). */
+    @Test
+    void refusesAStoredDocumentWhoseMediaCarriesNoLocation() {
+        String offerId = OfferDocumentFixture.uniqueOfferId();
+        jdbc.update("insert into offer_document (offer_id, version, state, content) values (?, 1, 'DRAFT', ?::jsonb)",
+                offerId, """
+                        { "description": { "title": "LEGO Star Wars 75423",
+                                           "identifiers": { "productNumber": "75423" },
+                                           "brand": { "name": "LEGO", "verified": true },
+                                           "condition": "NEW", "categoryPath": ["Zabawki"],
+                                           "blocks": [ { "paragraph": { "text": "Opis" } } ] },
+                          "media": [ { "mediaId": "M-01", "kind": "IMAGE", "position": 1, "primary": true,
+                                       "format": "jpg" } ] }
+                        """);
+
+        assertThatThrownBy(() -> repository.get(offerId))
+                .hasMessageContaining("a media item needs its location");
+    }
+
     private int lockOf(String offerId) {
         return jdbc.queryForObject("select version from offer_document where offer_id = ?", Integer.class, offerId);
     }
@@ -210,5 +244,9 @@ class DocumentOfferRepositoryTest {
     private String payloadOf(String offerId, String eventType) {
         return jdbc.queryForObject("select payload::text from offer_history where offer_id = ? and event_type = ?",
                 String.class, offerId, eventType);
+    }
+
+    private static List<String> locationsOfInstanceA() {
+        return OfferFixture.mediaOfInstanceA().stream().map(Media::url).toList();
     }
 }

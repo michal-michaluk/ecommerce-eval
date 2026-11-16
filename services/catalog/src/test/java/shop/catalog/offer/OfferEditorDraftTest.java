@@ -7,6 +7,7 @@ import shop.catalog.offer.OfferEvent.OfferDraftUpdated;
 import shop.catalog.offer.ProductDescription.Draft;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static shop.catalog.offer.OfferAssert.assertRefused;
@@ -123,6 +124,18 @@ class OfferEditorDraftTest {
         OfferEditor offer = draftOffer();
 
         assertRefused(OfferException.Error.COMMAND_VALUE_MISSING, () -> offer.updateMedia(null));
+    }
+
+    /** RULE-2a: a media item without a location is unusable, so the item is refused before it can enter the draft. */
+    @Test
+    void mediaWithoutALocationIsRefused() {
+        OfferEditor offer = draftOffer();
+
+        assertRefused(OfferException.Error.MEDIA_URL_MISSING,
+                () -> offer.updateMedia(List.of(OfferFixture.locatedImage("M-01", 1, true, " "))));
+        assertRefused(OfferException.Error.MEDIA_URL_MISSING,
+                () -> offer.updateMedia(List.of(OfferFixture.locatedImage("M-01", 1, true, null))));
+        Assertions.assertThat(offer.events).hasSize(1);
     }
 
     @Test

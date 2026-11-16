@@ -310,6 +310,8 @@ class DocumentOfferRepository implements OfferRepository {
         private boolean primaryMedia;
         @Column(name = "media_format")
         private String mediaFormat;
+        @Column(name = "url")
+        private String url;
 
         protected OfferVersionMediaEntity() {
         }
@@ -322,6 +324,7 @@ class DocumentOfferRepository implements OfferRepository {
             this.kind = source.kind();
             this.primaryMedia = source.primary();
             this.mediaFormat = source.format();
+            this.url = source.url();
         }
 
         static List<OfferVersionMediaEntity> frozenBy(String offerId, OfferVersion frozen) {
@@ -335,7 +338,7 @@ class DocumentOfferRepository implements OfferRepository {
         }
 
         Media toMedia() {
-            return new Media(mediaId, kind, mediaPosition, primaryMedia, mediaFormat);
+            return new Media(mediaId, kind, mediaPosition, primaryMedia, mediaFormat, url);
         }
     }
 
