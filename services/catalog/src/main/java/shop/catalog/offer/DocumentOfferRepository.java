@@ -13,6 +13,10 @@ import jakarta.persistence.Version;
 import org.hibernate.annotations.ColumnTransformer;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Primary;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import shop.catalog.offer.Offer.State;
@@ -53,6 +57,9 @@ class DocumentOfferRepository implements OfferRepository {
             .addMixIn(ProductDescription.DescriptionBlock.class, PolymorphicBlock.class)
             .build();
 
+    /** A page of offers is only a page if its order is stable, so the identity of the offer is the sort key (D16). */
+    private static final Sort BY_OFFER_ID = Sort.by("offerId");
+
     private final OfferDocuments documents;
     private final OfferVersions versions;
     private final OfferVersionMedia media;
@@ -73,6 +80,16 @@ class DocumentOfferRepository implements OfferRepository {
     @Override
     public Optional<OfferEditor> get(String offerId) {
         return documents.findById(offerId).map(this::rehydrate);
+    }
+
+    @Override
+    public List<OfferEditor> findAll(int page, int size) {
+        return documents.findAllBy(PageRequest.of(page, size, BY_OFFER_ID)).stream().map(this::rehydrate).toList();
+    }
+
+    @Override
+    public long count() {
+        return documents.count();
     }
 
     @Override
@@ -153,6 +170,12 @@ class DocumentOfferRepository implements OfferRepository {
     }
 
     interface OfferDocuments extends JpaRepository<OfferDocumentEntity, String> {
+
+        /**
+         * A {@code Slice}, not a {@code Page}: it reads one row more than asked and issues no count of its own, so the list route
+         * counts once, through {@link DocumentOfferRepository#count()} (D16).
+         */
+        Slice<OfferDocumentEntity> findAllBy(Pageable pageable);
     }
 
     interface OfferVersions extends JpaRepository<OfferVersionEntity, Long> {

@@ -21,6 +21,16 @@ public record Media(String mediaId, Kind kind, int position, boolean primary, St
         url = checkedUrl(url);
     }
 
+    /**
+     * The id of a file a client references by location only (D17, RULE-2a): it names the file itself, so the adapter never mints an
+     * identity and two versions of one picture keep the same id.
+     */
+    static String idOf(String url) {
+        String name = checkedUrl(url).substring(checkedUrl(url).lastIndexOf('/') + 1);
+        int extension = name.lastIndexOf('.');
+        return extension > 0 ? name.substring(0, extension) : name;
+    }
+
     private static String checkedUrl(String url) {
         if (url == null || url.isBlank()) {
             throw new OfferException(OfferException.Error.MEDIA_URL_MISSING, url);

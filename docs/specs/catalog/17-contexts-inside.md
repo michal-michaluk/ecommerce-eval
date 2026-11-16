@@ -18,10 +18,12 @@ flowchart LR
   end
   shopping["Shopping<br/>(other service)"]
 
-  offer -- "OfferDraftUpdated / OfferVersionFrozen / OfferRemoved (event)" --> reads
-  review -- "ReviewRequested / Accepted / Rejected / Withdrawn (event)" --> reads
+  offer -- "Offer (snapshot, carries the draft surface)" --> reads
+  review -- "Review (snapshot)" --> reads
   pricing -- "PricingChanged (event)" --> reads
   review -- "QualityFindings (contract port, mediator)" --> quality
+  reads -- "DraftFindings (contract port, mediator)" --> quality
+  reads -- "EffectivePrices (contract port, mediator)" --> pricing
   review -- "OfferPublication (contract port, mediator)" --> offer
   review -- "OfferDraftSnapshot (contract port, mediator)" --> offer
   offer -- "OfferVersionFrozen (event)" --> pricing
@@ -131,10 +133,17 @@ rows live.
 
 | Direction | Counterpart | Type | What crosses |
 |---|---|---|---|
-| ← | `offer` | event | `OfferDraftUpdated`, `OfferVersionFrozen`, `OfferRemoved` |
-| ← | `review` | event | `ReviewRequested`, `ReviewAccepted`, `ReviewRejected`, `ReviewWithdrawn` |
-| ← | `pricing` | event | `PricingChanged` |
+| ← | `offer` | event (snapshot) | `Offer` — state, availability date, the draft in builder form and its media |
+| ← | `review` | event (snapshot) | `Review` — the state, the requester, the frozen candidate's title and findings |
+| ← | `pricing` | event | `PricingChanged` — the whole price series and every discount |
+| → | `quality` | contract port + mediator | `DraftFindings` — the findings 14 renders |
+| → | `pricing` | contract port + mediator | `EffectivePrices` — 10's answer for the date 16 previews |
 | → | `tools` | dependency | `Clock` (visibility), clock for waiting time in 15 |
+
+The two producer edges carry a **snapshot**, not the domain events the graph of a pure event model would name: 02 and 04 publish their
+facts with identifiers only (`OfferDraftUpdated` is `{productId}`), while a projection copies what it is handed and asks nothing back
+(`integration.payload-complete`). The snapshot is published inside the same transaction as the write, so 17 RULE-5's read-your-writes
+holds for both.
 
 **Actors:** read side of all four roles (12 matrix).
 
