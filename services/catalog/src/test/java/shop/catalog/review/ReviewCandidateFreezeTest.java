@@ -76,7 +76,7 @@ class ReviewCandidateFreezeTest {
         ReviewProcess review = freeze(offers);
         offers.offer(OFFER_ID, editedContent());
         review.accept(REVIEWER, REVIEWED_AT);
-        int frozenVersion = publication.publish(review.toReview().candidate(), REVIEWED_AT, REVIEWER);
+        int frozenVersion = publication.publish(OFFER_ID, review.toReview().candidate(), REVIEWED_AT, REVIEWER);
         review.recordPublication(frozenVersion);
 
         Assertions.assertThat(publication.lastPublished().description()).isEqualTo(descriptionOfInstanceA());

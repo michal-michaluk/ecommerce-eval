@@ -1,6 +1,5 @@
 package shop.catalog.offer;
 
-import shop.catalog.offer.OfferVersion.Media;
 
 import java.util.List;
 
@@ -10,7 +9,8 @@ import java.util.List;
  * {@link Offer}, so they are not repeated here.
  *
  * <p>The persistence adapter writes it into the offer document. It stays inside the context: a consumer that needs the same content
- * declares its own record for it ({@code review.OfferContent}), because only {@link Offer} and {@link ProductDescription} are exposed.
+ * declares its own record for it ({@code review.OfferContent}), because a draft and its builder form are never exposed, while
+ * {@link Offer}, {@link ProductDescription}, {@link Media} and {@link OfferCandidate} are.
  */
 record OfferSurface(ProductDescription.Draft description, List<Media> media) {
 

@@ -107,6 +107,17 @@ public class ReviewCandidateFixture {
         return candidateOf(content(), List.of(missingEanGtin()));
     }
 
+    /** Two primaries, which 02 RULE-1 refuses when a version freezes — the content that makes a publication fail. */
+    public static List<ReviewMedia> mediaWithTwoPrimaries() {
+        return List.of(
+                new ReviewMedia("M-01", ReviewMedia.Kind.IMAGE, 1, true, "jpg"),
+                new ReviewMedia("M-02", ReviewMedia.Kind.IMAGE, 2, true, "jpg"));
+    }
+
+    public static ReviewCandidate candidateWithUnpublishableMedia() {
+        return candidateOf(contentWithMedia(descriptionOfInstanceA(), mediaWithTwoPrimaries()));
+    }
+
     public static ReviewCandidate candidateWithAStaleOverride(String actor) {
         return candidateOf(content(), List.of(), overrideBy(actor, blockingFindings()));
     }

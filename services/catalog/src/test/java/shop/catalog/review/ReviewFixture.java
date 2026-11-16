@@ -6,6 +6,7 @@ import shop.catalog.review.Review.State;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import static shop.catalog.review.ReviewCandidateFixture.candidate;
 
@@ -37,6 +38,26 @@ public class ReviewFixture {
 
     public static ReviewRequest nextRequest(ReviewCandidate candidate) {
         return new ReviewRequest(NEXT_REVIEW_ID, OFFER_ID, AUTHOR, REQUESTED_AT, candidate);
+    }
+
+    /** A request for one attempt of one offer, for a test that needs both identifiers of its own. */
+    public static ReviewRequest request(String reviewId, String offerId, ReviewCandidate candidate) {
+        return request(reviewId, offerId, REQUESTED_AT, candidate);
+    }
+
+    /** The same request at a moment of the test's choosing, so the offer's attempt history has an order. */
+    public static ReviewRequest request(String reviewId, String offerId, Instant requestedAt, ReviewCandidate candidate) {
+        return new ReviewRequest(reviewId, offerId, AUTHOR, requestedAt, candidate);
+    }
+
+    /** An attempt no other test has used: a committed test leaves its rows behind, and RULE-7 never reuses a review id. */
+    public static String aNewReviewId() {
+        return "RV-" + UUID.randomUUID();
+    }
+
+    /** An offer no other test has used, so RULE-1's history of one offer stays inside one test. */
+    public static String aNewOfferId() {
+        return "PRD-" + UUID.randomUUID();
     }
 
     public static ReviewProcess aRequestedReview() {
@@ -129,6 +150,22 @@ public class ReviewFixture {
     public static ReviewEvent publicationBlocked() {
         return new ReviewEvent.ReviewPublicationBlocked(
                 OFFER_ID, REVIEW_ID, PublishDecision.BlockReason.FINDINGS);
+    }
+
+    /** The three facts one acceptance publishes, in the order the process accepted them (RULE-4, D34, 09). */
+    public static ReviewEvent[] aPublishedHistory(String offerId, String reviewId, int offerVersion) {
+        return new ReviewEvent[]{
+                new ReviewEvent.ReviewRequested(offerId, reviewId),
+                new ReviewEvent.ReviewAccepted(offerId, reviewId, null),
+                new ReviewEvent.ReviewPublicationRecorded(offerId, reviewId, offerVersion)};
+    }
+
+    /** The same acceptance when 09 refused to publish it: the block replaces the version (09 {@code PublishBlocked}). */
+    public static ReviewEvent[] aBlockedHistory(String offerId, String reviewId, PublishDecision.BlockReason reason) {
+        return new ReviewEvent[]{
+                new ReviewEvent.ReviewRequested(offerId, reviewId),
+                new ReviewEvent.ReviewAccepted(offerId, reviewId, null),
+                new ReviewEvent.ReviewPublicationBlocked(offerId, reviewId, reason)};
     }
 
     private static Review reviewOf(

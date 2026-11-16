@@ -1,1 +1,188 @@
 databaseChangeLog:
+
+  # The review as 04 freezes it: the lifecycle state, who asked and decided, the version the acceptance published, and the
+  # candidate captured at the request — the description by value and the media in the author's order, one JSONB document because
+  # nothing queries into it and every read loads it whole (RULE-3, D38). The columns outside it are the ones a query filters on
+  # (offer_id) and the facts the read side lists without a candidate: state, requester, reviewer, reason, published version.
+  - changeSet:
+      id: 0005-review-process
+      author: michal.michaluk
+      changes:
+        - createTable:
+            tableName: review_process
+            columns:
+              - column:
+                  name: review_id
+                  type: varchar(64)
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: review_process_pkey
+                    nullable: false
+              - column:
+                  name: version
+                  type: bigint
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+              - column:
+                  name: offer_id
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: state
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: requested_by
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: requested_at
+                  type: timestamptz
+                  constraints:
+                    nullable: false
+              - column:
+                  name: reviewed_by
+                  type: varchar(255)
+              - column:
+                  name: reviewed_at
+                  type: timestamptz
+              - column:
+                  name: reason
+                  type: varchar(1024)
+              - column:
+                  name: published_offer_version
+                  type: int
+              - column:
+                  name: availability_start
+                  type: date
+              - column:
+                  name: override_actor
+                  type: varchar(255)
+              - column:
+                  name: override_recorded_at
+                  type: timestamptz
+              - column:
+                  name: candidate
+                  type: jsonb
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: review_process
+            indexName: review_process_offer_id_idx
+            columns:
+              - column:
+                  name: offer_id
+        # RULE-1 backed at the schema level: at most one review of an offer is open at a time. The aggregate refuses the second
+        # request; the partial index makes a lost race a failure instead of two reviewers deciding the same candidate.
+        - sql:
+            sql: |
+              CREATE UNIQUE INDEX review_process_open_review_idx
+                  ON review_process (offer_id) WHERE state = 'REQUESTED';
+            rollback: DROP INDEX review_process_open_review_idx;
+
+  # One row per finding the frozen candidate carries: the report 08 gave at the request and the findings an override takes
+  # responsibility for, told apart by `source` and ordered by `finding_position`. No foreign key: parent and children are written
+  # in one flush by one adapter, and Hibernate does not order inserts between unrelated entities.
+  - changeSet:
+      id: 0005-review-finding
+      author: michal.michaluk
+      changes:
+        - createTable:
+            tableName: review_finding
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: review_finding_pkey
+                    nullable: false
+              - column:
+                  name: review_id
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: source
+                  type: varchar(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: finding_position
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: rule
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: field
+                  type: varchar(128)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: severity
+                  type: varchar(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: message
+                  type: varchar(1024)
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: review_finding
+            indexName: review_finding_review_id_idx
+            columns:
+              - column:
+                  name: review_id
+
+  # One row per emitted domain event: the facts a write produced, drained from the aggregate's buffer (persistence.drain-events).
+  - changeSet:
+      id: 0005-review-history
+      author: michal.michaluk
+      changes:
+        - createTable:
+            tableName: review_history
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: review_history_pkey
+                    nullable: false
+              - column:
+                  name: review_id
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: recorded_at
+                  type: timestamptz
+                  constraints:
+                    nullable: false
+              - column:
+                  name: event_type
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: payload
+                  type: jsonb
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: review_history
+            indexName: review_history_review_id_idx
+            columns:
+              - column:
+                  name: review_id
