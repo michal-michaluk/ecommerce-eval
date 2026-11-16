@@ -7,6 +7,7 @@ import shop.catalog.IntegrationTest;
 import shop.catalog.offer.Offer;
 import shop.catalog.offer.OfferDocumentFixture;
 import shop.catalog.offer.OfferService;
+import shop.catalog.offer.ProductDescription;
 import shop.catalog.offer.ProductDescriptionDraftFixture;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -16,7 +17,7 @@ import static shop.catalog.TestTransaction.transactional;
 /**
  * D38 and D34 across two contexts: the request freezes the candidate from the offer as it stands, the author edits the draft
  * afterwards, and accepting the review publishes the <em>candidate</em> — one version, once — through the offer context's own
- * {@code OfferService}. Nothing here reaches an offer editor: the exchange goes through the two contract ports 04 declares.
+ * {@code OfferService}. Nothing here reaches an offer editor: the exchange goes through the offer's contract ports.
  */
 @IntegrationTest
 class ReviewPublicationIntegrationTest {
@@ -38,8 +39,7 @@ class ReviewPublicationIntegrationTest {
         ReviewCandidate frozen = freezes(offerId);
         String reviewId = ReviewFixture.aNewReviewId();
         transactional(() -> reviews.request(ReviewFixture.request(reviewId, offerId, frozen)));
-        transactional(() -> offers.updateDescription(offerId,
-                ProductDescriptionDraftFixture.draftWithTitle(ReviewCandidateFixture.EDITED_TITLE)));
+        transactional(() -> offers.updateDescription(offerId, anEditedTitle()));
 
         Review published = transactional(() -> reviews.decide(reviewId, ReviewFixture.REVIEWER)).orElseThrow();
 
@@ -109,6 +109,15 @@ class ReviewPublicationIntegrationTest {
         transactional(() -> offers.draftOffer(offerId, draft));
         transactional(() -> offers.scheduleAvailability(offerId, ReviewCandidateFixture.AVAILABILITY_START));
         return offerId;
+    }
+
+    /**
+     * RULE-9's partial edit: the change names the title and nothing else, so the offer keeps the identifiers it was drafted with.
+     * A commit-time test cannot borrow instance A's identifiers — the suite shares one database, and a second offer carrying them
+     * would break RULE-11 for whoever committed first.
+     */
+    private static ProductDescription.Draft anEditedTitle() {
+        return ProductDescription.Draft.builder().title(ReviewCandidateFixture.EDITED_TITLE).build();
     }
 
     private ReviewCandidate freezes(String offerId) {

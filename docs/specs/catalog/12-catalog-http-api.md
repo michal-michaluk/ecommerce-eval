@@ -80,7 +80,7 @@ Per `http-adapter.md`, five failure classes plus authorization, one owner each; 
 | malformed JSON, invalid command record (bad GTIN, bad basisPoints), unknown PATCH component | `400` | framework `@Valid` | `errors[]` with `field` |
 | unknown offer / review | `404` | handler | empty |
 | caller lacks the scope, or the draft component is outside it | `403` | framework security / one advice | `{reason: "FIELD_NOT_IN_SCOPE"}` for the component case, empty body otherwise |
-| state forbids the command (`MEDIA_PRIMARY_REQUIRED`, `QUALITY_FINDINGS`, `PRICE_ALREADY_STARTED`, `DISCOUNT_ALREADY_STARTED`, `DISCOUNT_CURRENCY_NOT_PRICED`, `REVIEW_ALREADY_OPEN`, `REVIEW_NOT_OPEN`, `OFFER_REMOVED`, `AVAILABILITY_START_MISSING`, `REMOVAL_NEEDS_PUBLICATION`) | `409` | one advice | `{reason, findings?}` |
+| state forbids the command (`MEDIA_IMAGE_MISSING`, `MEDIA_PRIMARY_AMBIGUOUS`, `MEDIA_POSITIONS_NOT_CONTIGUOUS`, `MEDIA_VIDEO_COUNT`, `QUALITY_FINDINGS`, `PRICE_ALREADY_STARTED`, `DISCOUNT_ALREADY_STARTED`, `DISCOUNT_CURRENCY_NOT_PRICED`, `REVIEW_ALREADY_OPEN`, `REVIEW_NOT_OPEN`, `OFFER_REMOVED`, `AVAILABILITY_START_MISSING`, `REMOVAL_NEEDS_PUBLICATION`) | `409` | one advice | `{reason, findings?}` |
 | optimistic-lock loss | `409` | one advice | retry hint |
 | anything unexpected | `500` | framework | empty (`include-message: never`) |
 
@@ -114,7 +114,9 @@ Per `http-adapter.md`, five failure classes plus authorization, one owner each; 
 - **D49 reasons must have a producer** — every `reason` in the table above is emitted by a real domain refusal; the wire vocabulary is
   the domain's, never a second list. Concretely: `MEDIA_IMAGE_MISSING` and `MEDIA_PRIMARY_AMBIGUOUS` replace the invented
   `MEDIA_PRIMARY_REQUIRED`, and `QUALITY_FINDINGS` is emitted by the review refusal that carries the blocking findings (D27/D38). The
-  prototype `catalog-http-api.hurl` must assert the produced names.
+  prototype `catalog-http-api.hurl` must assert the produced names. `POST /offers/{offerId}/review` asks the offer before it freezes
+  anything (`OfferReview`, 17 RULE-3), so that route answers the offer's media and removal refusals too — the same names the freeze
+  emits, never a review-side paraphrase.
 - **D50 `WITHDRAWAL_NEEDS_REQUESTER` is `409`, not `403`** — it is an identity/state rule (04 RULE-6), not a scope rule; 12's auth matrix
   lists it as a reviewer capability only because a reviewer happens to be the other party.
 - **D31 identifiers** — the offer has one identifier. HTTP exposes it as `offerId` (`OFR-` + 8 uppercase alphanumerics, server

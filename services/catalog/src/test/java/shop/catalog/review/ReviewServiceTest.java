@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static shop.catalog.review.ReviewCandidateFixture.candidate;
 import static shop.catalog.review.ReviewCandidateFixture.candidatePushedWithAnOverride;
 import static shop.catalog.review.ReviewCandidateFixture.content;
@@ -25,9 +26,9 @@ import static shop.catalog.review.ReviewFixture.aRequestedReview;
 import static shop.catalog.review.ReviewFixture.request;
 
 /**
- * The primary port against a fake repository and the three contract ports: every use case is one load, one command and one save, and
+ * The primary port against a fake repository and the four contract ports: every use case is one load, one command and one save, and
  * the decisions the service makes are the ones 04 and 09 own — publication on acceptance, the block the decision reports, and the
- * replay that publishes nothing.
+ * replay that publishes nothing. The request asks the offer first, so an offer that refuses it never sees a frozen candidate.
  */
 class ReviewServiceTest {
 
@@ -169,6 +170,30 @@ class ReviewServiceTest {
         Review withdrawn = service.withdraw(REVIEW_ID, AUTHOR).orElseThrow();
 
         ReviewAssert.assertThat(withdrawn).hasState(Review.State.WITHDRAWN).hasNoPublishedVersion();
+    }
+
+    @Test
+    void refusesAReviewRequestTheOfferRejectsBeforeItFreezesAnything() {
+        RuntimeException refused = new IllegalStateException("the offer refused the review");
+        ReviewService refusing = ReviewServiceFixture.service(
+                new FakeReviewRepository(), offers, publications, FakeOfferReview.refusing(refused), ReviewFixture.OVERRIDE_ENABLED);
+
+        assertThatThrownBy(() -> refusing.requestFor(OFFER_ID, AUTHOR, List.of())).isSameAs(refused);
+        assertThat(offers.reads()).isZero();
+        assertThat(reviews).isEmpty();
+    }
+
+    @Test
+    void asksTheOfferToEnterReviewForTheAttemptItOpens() {
+        FakeOfferReview offerReview = FakeOfferReview.accepting();
+        ReviewService asking = ReviewServiceFixture.service(
+                new FakeReviewRepository(), offers, publications, offerReview, ReviewFixture.OVERRIDE_ENABLED);
+
+        Review requested = asking.requestFor(OFFER_ID, AUTHOR, List.of());
+
+        assertThat(offerReview.asks()).isEqualTo(1);
+        assertThat(offerReview.lastAttempt()).isEqualTo(requested.reviewId());
+        assertThat(offers.reads()).isEqualTo(1);
     }
 
     @Test

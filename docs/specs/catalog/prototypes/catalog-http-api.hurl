@@ -292,7 +292,7 @@ Content-Type: application/json
 {}
 HTTP 409
 [Asserts]
-jsonpath "$.reason" == "MEDIA_PRIMARY_REQUIRED"
+jsonpath "$.reason" == "MEDIA_IMAGE_MISSING"
 
 # 409 — acceptance blocked by blocking findings, no override exists (09 R2)
 PATCH {{BASE_URL}}/offers/{{offer_with_findings}}/review
@@ -324,7 +324,9 @@ HTTP 409
 jsonpath "$.reason" == "PRICE_ALREADY_STARTED"
 
 # 409 — second open review for the same offer (04 RULE-1)
-POST {{BASE_URL}}/offers/{{offer_id}}/review
+# The offer is the one whose review the author started with an override above and nobody has decided yet: `{{offer_id}}` is removed
+# by now, and the request asks the offer first (12 D49, 17 RULE-3), so it would answer OFFER_REMOVED instead.
+POST {{BASE_URL}}/offers/{{offer_with_findings}}/review
 Authorization: Bearer {{author_token}}
 Content-Type: application/json
 {}
