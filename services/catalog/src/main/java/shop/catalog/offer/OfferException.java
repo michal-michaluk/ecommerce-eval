@@ -19,7 +19,20 @@ class OfferException extends RuntimeException {
         PARAMETER_CODE_DUPLICATED("parameter code '%s' appears more than once"),
         PARAMETER_VALUE_MISSING("parameter '%s' carries no value"),
         DESCRIPTION_BLOCKS_MISSING("at least one description block is required"),
-        PARAGRAPH_BLOCK_MISSING("at least one paragraph block is required");
+        PARAGRAPH_BLOCK_MISSING("at least one paragraph block is required"),
+        COMMAND_VALUE_MISSING("%s is required for this command"),
+        OFFER_REMOVED("offer %s is removed and can never be changed again"),
+        REMOVAL_NEEDS_PUBLICATION("only a published offer can be removed, offer %s is %s"),
+        PRODUCT_NUMBER_TAKEN("productNumber '%s' is already carried by another offer"),
+        EAN_GTIN_TAKEN("eanGtin '%s' is already carried by another offer"),
+        MEDIA_IMAGE_MISSING("offer %s needs at least one image before a review can be requested"),
+        MEDIA_PRIMARY_AMBIGUOUS("offer %s needs exactly one primary image, got %s"),
+        MEDIA_POSITIONS_NOT_CONTIGUOUS("offer %s needs media positions contiguous from 1, got %s"),
+        MEDIA_VIDEO_COUNT("offer %s allows at most one video, got %s"),
+        OFFER_VERSION_MISSING("offer %s has no version %s"),
+        AVAILABILITY_START_MISSING("offer %s needs an availabilityStart before a version can be frozen"),
+        REVIEW_OPEN("offer %s is under review; published content cannot change until the review is decided"),
+        OFFER_VERSION_NUMBER_INVALID("offer version numbers start at 1, got %s");
 
         private final String template;
 
