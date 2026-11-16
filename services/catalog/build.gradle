@@ -149,6 +149,17 @@ tasks.register("trivyScanImage", Exec) {
 
 jacocoTestCoverageVerification {
     dependsOn jacocoTestReport
+    // Measure exactly what the gate claims to measure: the bounded contexts. The `onlyIf` below already
+    // defines a context as a package that is neither `tools` nor `mediators`; without the same filter here
+    // the bundle also counts the skeleton's infrastructure, so a context at 100 % can never reach 80 %.
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                    '**/tools/**', '**/mediators/**',
+                    '**/AppRunner*', '**/AppConfiguration*', '**/*package-info*'
+            ])
+        }))
+    }
     // The skeleton ships no business context, so there is nothing to cover yet. A context is a package under the root
     // that is neither `tools` nor `mediators`; while none exists the gate stays off instead of demanding 80% of nothing.
     onlyIf {

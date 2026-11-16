@@ -75,7 +75,7 @@ compute the active price.
 
 **Actors:** Sales.
 
-**Components:** *Editor* `PricingModel` (living configuration with history); *Policy* `ActivePriceCalculation` (10) — the only place
+**Components:** *Editor* `PricingModelEditor` (aggregate, package-private; living configuration with history); *Snapshot* `PricingModel`; *Policy* `ActivePriceCalculation` (10) — the only place
 where stacking (D3) and currency precision (D1) live.
 
 ## Subdomain: review
