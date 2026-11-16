@@ -50,7 +50,7 @@ by `review` through the port) · revert · remove.
 
 **Actors:** ContentAuthor, ContentReviewer (revert, removal), Photographer (media component only).
 
-**Components:** *Editor* `Offer.Draft`; *Value Object in the shared kernel* `ProductDescription` (+ `Draft`, nested components); *Definition* `OfferVersion`;
+**Components:** *Editor* `OfferEditor` (aggregate, package-private); *Value Object in the shared kernel* `ProductDescription` (+ `Draft`, nested components); *Snapshot* `Offer`; *Definition* `OfferVersion`;
 *Invariant* the offer aggregate — one primary image, contiguous positions, availability date shape, immutable versions (02 RULE-1…11).
 
 `ProductDescription` is exported from this context and listed in `sharedKernelExposed`; it carries no identity or lifecycle, so `pricing`,

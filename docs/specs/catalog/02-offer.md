@@ -85,10 +85,18 @@ version, not a state.
 
 ## Implementation note
 
-Two files, one concept each: `Offer.java` (editor + frozen version + lifecycle) and `ProductDescription.java`
-(the Definition and its nested `Draft`, per `01-product-description.md`). The draft reuses the components declared in
-`ProductDescription.java` — `Identifiers`, `Parameter`, `DescriptionBlock` (+ sealed alternatives) — so no second
-shape of the same content exists.
+Four files, one concept each, named as `domain-model-aggregate.md:33` prescribes — the **editor** aggregate carries the role
+suffix, the bare business noun is the snapshot record:
+
+- `OfferEditor.java` — the package-private aggregate: draft surface, lifecycle commands, revert/removal, and the
+  `final List<OfferEvent> events` buffer (`domain-model-aggregate.md:35`). This is the only writer.
+- `Offer.java` — the public snapshot record published after a write: id, state, current version number, `availabilityStart`.
+- `OfferVersion.java` — the frozen version: version number, the embedded `ProductDescription` **by value** (RULE-4), media,
+  `publishedAt`/`publishedBy`, `copiedFrom`.
+- `ProductDescription.java` — the Definition and its nested `Draft` (01).
+
+The draft reuses the components declared in `ProductDescription.java` — `Identifiers`, `Parameter`, `DescriptionBlock` (+ sealed
+alternatives) — so no second shape of the same content exists.
 
 ## Decisions taken at acceptance
 
