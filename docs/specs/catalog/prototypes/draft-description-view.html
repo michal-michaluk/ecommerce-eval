@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<title>catalog — DraftDescriptionView (low-fi)</title>
+<style>
+  :root { --ink:#1b1f24; --muted:#5c6672; --line:#d8dee6; --bg:#f6f7f9; --ok:#1f7a45; --bad:#b3261e; --warn:#8a5a00 }
+  * { box-sizing:border-box }
+  body { margin:0; font:14px/1.45 -apple-system,Segoe UI,Roboto,sans-serif; color:var(--ink); background:var(--bg) }
+  header { display:flex; gap:12px; align-items:center; padding:10px 18px; background:#fff; border-bottom:1px solid var(--line) }
+  header .role { margin-left:auto; font-size:12px; color:var(--muted) }
+  main.screen { display:none; grid-template-columns: 1fr 380px; gap:18px; padding:18px; max-width:1320px }
+  section.card { background:#fff; border:1px solid var(--line); border-radius:8px; padding:14px }
+  h1 { font-size:18px; margin:0 0 4px }
+  h2 { font-size:13px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); margin:0 0 10px }
+  .row { display:grid; grid-template-columns:180px 1fr; gap:10px; padding:5px 0; border-bottom:1px dashed var(--line) }
+  .row:last-child { border-bottom:0 }
+  .row .k { color:var(--muted) }
+  .empty { color:var(--muted); font-style:italic }
+  .block { border:1px solid var(--line); border-radius:6px; padding:8px 10px; margin:8px 0 }
+  .block .tag { font-size:11px; color:var(--muted); text-transform:uppercase }
+  .media { display:flex; gap:10px; flex-wrap:wrap }
+  .thumb { width:92px; height:69px; border:1px solid var(--line); border-radius:6px; display:grid; place-items:center; font-size:11px; color:var(--muted); background:#fbfcfd }
+  .thumb.primary { outline:2px solid var(--ok) }
+  .findings li { margin:6px 0 }
+  .sev-blocking { color:var(--bad); font-weight:600 }
+  .sev-warning { color:var(--warn); font-weight:600 }
+  .okline { color:var(--ok); font-weight:600 }
+  .actions { display:flex; gap:10px; margin-top:14px; flex-wrap:wrap }
+  button { font:inherit; padding:9px 14px; border-radius:6px; border:1px solid var(--line); background:#fff; cursor:pointer }
+  button.primary { background:var(--ink); color:#fff; border-color:var(--ink) }
+  button[disabled] { opacity:.5; cursor:not-allowed }
+  .why { font-size:12px; color:var(--muted); margin-top:6px }
+  a.nav { color:#0b5cad }
+  .screen.on { display:grid }
+  .hint { font-size:12px; color:var(--muted); padding:0 18px 18px }
+  nav.crumbs { padding:8px 18px; font-size:12px; color:var(--muted) }
+</style>
+</head>
+<body>
+
+<header>
+  <strong>catalog</strong>
+  <span style="color:var(--muted)">/ oferty / PRD-75423</span>
+  <span class="role">Zalogowany: <b>ContentAuthor</b> · zakres: <code>catalog-author</code></span>
+</header>
+
+<nav class="crumbs">
+  Ekrany: <a class="nav" href="#/draft-empty">pusty szkic</a> ·
+  <a class="nav" href="#/draft-in-progress">szkic w toku</a> ·
+  <a class="nav" href="#/draft-ready">gotowy do przeglądu</a> ·
+  <a class="nav" href="#/review-requested">przegląd zgłoszony</a>
+</nav>
+
+<!-- ── Ekran 1: pusty szkic ─────────────────────────────────────────────────────────────── -->
+<main class="screen" id="/draft-empty">
+  <section class="card">
+    <h1>LEGO Star Wars SMART Play X-Wing Czerwona Piątka Luke'a 75423</h1>
+    <p class="empty">Szkic utworzony przed chwilą — puste pola nie blokują edycji, blokują publikację.</p>
+    <h2>Opis produktu</h2>
+    <div class="row"><span class="k">Tytuł</span><span>LEGO Star Wars SMART Play X-Wing Czerwona Piątka Luke'a 75423</span></div>
+    <div class="row"><span class="k">Numer produktu</span><span>75423</span></div>
+    <div class="row"><span class="k">EAN (GTIN)</span><span class="empty">— brak</span></div>
+    <div class="row"><span class="k">Kategoria</span><span>Dziecko / Zabawki / Klocki / LEGO / Zestawy / Star Wars</span></div>
+    <div class="row"><span class="k">Parametry</span><span class="empty">— brak (LEGO wymaga: condition, childAge, pieceCount, gender, certificates, safetyInfo)</span></div>
+    <h2>Opis</h2>
+    <div class="block"><span class="tag">paragraph</span> <span class="empty">— brak treści</span></div>
+    <h2>Zdjęcia</h2>
+    <div class="media"><div class="thumb">brak zdjęć</div></div>
+    <h2>Dostępność</h2>
+    <div class="row"><span class="k">Data dostępności</span><span class="empty">— brak</span></div>
+  </section>
+
+  <aside class="card">
+    <h2>Kontrola jakości (08 QualityPolicy)</h2>
+    <ul class="findings">
+      <li><span class="sev-blocking">QP-2</span> EAN (GTIN) brak</li>
+      <li><span class="sev-blocking">QP-4</span> brak zdjęcia</li>
+      <li><span class="sev-blocking">QP-5</span> brak zdjęcia głównego</li>
+      <li><span class="sev-blocking">QP-6</span> opis 0 / 1000 znaków, brak akapitu</li>
+      <li><span class="sev-blocking">QP-10</span> brakuje: condition, childAge, pieceCount, gender, certificates, safetyInfo</li>
+    </ul>
+    <div class="actions">
+      <a href="#/draft-in-progress"><button class="primary">Uzupełnij szkic</button></a>
+      <button disabled>Poproś o przegląd</button>
+    </div>
+    <p class="why">„Poproś o przegląd” nieaktywne: 5 reguł blokujących (QP-2, QP-4, QP-5, QP-6, QP-10).</p>
+  </aside>
+</main>
+
+<!-- ── Ekran 2: szkic w toku ────────────────────────────────────────────────────────────── -->
+<main class="screen" id="/draft-in-progress">
+  <section class="card">
+    <h1>LEGO Star Wars SMART Play X-Wing Czerwona Piątka Luke'a 75423</h1>
+    <p class="empty">Autozapis 12:04. Zdjęcia dodaje fotograf — ten ekran nie pozwala ich zmieniać.</p>
+    <h2>Opis produktu</h2>
+    <div class="row"><span class="k">Tytuł</span><span>LEGO Star Wars SMART Play X-Wing Czerwona Piątka Luke'a 75423</span></div>
+    <div class="row"><span class="k">Numer produktu</span><span>75423</span></div>
+    <div class="row"><span class="k">EAN (GTIN)</span><span>5702017817705 ✓</span></div>
+    <div class="row"><span class="k">Kategoria</span><span>Dziecko / Zabawki / Klocki / LEGO / Zestawy / Star Wars</span></div>
+    <div class="row"><span class="k">Parametry</span><span>condition · childAge 6+ · pieceCount 581 · gender (3) · certificates (2) · safetyInfo</span></div>
+    <h2>Opis</h2>
+    <div class="block"><span class="tag">paragraph</span> Odkryj nową galaktykę LEGO® Star Wars™ dzięki interaktywnej zabawce konstrukcyjnej X-Wing™ Czerwona Piątka Luke'a (75423)…</div>
+    <div class="block"><span class="tag">paragraph</span> Posłuchaj ryku silnika podczas lotu myśliwca X-wing. Aktywuj dźwięki strzałów laserowych…</div>
+    <div class="block"><span class="tag">bulletList</span> 3 punkty (aktywacja ruchem, SMART klocek, dźwięki i światła)</div>
+    <h2>Zdjęcia</h2>
+    <div class="media">
+      <div class="thumb primary">M-01<br>główne</div>
+      <div class="thumb">M-02</div>
+      <div class="thumb">M-03<br>wideo 18 s</div>
+      <div class="thumb" style="opacity:.45">+ dodaj (fotograf)</div>
+    </div>
+    <h2>Dostępność</h2>
+    <div class="row"><span class="k">Data dostępności</span><span>2026-07-01</span></div>
+  </section>
+
+  <aside class="card">
+    <h2>Kontrola jakości (08 QualityPolicy)</h2>
+    <ul class="findings">
+      <li><span class="sev-blocking">QP-6</span> opis 620 / 1000 znaków</li>
+      <li><span class="sev-warning">QP-8</span> pozycje zdjęć 1, 2, 3 — OK, ostrzeżenie o jednym wideo nie występuje</li>
+    </ul>
+    <div class="actions">
+      <a href="#/draft-ready"><button class="primary">Dopisz brakujące 380 znaków</button></a>
+      <button disabled>Poproś o przegląd</button>
+    </div>
+    <p class="why">„Poproś o przegląd” nieaktywne: 1 reguła blokująca (QP-6).</p>
+  </aside>
+</main>
+
+<!-- ── Ekran 3: gotowy do przeglądu ─────────────────────────────────────────────────────── -->
+<main class="screen" id="/draft-ready">
+  <section class="card">
+    <h1>LEGO Star Wars SMART Play X-Wing Czerwona Piątka Luke'a 75423</h1>
+    <p class="okline">Szkic spełnia politykę jakości — można zgłosić do przeglądu.</p>
+    <h2>Opis produktu</h2>
+    <div class="row"><span class="k">EAN (GTIN)</span><span>5702017817705 ✓</span></div>
+    <div class="row"><span class="k">Parametry</span><span>condition · childAge 6+ · pieceCount 581 · gender (3) · certificates (2) · safetyInfo</span></div>
+    <h2>Opis</h2>
+    <div class="block"><span class="tag">paragraph</span> Odkryj nową galaktykę LEGO® Star Wars™…</div>
+    <div class="block"><span class="tag">paragraph</span> Posłuchaj ryku silnika podczas lotu myśliwca X-wing…</div>
+    <div class="block"><span class="tag">paragraph</span> Dzięki aplikacji LEGO SMART Assist możesz pomóc dzieciom rozpocząć zabawę…</div>
+    <div class="block"><span class="tag">bulletList</span> 8 punktów</div>
+    <p class="empty">Suma treści: 1 626 znaków (próg 1 000).</p>
+    <h2>Zdjęcia</h2>
+    <div class="media">
+      <div class="thumb primary">M-01<br>główne</div>
+      <div class="thumb">M-02</div>
+      <div class="thumb">M-03<br>wideo 18 s</div>
+    </div>
+    <h2>Dostępność</h2>
+    <div class="row"><span class="k">Data dostępności</span><span>2026-07-01 — oferta ukryta do tej daty</span></div>
+  </section>
+
+  <aside class="card">
+    <h2>Kontrola jakości (08 QualityPolicy)</h2>
+    <p class="okline">Brak uwag — 0 reguł blokujących, 0 ostrzeżeń.</p>
+    <div class="actions">
+      <a href="#/review-requested"><button class="primary">Poproś o przegląd</button></a>
+      <button>Zapisz i zamknij</button>
+    </div>
+    <p class="why">Zgłoszenie zamraża kandydata (04 RULE-3) — dalsze edycje nie zmienią tego, co zobaczy recenzent.</p>
+  </aside>
+</main>
+
+<!-- ── Ekran 4: przegląd zgłoszony ──────────────────────────────────────────────────────── -->
+<main class="screen" id="/review-requested">
+  <section class="card">
+    <h1>Przegląd zgłoszony — RV-12</h1>
+    <p class="empty">Szkic jest zablokowany do decyzji recenzenta. Możesz wycofać zgłoszenie.</p>
+    <div class="row"><span class="k">Zgłosił</span><span>author.nowak · 2025-06-14 09:10</span></div>
+    <div class="row"><span class="k">Recenzent</span><span>reviewer.kowalska (przegląd otwarty)</span></div>
+    <div class="row"><span class="k">Kandydat</span><span>zamrożony: opis 1 626 znaków, 3 zdjęcia, dostępność 2026-07-01</span></div>
+    <div class="row"><span class="k">Uwagi przy zgłoszeniu</span><span class="okline">0</span></div>
+    <div class="actions">
+      <a href="#/draft-in-progress"><button>Wycofaj zgłoszenie</button></a>
+      <button disabled>Edytuj szkic</button>
+    </div>
+    <p class="why">„Edytuj szkic” nieaktywne: przegląd otwarty (04 RULE-1).</p>
+  </section>
+
+  <aside class="card">
+    <h2>Co dalej</h2>
+    <ul class="findings">
+      <li>recenzent akceptuje → nowa wersja oferty 1 (D5, D15)</li>
+      <li>recenzent odrzuca → powrót do szkicu z uzasadnieniem (04 RULE-5)</li>
+      <li>oferta pozostaje ukryta do 2026-07-01 (11 R1/R2)</li>
+    </ul>
+  </aside>
+</main>
+
+<p class="hint">Low-fi prototyp (Case C): brak frameworka, brak danych z backendu, nawigacja przez <code>#/…</code>. Ekrany 15 i 16 są opisane osobno.</p>
+
+<script>
+  function show() {
+    var hash = location.hash || '#/draft-empty';
+    document.querySelectorAll('.screen').forEach(function (s) {
+      s.classList.toggle('on', '#' + s.id === hash);
+    });
+  }
+  addEventListener('hashchange', show);
+  show();
+</script>
+</body>
+</html>
