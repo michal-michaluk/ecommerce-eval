@@ -324,6 +324,7 @@ Plan tickets (both top level: #1 has no parent):
 - **Goal:** implement element 02 as pure domain — the offer editor, its frozen versions, its lifecycle and its invariants, with no persistence and no framework
 - **Executor:** general
 - **Docs:** `02-offer.md` (RULE-1…RULE-11, Q11), `01-product-description.md`; `domain-model-aggregate.md`, `domain-model-events.md`, `ports.md` (secondary port + fake), `error-handling.md`, `testing.md`
+- **Proof the shape gate is live:** `sqt explain src/main/java/shop/catalog/offer/Offer.java` must report `is.aggregate true` and all `aggregate.*` checks applied — the classifier was fixed for immutable aggregates (`class_declaration + has.id + has.events`), so an `Offer` without an `id`/`events` pair silently escapes every aggregate rule
 - **IN / OUT:** IN: `description-kernel`; OUT: `src/main/java/shop/catalog/offer/{Offer,OfferEvent,OfferException}.java`, `offer/OfferRepository.java` (secondary port), `offer/OfferRegistry.java` (population-uniqueness port, 02 RULE-11), fixtures + tests. No `@Entity`, no Liquibase, no `@Service`, no `@Component`, no controller. Does NOT touch `ProductDescription.java`, `application.yml`
 - **checks:**
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; ./gradlew test --tests 'shop.catalog.offer.*'`
@@ -567,7 +568,8 @@ Plan tickets (both top level: #1 has no parent):
 | http-* | JaCoCo gate arms at 80 % the moment a context exists | each node carries `./gradlew build`, so coverage is enforced from node 1 |
 | offer-domain / pricing-domain | 02 and 03 were originally planned together with persistence, which hides the model behind adapters | split into `*-domain` (no Spring, no JPA, no Liquibase, secondary ports only) and `*-application` (service + adapter + schema) |
 | domain-review-hitl | the plan had no place to stop for the operator | a HALT node after the two domain slices; nothing after it runs before `status: approved` |
-| context-skeleton | the node put the five arch tests in `shop.catalog`, while `arch-unit.md` (`archunit.context-test-location`) and the reference app put each test inside its context package — and the plan's `--tests 'shop.catalog.ArchitectureOf*Test'` filter then matched nothing | tests moved to `shop.catalog.{offer,pricing,quality,reads,review}`; every arch gate now uses `--tests '*ArchitectureOf*Test'` (updated in §Prove of Done P2 and in the node) |
+| context-skeleton | the node put the five arch tests in `shop.catalog`
+| offer-domain (gate defect) | `is.aggregate` in `src/main/java/.sqt.yaml` required `is.entity`, i.e. `is.mutable`; the immutable editor of 02 RULE-9 was therefore invisible and all 13 `aggregate.*` checks were silently skipped (probe: 0 violations before, 5 after) | `is.aggregate` broadened to `class_declaration + has.id + is.top-level + has.events`; coverage went up, no threshold changed. `offer-domain` must prove `is.aggregate: true` for `Offer` with `sqt explain` before it closes |, while `arch-unit.md` (`archunit.context-test-location`) and the reference app put each test inside its context package — and the plan's `--tests 'shop.catalog.ArchitectureOf*Test'` filter then matched nothing | tests moved to `shop.catalog.{offer,pricing,quality,reads,review}`; every arch gate now uses `--tests '*ArchitectureOf*Test'` (updated in §Prove of Done P2 and in the node) |
 | e2e-harness | the prototype reads 10 variables it never captures and asserts a wall-clock-dependent visibility | captures + fixture offers + run-relative dates (F9/F16/D32) |
 
 ### Open Topics

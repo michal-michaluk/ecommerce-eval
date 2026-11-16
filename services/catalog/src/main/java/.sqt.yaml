@@ -65,9 +65,13 @@ utils:
     inside: { stopBy: neighbor, kind: program }
 
   # An AGGREGATE is a top-level entity that collects domain events.
+  # An aggregate is a class with its own id and a domain-event buffer. It is deliberately NOT keyed on
+  # `is.entity` (which requires `is.mutable`): spec 02 RULE-9 makes the editor immutable, and keying on
+  # mutability would silently skip all thirteen `aggregate.*` checks for exactly the aggregates we build.
   is.aggregate:
     all:
-      - matches: is.entity
+      - kind: class_declaration
+      - matches: has.id
       - matches: is.top-level
       - matches: has.events
 
