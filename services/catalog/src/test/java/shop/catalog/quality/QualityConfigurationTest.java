@@ -18,6 +18,8 @@ class QualityConfigurationTest {
     QualityProperties properties;
     @Autowired
     QualityConfig config;
+    @Autowired
+    QualityPolicy policy;
 
     @Test
     void bindsTheShippedBlockIntoTheBeanThePolicyReads() {
@@ -29,5 +31,10 @@ class QualityConfigurationTest {
             assertThat(category.parameters()).hasSize(6);
         });
         assertThat(config.severityOverrides()).isEmpty();
+    }
+
+    @Test
+    void handsThePolicyTheConfiguredValueTheMediatorOfTheEdgeInjects() {
+        assertThat(policy.config()).isSameAs(config);
     }
 }

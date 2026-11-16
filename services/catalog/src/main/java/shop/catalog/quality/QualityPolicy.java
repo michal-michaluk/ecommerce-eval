@@ -1,5 +1,6 @@
 package shop.catalog.quality;
 
+import shop.catalog.offer.Media;
 import shop.catalog.offer.ProductDescription;
 import shop.catalog.offer.ProductDescription.DescriptionBlock;
 import shop.catalog.offer.ProductDescription.DescriptionBlock.BulletList;
@@ -47,15 +48,22 @@ import java.util.stream.Stream;
  * <p>The category path is an input of its own rather than a component read off the draft, as 08 types the call: the argument
  * decides which category the draft is judged in, and {@code Draft.categoryPath()} is never read, so a path that differs from the
  * draft's own component judges the draft in the category it is about to be listed in.
+ *
+ * <p>{@code media} is the offer's own media value: the review and the offer both hold {@link Media}, so 08 judges the items a
+ * candidate froze instead of a copy of them (D45).
+ *
+ * <p>The policy and its answer are public for exactly one reason: the mediator of the {@code review → quality} edge names them
+ * (D42, 17 RULE-1). No other type of this context widens; {@link QualityConfig} stays internal, because the mediator injects the
+ * policy bean and never the configuration behind it.
  */
-record QualityPolicy(QualityConfig config) {
+public record QualityPolicy(QualityConfig config) {
 
     private static final int TITLE_MAX_LENGTH = 200;
     private static final int ONE_ITEM = 1;
     private static final Comparator<QualityFindings.Finding> BY_RULE_NUMBER =
             Comparator.comparingInt(finding -> finding.rule().number());
 
-    QualityPolicy {
+    public QualityPolicy {
         Objects.requireNonNull(config, "config");
     }
 
@@ -73,10 +81,10 @@ record QualityPolicy(QualityConfig config) {
      * <p>A category path that matches no configured prefix produces no QP-10…QP-12 finding, while the universal rules always
      * apply; the longest matching prefix wins and the first match is final, so the same inputs always report the same list.
      */
-    QualityFindings calculateFindings(
-            ProductDescription.Draft draft, List<MediaItem> media, List<String> categoryPath) {
+    public QualityFindings calculateFindings(
+            ProductDescription.Draft draft, List<Media> media, List<String> categoryPath) {
         Objects.requireNonNull(draft, "draft");
-        List<MediaItem> items = media == null ? List.of() : List.copyOf(media);
+        List<Media> items = media == null ? List.of() : List.copyOf(media);
         QualityConfig.CategoryParameters category = matchedCategory(categoryPath);
         List<QualityFindings.Finding> findings = new ArrayList<>(universalFindings(draft, items));
         if (category != null) {
@@ -91,7 +99,7 @@ record QualityPolicy(QualityConfig config) {
     }
 
     private List<QualityFindings.Finding> universalFindings(
-            ProductDescription.Draft draft, List<MediaItem> media) {
+            ProductDescription.Draft draft, List<Media> media) {
         return Stream.of(
                         titleFindings(draft),
                         identifierFindings(draft),
@@ -121,7 +129,7 @@ record QualityPolicy(QualityConfig config) {
     }
 
     private List<QualityFindings.Finding> blockFindings(
-            ProductDescription.Draft draft, List<MediaItem> media) {
+            ProductDescription.Draft draft, List<Media> media) {
         List<DescriptionBlock> blocks = blocksOf(draft);
         return Stream.of(proseFindings(blocks), unknownMediaFindings(blocks, media))
                 .flatMap(List::stream)
@@ -141,8 +149,8 @@ record QualityPolicy(QualityConfig config) {
     }
 
     private static List<QualityFindings.Finding> unknownMediaFindings(
-            List<DescriptionBlock> blocks, List<MediaItem> media) {
-        Set<String> mediaIds = media.stream().map(MediaItem::mediaId).collect(Collectors.toSet());
+            List<DescriptionBlock> blocks, List<Media> media) {
+        Set<String> mediaIds = media.stream().map(Media::mediaId).collect(Collectors.toSet());
         List<QualityFindings.Finding> findings = new ArrayList<>();
         for (int index = 0; index < blocks.size(); index++) {
             if (blocks.get(index) instanceof Image image && !mediaIds.contains(image.mediaId())) {
@@ -152,29 +160,37 @@ record QualityPolicy(QualityConfig config) {
         return findings;
     }
 
-    private static List<QualityFindings.Finding> mediaFindings(List<MediaItem> media) {
+    private static List<QualityFindings.Finding> mediaFindings(List<Media> media) {
         List<QualityFindings.Finding> findings = new ArrayList<>();
-        if (media.stream().noneMatch(MediaItem::isImage)) {
+        if (media.stream().noneMatch(QualityPolicy::isImage)) {
             findings.add(QualityFindings.Finding.imageMediaMissing());
         }
-        long primaryItems = media.stream().filter(MediaItem::primary).count();
+        long primaryItems = media.stream().filter(Media::primary).count();
         if (primaryItems != ONE_ITEM) {
             findings.add(QualityFindings.Finding.primaryMediaAmbiguous(primaryItems));
         }
         return Stream.of(findings, sequenceFindings(media)).flatMap(List::stream).toList();
     }
 
-    private static List<QualityFindings.Finding> sequenceFindings(List<MediaItem> media) {
-        List<Integer> positions = media.stream().map(MediaItem::position).sorted().toList();
+    private static List<QualityFindings.Finding> sequenceFindings(List<Media> media) {
+        List<Integer> positions = media.stream().map(Media::position).sorted().toList();
         List<QualityFindings.Finding> findings = new ArrayList<>();
         if (!isContiguousFromOne(positions)) {
             findings.add(QualityFindings.Finding.mediaPositionsNotContiguous(positions));
         }
-        long videos = media.stream().filter(MediaItem::isVideo).count();
+        long videos = media.stream().filter(QualityPolicy::isVideo).count();
         if (videos > ONE_ITEM) {
             findings.add(QualityFindings.Finding.tooManyVideos(videos));
         }
         return findings;
+    }
+
+    private static boolean isImage(Media media) {
+        return media.kind() == Media.Kind.IMAGE;
+    }
+
+    private static boolean isVideo(Media media) {
+        return media.kind() == Media.Kind.VIDEO;
     }
 
     private static boolean isContiguousFromOne(List<Integer> positions) {

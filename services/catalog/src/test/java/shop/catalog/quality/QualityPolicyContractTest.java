@@ -2,6 +2,7 @@ package shop.catalog.quality;
 
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
+import shop.catalog.offer.Media;
 import shop.catalog.offer.ProductDescription;
 
 import java.util.ArrayList;
@@ -54,8 +55,8 @@ class QualityPolicyContractTest {
 
     @Test
     void theCallLeavesItsInputsAsItFoundThem() {
-        List<MediaItem> media = new ArrayList<>(workedExampleMedia().reversed());
-        List<MediaItem> asGiven = List.copyOf(media);
+        List<Media> media = new ArrayList<>(workedExampleMedia().reversed());
+        List<Media> asGiven = List.copyOf(media);
 
         QualityFindings findings = policy.calculateFindings(legoDraft(), media, LEGO_CATEGORY);
 

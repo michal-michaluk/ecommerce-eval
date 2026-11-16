@@ -15,6 +15,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+import shop.catalog.offer.Media;
 import shop.catalog.offer.ProductDescription;
 import shop.catalog.tools.JsonConfiguration;
 import tools.jackson.databind.ObjectMapper;
@@ -173,7 +174,7 @@ class DocumentReviewRepository implements ReviewRepository {
     }
 
     /** The frozen candidate as one document: the two components the review never queries into, stored and read as a whole. */
-    record CandidateDocument(ProductDescription description, List<ReviewMedia> media) {
+    record CandidateDocument(ProductDescription description, List<Media> media) {
 
         CandidateDocument {
             media = List.copyOf(media);

@@ -1,5 +1,6 @@
 package shop.catalog.review;
 
+import shop.catalog.offer.Media;
 import shop.catalog.offer.ProductDescription;
 import shop.catalog.offer.ProductDescription.Brand;
 import shop.catalog.offer.ProductDescription.Condition;
@@ -48,18 +49,18 @@ public class ReviewCandidateFixture {
                 parameters(), List.of(new Paragraph("Opis po korekcie autora, wpisany po zgłoszeniu do przeglądu.")));
     }
 
-    public static List<ReviewMedia> mediaOfInstanceA() {
+    public static List<Media> mediaOfInstanceA() {
         return List.of(
-                new ReviewMedia("M-01", ReviewMedia.Kind.IMAGE, 1, true, "jpg"),
-                new ReviewMedia("M-02", ReviewMedia.Kind.IMAGE, 2, false, "jpg"),
-                new ReviewMedia("M-03", ReviewMedia.Kind.VIDEO, 3, false, "mp4"));
+                new Media("M-01", Media.Kind.IMAGE, 1, true, "jpg"),
+                new Media("M-02", Media.Kind.IMAGE, 2, false, "jpg"),
+                new Media("M-03", Media.Kind.VIDEO, 3, false, "mp4"));
     }
 
     public static OfferContent content() {
         return new OfferContent(descriptionOfInstanceA(), mediaOfInstanceA(), AVAILABILITY_START);
     }
 
-    public static OfferContent contentWithMedia(ProductDescription description, List<ReviewMedia> media) {
+    public static OfferContent contentWithMedia(ProductDescription description, List<Media> media) {
         return new OfferContent(description, media, AVAILABILITY_START);
     }
 
@@ -108,10 +109,10 @@ public class ReviewCandidateFixture {
     }
 
     /** Two primaries, which 02 RULE-1 refuses when a version freezes — the content that makes a publication fail. */
-    public static List<ReviewMedia> mediaWithTwoPrimaries() {
+    public static List<Media> mediaWithTwoPrimaries() {
         return List.of(
-                new ReviewMedia("M-01", ReviewMedia.Kind.IMAGE, 1, true, "jpg"),
-                new ReviewMedia("M-02", ReviewMedia.Kind.IMAGE, 2, true, "jpg"));
+                new Media("M-01", Media.Kind.IMAGE, 1, true, "jpg"),
+                new Media("M-02", Media.Kind.IMAGE, 2, true, "jpg"));
     }
 
     public static ReviewCandidate candidateWithUnpublishableMedia() {

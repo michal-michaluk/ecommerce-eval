@@ -17,6 +17,10 @@ import java.util.Optional;
  *
  * <p>The required parameters are a list of {@code {prefix, parameters}}, never a map keyed by the prefix: a category path is a
  * list and a map key cannot carry one. Each category's parameter order is the report order of QP-10…QP-12 (D33).
+ *
+ * <p>It stays internal although {@link QualityPolicy} is public: the mediator of the {@code review → quality} edge injects the
+ * policy bean and names no configuration, so a public type here would be an export no consumer reads (D42 is read as "the types
+ * the edge names", not as a list to widen).
  */
 record QualityConfig(
         int minProseChars,
