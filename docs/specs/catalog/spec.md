@@ -164,7 +164,7 @@ Every row is a command with an exit code — the `prove-dod` node executes each 
 | P3 | the code obeys the shape rules of the service | `sqt check .` | exit 0 over `src/main/java` + `src/test/java` |
 | P4 | 08/09/10/11 behave exactly as their scenario tables say | `./gradlew test --tests '*QualityPolicyTest' --tests '*PublishDecisionTest' --tests '*ActivePriceCalculationTest' --tests '*OfferVisibilityTest'` | 18 + 11 + 10 + 8 scenarios green (09 gained S11 with D37) |
 | P5 | the HTTP contract of 12 is real, including every error path and scope | `./gradlew e2eHurl` | exit 0, every request in `e2e/catalog-http-api.hurl` green |
-| P6 | the public events are the 13 contract, and no draft ever leaves | `./gradlew test --tests '*ShoppingEventsTest' --tests '*DraftPrivacyTest'` | payloads match the 13 schemas; no event, no `GET`, no log carries an unpublished draft |
+| P6 | the public events are the 13 contract, and no draft ever leaves | `./gradlew test --tests '*.ShoppingEventsOfOfferTest' --tests '*.ShoppingEventsOfPricingTest' --tests '*.DraftPrivacyTest'` | payloads match the 13 schemas; no event, no `GET`, no log carries an unpublished draft; the three suites are in `build/test-results/test/` with 3 + 10 + 10 tests (a filter that matches nothing writes no XML) |
 | P7 | the three views of 14/15/16 exist and render | `cd .storybook && node verify-storybook.frames.cjs http://127.0.0.1:6010 --flow flows.json` | every story non-empty, zero console errors, 3 flow chains pass |
 | P8 | the tests actually catch mutations | `./gradlew pitest` | mutation score ≥ 80 % on the context classes |
 
@@ -546,7 +546,10 @@ Plan tickets (both top level: #1 has no parent):
 - **IN / OUT:** IN: every implementation node; OUT: `docs/prove-of-done.md`
 - **checks:**
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce; test -f docs/prove-of-done.md`
-  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce; test "$(grep -c '^| P' docs/prove-of-done.md)" -ge 8`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce; test "$(/usr/bin/grep -c '^[|] P[1-8] |' docs/prove-of-done.md)" -eq 8`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce; /usr/bin/grep -q 'tests="3"' services/catalog/build/test-results/test/TEST-shop.catalog.offer.DraftPrivacyTest.xml`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce; /usr/bin/grep -q 'tests="10"' services/catalog/build/test-results/test/TEST-shop.catalog.offer.ShoppingEventsOfOfferTest.xml`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce; /usr/bin/grep -q 'tests="10"' services/catalog/build/test-results/test/TEST-shop.catalog.pricing.ShoppingEventsOfPricingTest.xml`
 - **review_prompt:** Check `/Users/michal/workspace/bottega-ai-mind/eval/ecommerce/docs/prove-of-done.md` against §Prove Definition of Done of `/Users/michal/workspace/bottega-ai-mind/eval/ecommerce/docs/specs/catalog/spec.md`; report every row missing, unexecuted, or marked pass without an observed result. Do not edit files — report only.
 
 #### 10. Evidence
