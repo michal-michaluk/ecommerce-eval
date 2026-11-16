@@ -22,6 +22,7 @@ OfferPublished:
   productId: PRD-75423
   offerVersion: 1
   descriptionHash: "sha256:9f2c…"     # equal content ⇒ equal hash; consumers may dedupe
+  identifiers: { productNumber: "75423", eanGtin: "5702017817705", setName: "…" }   # RULE-10: the hash is over the value
   availabilityStart: 2026-07-01
   title: "LEGO Star Wars SMART Play X-Wing Czerwona Piątka Luke'a 75423"
   brand: { name: LEGO, verified: true }
@@ -60,6 +61,8 @@ ProductRemoved:
   first poll after start, with `occurredAt` = poll time and `effectiveFrom` = the entry's `validFrom`, so a consumer sees the same
   ordering and the same effective date it would have seen had the service stayed up.
 - **RULE-9** `key` is the offer id: the same value 12 exposes as `offerId` and 01/02 call `productId` (D31).
+- **RULE-10** `OfferPublished` carries every component of the frozen value, `identifiers` included: `descriptionHash` is promised over
+  the value (D39), so a consumer that receives less than the value cannot recompute it or dedupe by content (review pack OQ-3).
 
 ## Transport decision (D28)
 

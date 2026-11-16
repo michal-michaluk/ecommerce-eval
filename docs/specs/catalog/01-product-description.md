@@ -56,7 +56,9 @@ Created from a title + identifiers → blank draft; edited by ContentAuthor any 
 
 ## Domain rules
 
-- **RULE-1** title required, 1–200 chars, editable until publication (segment 6).
+- **RULE-1** title required, 1–200 chars, editable until the **next** publication — every publication freezes a new version, so a
+  published title is never mutated, it is superseded (segment 6; the version model of 02 RULE-4 makes "until publication" a
+  statement about the frozen value, not a lock on the draft).
 - **RULE-2** `productNumber` and `eanGtin` unique per product; `eanGtin` = 13 digits with valid check digit.
 - **RULE-3** a value is immutable: a change produces a **new value**, never a mutation. Versioning is not this object's concern — the offer version (02) is what carries a change into the world.
 - **RULE-4** draft content never leaves the context — no event, no query outside it (segments 9–11).
@@ -96,7 +98,9 @@ None of its own — a value object has no lifecycle. The events that move a desc
 The entire description is implemented in a **single file** — `ProductDescription.java` — with its details as
 **inner records** (`Identifiers`, `Parameter`, `DescriptionBlock` and its sealed alternatives), not one file per
 part. This follows the existing convention `docs/arch/microservice-java-spring/domain-model-value-object.md:10`
-("declare a value object used only inside its parent as a nested record of that parent; `vo.nested`") and
+("declare a value object used only inside its parent as a nested record of that parent") and
 `docs/arch/microservice-java-spring/code-structure.md:39-40` (one `<Concept>.java` holding the concept snapshot
 and its nested event records). Open-ended alternative sets stay a `sealed interface` with one nested record per
-alternative, so exhaustive `switch` replaces `instanceof` (`vo.sealed-alternatives`).
+alternative, so exhaustive `switch` replaces `instanceof`. Neither the nesting policy nor the sealed-alternative policy is an
+encoded `sqt` rule — the ids `vo.nested` / `vo.sealed-alternatives` are review vocabulary, not checks (verified against
+`src/main/java/.sqt.yaml`); the reviewer enforces them, not the gate.

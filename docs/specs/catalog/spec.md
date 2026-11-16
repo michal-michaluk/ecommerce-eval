@@ -598,6 +598,18 @@ Plan tickets (both top level: #1 has no parent):
 - **D41 (approved at review approval — as implemented)** a fixed discount bound to a currency the offer does not price is **refused** at write time
   (`DISCOUNT_CURRENCY_NOT_PRICED`) rather than stored and ignored. Confirm, or accept-and-ignore so sales can prepare a EUR discount before
   the EUR price exists
+- **OQ-1** `Draft.merge` treats `null` as "unchanged", so a scalar draft component (`title`, `identifiers`, `brand`, `condition`) cannot be
+  cleared through it; 12's PATCH says "absent component = absent". The adapter must map PATCH-absent to "keep" and a future clear-request must
+  be an explicit component, or the aggregate gains a `clear...` command
+- **OQ-2** `Condition` constants are upper-case while 13/12 show `condition: new`; the domain deliberately carries no Jackson type, so the
+  transport adapter owns the mapping
+- **OQ-4** 09 R1 admits `offerState = draft`, so `publish` is legal without a fresh review; the aggregate refuses only `removed`. Pinned as
+  intended, but the HTTP layer must not expose a publish command (F4, D5) — only acceptance publishes
+- **OQ-5** `PricingModelEditor` rejects a missing argument with a raw `NullPointerException` while `OfferEditor` raises `COMMAND_VALUE_MISSING`;
+  `error.domain-throws-context-type` only sees an explicit `throw`, so the NPE path is ungated
+- **gate gap (rules the docs cite but the service does not define)** `model.no-setters`, `model.no-lombok-data`, `vo.nested`,
+  `vo.sealed-alternatives` are review vocabulary in `docs/arch/**`, not `sqt` checks; the spec files no longer claim otherwise. A `@Data`
+  check and a `constructor_declaration`-aware `no-public-members` check would close two whole classes of defect
 - **gate gap (platform)** `aggregate.no-public-members` reads source text, so a Lombok-generated `public` constructor passed the gate; the
   pricing node fixed its own case with `@AllArgsConstructor(access = PACKAGE)` and verified by `javap`. A `constructor_declaration`-based
   check would close the class of defects, not one instance — belongs to the service's `.sqt.yaml`
