@@ -1,0 +1,171 @@
+{
+  "product": {
+    "name": "LEGO Star Wars SMART Play: X-Wing Czerwona Piątka Luke'a",
+    "set_number": "75423",
+    "series": "LEGO Star Wars",
+    "sub_series": "SMART Play",
+    "product_line": "Wszystko w jednym (All-in-One)",
+    "description": "LEGO Star Wars SMART Play X-Wing Czerwona Piątka Luke'a 75423\n\nOdkryj nową galaktykę LEGO® Star Wars™ dzięki interaktywnej zabawce konstrukcyjnej X-Wing™ Czerwona Piątka Luke'a (75423). Ten zestaw Wszystko w jednym, będący częścią serii zestawów obsługiwanych przez system LEGO SMART Play™, zawiera wszystkie elementy SMART Play™ — SMART klocek i ładowarkę, dwie SMART minifigurki LEGO oraz pięć SMART Tagów, które umożliwiają responsywną zabawę, dynamiczne efekty dźwiękowe i świetlne oraz wiele innych funkcji.\n\nPosłuchaj ryku silnika podczas lotu myśliwca X-wing. Aktywuj dźwięki strzałów laserowych X-winga i wieżyczki imperialnej. Monitoruj komunikację w centrum dowodzenia. Ożyw SMART Luke'a Skywalkera i SMART Księżniczkę Leię. Zatankuj i napraw X-winga za pomocą transportera. Dodaj kompatybilne zestawy SMART Play (sprzedawane oddzielnie), aby uzyskać więcej interaktywnych opcji zabawy.\n\nDzięki aplikacji LEGO SMART Assist możesz pomóc dzieciom rozpocząć zabawę, rozwiązywać problemy, kontrolować poziom głośności i pobierać aktualizacje, aby wykorzystać pełny potencjał SMART Play.",
+    "summary_bullets": [
+      "Interaktywna zabawka konstrukcyjna ożywia X-winga poprzez zabawę aktywowaną ruchem",
+      "SMART klocek umożliwia korzystanie z systemu SMART Play™ ze światłami i dźwiękami",
+      "SMART minifigurki LEGO® Star Wars™: SMART Luke Skywalker i SMART Księżniczka Leia",
+      "Model emituje dźwięki i światła w reakcji na ruchy i zabawę dzieci",
+      "Innowacyjny prezent dla dzieci w wieku od sześciu lat, które są fanami Gwiezdnych Wojen",
+      "Odblokuj więcej funkcji systemu SMART Play™ dzięki aplikacji LEGO® SMART Assist",
+      "Zawiera wbudowany mikrofon, gotowy do późniejszej aktywacji za Twoją zgodą",
+      "Myśliwiec X-wing™ Czerwona Piątka ma 22 cm długości"
+    ],
+    "ean": "5702017817705",
+    "age_recommendation": "6+",
+    "piece_count": 581,
+    "release_date": "2026-03-01",
+    "price_pln": 379.99,
+    "currency": "PLN",
+    "dimensions": {
+      "height_cm": 6,
+      "length_cm": 22,
+      "width_cm": 19
+    },
+    "battery": {
+      "life_per_charge_minutes": 45,
+      "includes_charger": true
+    },
+    "warning": "Choking hazard. Small parts. This toy emits flashing lights that may trigger seizures in photosensitive individuals.",
+    "includes": [
+      {
+        "item": "SMART brick",
+        "quantity": 1,
+        "description": "Recognizes SMART Tags and SMART minifigures, reacts to movement and play"
+      },
+      {
+        "item": "SMART minifigures",
+        "quantity": 2,
+        "description": "SMART Luke Skywalker and SMART Princess Leia with unique personalities and sounds"
+      },
+      {
+        "item": "SMART Tags",
+        "quantity": 5,
+        "description": "For X-wing, Imperial turret, transporter, command center, and R2-D2"
+      },
+      {
+        "item": "SMART charger",
+        "quantity": 1,
+        "description": "For charging the SMART brick"
+      }
+    ],
+    "features": [
+      "Reacts to movement and how you play",
+      "Dynamic sounds and lights activated by motion",
+      "SMART brick placed in X-wing unlocks engine sounds, laser blasts, refueling and repair sounds",
+      "Two SMART minifigures react to various situations via SMART brick",
+      "Five SMART tags activate dynamic sounds and lights in response to movement",
+      "Compatible with other LEGO SMART Play sets for expanded interactive play",
+      "LEGO SMART Assist app available for setup, troubleshooting, volume control, and updates",
+      "Built-in microphone (currently disabled, future feature requiring consent and firmware update)"
+    ],
+    "play_scenarios": [
+      "Fly the X-wing and hear engine roar",
+      "Activate laser blasts for X-wing and Imperial turret",
+      "Monitor communications at command center",
+      "Bring SMART Luke Skywalker and SMART Princess Leia to life",
+      "Refuel and repair X-wing using transporter",
+      "Use hammer to repair damage",
+      "Pull lever to fire cannon",
+      "Seat R2-D2 in cockpit to observe moods and reactions"
+    ],
+    "app": {
+      "name": "LEGO SMART Assist",
+      "purpose": "Help children start play, troubleshoot, control volume, download updates",
+      "requires_account": false,
+      "optional_login": "LEGO Insiders",
+      "requires_internet": false
+    },
+    "data_privacy": {
+      "data_generated": [
+        "Battery level",
+        "Battery charging characteristics",
+        "SMART brick position",
+        "Bluetooth connection",
+        "SMART Tag and minifigure identification",
+        "Gestures (acceleration and movement)",
+        "Recognized colors"
+      ],
+      "data_storage": "Both on device and remote server (with user consent)",
+      "data_size_estimate": "max 10 kB stored on physical device"
+    },
+    "related_sets": [
+      {
+        "set_number": "75424",
+        "name": "SMART Play: Atak AT-ST na Endor",
+        "price_pln": 209.99
+      },
+      {
+        "set_number": "75425",
+        "name": "SMART Play: Śmigacz Luke'a",
+        "price_pln": 169.99
+      },
+      {
+        "set_number": "75426",
+        "name": "SMART Play: Chatka Yody i szkolenie Jedi",
+        "price_pln": 299.99
+      },
+      {
+        "set_number": "75427",
+        "name": "SMART Play: Kantyna Mos Eisley",
+        "price_pln": 339.99
+      },
+      {
+        "set_number": "75428",
+        "name": "SMART Play: Sokół Millennium",
+        "price_pln": 419.99
+      }
+    ],
+    "urls": {
+      "lego_official": "https://www.lego.com/pl-pl/product/smart-play-lukes-red-five-x-wing-75423",
+      "ateneum": "https://www.ateneum.pl/pozycja.php?id=747619",
+      "smyk": "https://www.smyk.com/p/lego-star-wars-smart-play-x-wing-czerwona-piatka-lukea-75423-i8240071",
+      "brixani": "https://brixani.com/produkt/lego-75423-smart-play-x-wing-czerwona-piatka-lukea/"
+    }
+  },
+  "other_offers_on_page": {
+    "note": "These are separate seller offers for the SAME product (set 75423), not different products.",
+    "sellers": [
+      {
+        "seller": "Allegro",
+        "url": "https://allegro.pl/produkt/lego-star-wars-75423-smart-play-x-wing-czerwona-piatka-lukea-9982760d-8452-4f1c-b378-0e6731c56a62?offerId=18319048965",
+        "delivery": {
+          "estimated": "jutro",
+          "cutoff_time": "17:00",
+          "cost_pln": 10.49,
+          "cost_free_condition": "0 zł jeśli aktywujesz Smart!"
+        },
+        "returns": {
+          "free_return_days": 14,
+          "buyer_protection": "Allegro Ochrona Kupujących",
+          "complaint": "Reklamacja",
+          "warranty": "Gwarancja"
+        },
+        "payment_methods": {
+          "tagline": "Płać tak, jak lubisz",
+          "available_methods": "multiple"
+        }
+      },
+      {
+        "seller": "Ateneum",
+        "price_pln": 400.00,
+        "url": "https://www.ateneum.pl/pozycja.php?id=747619"
+      },
+      {
+        "seller": "Smyk",
+        "price_pln": null,
+        "url": "https://www.smyk.com/p/lego-star-wars-smart-play-x-wing-czerwona-piatka-lukea-75423-i8240071"
+      },
+      {
+        "seller": "Brixani",
+        "price_pln": 382.99,
+        "url": "https://brixani.com/produkt/lego-75423-smart-play-x-wing-czerwona-piatka-lukea/"
+      }
+    ]
+  }
+}

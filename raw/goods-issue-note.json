@@ -1,0 +1,98 @@
+{
+  "document_type": "goods_issue_note",
+  "document_number": "WZ 1/10/2019",
+  "issue_date": "2019-10-05",
+  "issue_location": "Katowice",
+  "issuer_system": {
+    "name": "FakturaXL.pl",
+    "website": "www.fakturaxl.pl"
+  },
+  "seller": {
+    "label": "Sprzedawca",
+    "company_name": "Firma ABC",
+    "address": {
+      "street": "ul. Szerska 2",
+      "postal_code": "44-555",
+      "city": "Katowice"
+    },
+    "tax_id": "9720002729",
+    "email": "firma@fakturaxl.pl"
+  },
+  "buyer": {
+    "label": "Nabywca",
+    "company_name": "Produkcja Sp. z o.o.",
+    "address": {
+      "street": "ul. Stawowa 38",
+      "postal_code": "00-967",
+      "city": "Warszawa"
+    },
+    "tax_id": "9372424178"
+  },
+  "recipient": {
+    "label": "Odbiorca",
+    "company_name": "Handel s.c.",
+    "address": {
+      "street": "ul. Prosta 8",
+      "postal_code": "00-121",
+      "city": "Warszawa"
+    },
+    "tax_id": "5111625852"
+  },
+  "line_items": [
+    {
+      "line_number": 1,
+      "name": "Meble ogrodowe",
+      "quantity": 1,
+      "unit": "szt.",
+      "net_price": 16200.00,
+      "net_value": 16200.00,
+      "vat_rate": 23,
+      "vat_amount": 3726.00,
+      "gross_value": 19926.00
+    },
+    {
+      "line_number": 2,
+      "name": "Dostawa",
+      "quantity": 1,
+      "unit": "szt.",
+      "net_price": 10.00,
+      "net_value": 10.00,
+      "vat_rate": 23,
+      "vat_amount": 2.30,
+      "gross_value": 12.30
+    }
+  ],
+  "related_documents": [
+    {
+      "document_type": "FV",
+      "document_number": "1/09/2019",
+      "date": "2019-09-28"
+    }
+  ],
+  "summary": {
+    "total_net_value": 16210.00,
+    "total_net_currency": "PLN",
+    "vat_rate": 23,
+    "total_vat_amount": 3728.30,
+    "total_gross_value": 19938.30,
+    "total_gross_currency": "PLN",
+    "amount_in_words": "dziewiętnaście tysięcy dziewięćset trzydzieści osiem i 0.30 PLN",
+    "remarks": "Dostawa z magazynu głównego. Odbiór po godzinie 15."
+  },
+  "signatures": {
+    "received_by": {
+      "label": "Odebrał",
+      "name": "Jan Kowalski"
+    },
+    "issued_by": {
+      "label": "Wystawił",
+      "name": "Krzysztof Nowak"
+    }
+  },
+  "footer": {
+    "website": "www.fakturaxl.pl",
+    "eco_message": "Stosujemy opakowania recyklingowe!",
+    "page": "1/1"
+  },
+  "language": "pl"
+}

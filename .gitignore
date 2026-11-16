@@ -1,0 +1,14 @@
+.DS_Store
+
+# build output of every service
+**/build/
+**/.gradle/
+**/target/
+
+# local environment
+.env
+.env.local
+
+# agent runtime state
+**/.opencode/
+**/.pi/
