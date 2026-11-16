@@ -72,8 +72,13 @@ catalog:
 This is the binding shape (`@ConfigurationProperties`, key `catalog.quality`): a list of `{prefix, parameters}`, because a category
 path is a list and a YAML map key cannot carry one (D33).
 
+- `required` has no default: an omitted key binds to `false`, so the category allows that parameter to be absent and QP-10 stays
+  silent for it. Every parameter of a blocking set therefore states `required: true` explicitly.
+- `severity` names a rule id and a severity word, both of which must exist: an unknown key (`QP-9`, a typo) or an unknown word fails
+  binding at startup and is never ignored, because a severity nobody reads is a silently misconfigured policy.
 - Ordering and matching: findings are ordered by rule number, then by the configuration's **declaration order** within one rule. The draft's `categoryPath` is matched against configured prefixes; the **longest matching prefix wins**;
-  the first match is final (deterministic).- No match → no QP-10…QP-12 findings; universal rules still apply. One category (`LEGO`) is configured today.
+  the first match is final (deterministic).
+- No match → no QP-10…QP-12 findings; universal rules still apply. One category (`LEGO`) is configured today.
 - A deeper prefix **inherits nothing**: the matched prefix's parameter set is the whole set. `[Dziecko, Zabawki, Klocki, LEGO, Star Wars]`
   matches the LEGO entry only because that entry is its longest configured prefix, not because `Star Wars` adds rules. If a future category
   needs the LEGO set plus its own, the configuration repeats the inherited parameters (binding composes, the policy does not).
@@ -86,7 +91,7 @@ path is a list and a YAML map key cannot carry one (D33).
 | DescriptionDraft | title, ids, parameters, blocks | Business concept | 01 ProductDescription (`Draft`) |
 | MediaSet | items, primary, position | Business concept | 02 Offer |
 | CategoryPath | path | Business concept | 01 ProductDescription (component of the value) |
-| QualityConfig | minProseChars, requiredParameters | Configuration | config keys `catalog.quality.*` |
+| QualityConfig | minProseChars, categories (per-category required parameters), severityOverrides | Configuration | config keys `catalog.quality.*` |
 
 ## Variants and configurations
 
