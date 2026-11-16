@@ -16,7 +16,7 @@ description:                            # ProductDescription.Draft
   ids: { productNumber: "75423", eanGtin: null }     # violation, allowed while drafting
   parameters: [ { code: pieceCount, value: 581, valueType: integer } ]
   blocks: [ { type: paragraph, text: "Odkryj nową galaktykę…" } ]
-media: [ { id: M-01, kind: image, position: 1, primary: true, format: jpg } ]
+media: [ { id: M-01, kind: image, position: 1, primary: true, format: jpg, url: "https://cdn.example/M-01.jpg" } ]
 availabilityStart: 2026-07-01
 ```
 
@@ -55,6 +55,9 @@ because 11 R3 hides `pendingReview`).
 
 - **RULE-1** ≥1 image required before a review can be requested; exactly one `primary: true`.
 - **RULE-2** `position` explicit and contiguous from 1; at most one video per offer.
+- **RULE-2a** a media item carries its **location** (`url`) besides `id`/`kind`/`position`/`primary`/`format`: 12 receives it in the
+  `media` component (D17), 13 publishes it, and 02's own instances show it (D47). The domain never fetches the file; it stores where
+  the file lives.
 - **RULE-3** `availabilityStart` is a date, may lie in the future; publication with a future date leaves the offer hidden (11 OfferVisibility).
 - **RULE-4** publication embeds the description **by value** in the frozen offer version; the frozen version never re-reads a draft, so a later
   edit cannot change what was published. The content frozen is the **candidate 04 froze at request time**, handed over through

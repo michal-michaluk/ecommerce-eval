@@ -45,6 +45,8 @@ discounts: []
   `validFrom` order. Activation is idempotent — the marker is written in the same transaction as the `*Activated` event — and it
   catches up: entries that became due while the service was down activate at the first poll after start, emitted with `occurredAt` =
   the moment of the poll and `effectiveFrom` = the entry's `validFrom` (13 RULE-8).
+  An entry that started **and ended** before the poll is still marked (otherwise the poll would consider it due forever), but it
+  produces no `PricesChanged`: 13 RULE-7 forbids shipping a price for a currency with no open entry (D48).
 
 ## Instance diff — schedule a price change
 

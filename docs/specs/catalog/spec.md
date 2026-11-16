@@ -466,6 +466,20 @@ Plan tickets (both top level: #1 has no parent):
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; sqt check .`
 - **review_prompt:** Review the work in `/Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog`; do not inspect other repositories; if a premise below is false, say so and stop. Premises: exactly three public types leave the process; `OfferPublished` carries the whole frozen version including `availabilityStart`, `descriptionHash`, brand, condition, categoryPath; `PricesChanged` fires only on activation; `ProductRemoved` carries `removedAt`; envelope has `eventId`/`eventType`/`eventVersion`/`occurredAt`/`key` = offer id; publishing happens in the adapter inside the transaction; S1–S9 covered. Report every payload field missing or extra against 13, with file:line; report only.
 
+##### media-url
+- **Goal:** give the media value its location, so the wire and the draft agree on how a file is referenced
+- **Executor:** general
+- **Docs:** `02-offer.md` (RULE-2a, instances), `12-catalog-http-api.md` (D17), `13-shopping-events.md` (the media sample)
+- **IN / OUT:** IN: `shopping-events`; OUT: `offer/Media.java` (+ fixtures, editor commands, adapter round-trip, migration if a column is needed),
+  `offer/OfferPublished.java` and its payload tests + the re-pinned golden `descriptionHash`. Does NOT touch pricing, review, reads, HTTP
+- **checks:**
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; ./gradlew test --tests 'shop.catalog.offer.*'`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; ./gradlew build`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog; sqt check .`
+- **review_prompt:** Review the work in `/Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/catalog`; do not inspect other repositories; if a premise below is false, say so and stop. Premises: `Media` carries `url` and every producer/consumer of media compiled against it; the stored round-trip preserves `url`; `OfferPublished` ships it; the golden hash was re-pinned after the shape change rather than relaxed; no other context carries a second media shape. Report every place a media item is built without a location and every test that was weakened to accommodate the change, with file:line; report only.
+
+#### 6. Cross-context plumbing — AFK (continued)
+
 ##### error-and-security
 - **Goal:** one rejection path for 12 — the advice that maps every domain failure to its `reason`, and the scope model including field-level draft scoping
 - **Executor:** general
@@ -602,6 +616,11 @@ Plan tickets (both top level: #1 has no parent):
 - **D41 (approved at review approval — as implemented)** a fixed discount bound to a currency the offer does not price is **refused** at write time
   (`DISCOUNT_CURRENCY_NOT_PRICED`) rather than stored and ignored. Confirm, or accept-and-ignore so sales can prepare a EUR discount before
   the EUR price exists
+- **D46 (decided)** a record that exists only as a wire schema (`OfferPublished.MediaItem`, the envelope, the three payloads) is not the local
+  copy `contract.no-local-copy` forbids: the rule targets a producer's value object re-declared inside a consumer's model. Transport shapes are
+  allowed to differ from the domain and are pinned by payload tests
+- **D47 (decided)** `offer.Media` gains `url`: 12 receives it in the draft `media` component (D17), 13 publishes it, and without it the shop cannot
+  resolve a file. This is a small follow-up node (`media-url`) before the HTTP surface, because adding a record component is cheapest before 12
 - **D45 (decided)** `offer.Media` is the single media value; `review.ReviewMedia` is deleted and the mediator passes the value through. It was
   a legitimate consumer-side contract while offer's media was package-private (D42), but exporting `Media` made it a local copy with a second
   `Kind` enum that only a `valueOf(name())` bridge keeps in sync
