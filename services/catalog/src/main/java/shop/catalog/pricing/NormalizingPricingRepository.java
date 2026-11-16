@@ -32,7 +32,7 @@ import java.util.stream.Stream;
  *
  * <p>{@code get} rehydrates through the aggregate's all-args constructor with the rows in {@code valid_from} order;
  * {@code save} drains the event buffer before writing, maps the snapshot onto the rows, and only then publishes the
- * snapshot once and every event once — a save that emitted nothing publishes nothing.
+ * snapshot once, the {@code reads} payload once and every event once — a save that emitted nothing publishes nothing.
  */
 @Primary
 @Repository
@@ -61,6 +61,7 @@ class NormalizingPricingRepository implements PricingRepository {
 
         if (!emitted.isEmpty()) {
             publisher.publishEvent(model);
+            publisher.publishEvent(PricingChanged.of(pricing.offerId, model));
         }
         emitted.forEach(publisher::publishEvent);
     }

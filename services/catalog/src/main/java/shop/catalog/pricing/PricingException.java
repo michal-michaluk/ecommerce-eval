@@ -35,6 +35,7 @@ class PricingException extends RuntimeException implements DomainRefusal {
         DISCOUNT_CURRENCY_NOT_PRICED("discount '%s' is bound to a currency this offer has no price entry for (RULE-5)"),
         ACTIVE_PRICE_INCOMPLETE("an active price carries an amount and an absent price carries none"),
         DISCOUNT_POLICY_INCOMPLETE("a discount policy requires an order and a stacking"),
+        OFFER_UNKNOWN("offer %s does not exist"),
         PRICING_MODEL_UNKNOWN("offer %s has no pricing model to publish");
 
         private final String template;

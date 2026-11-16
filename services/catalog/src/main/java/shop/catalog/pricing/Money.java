@@ -6,10 +6,12 @@ import java.util.Objects;
 /**
  * RULE-1 — an integer amount in minor units plus its ISO 4217 currency (D1). The scale is the currency's own
  * ({@code PLN} 2, {@code JPY} 0) and is derived on read, so no amount is ever stored as a decimal or a float.
+ *
+ * <p>Public together with {@link ActivePrice}, because 10's answer travels as this value and a caller reads its amount through it.
  */
-record Money(int amountMinor, String currency) {
+public record Money(int amountMinor, String currency) {
 
-    Money {
+    public Money {
         Objects.requireNonNull(currency, "currency");
         if (amountMinor < 0) {
             throw new PricingException(PricingException.Error.AMOUNT_MINOR_NEGATIVE, amountMinor);

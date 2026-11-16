@@ -23,9 +23,14 @@ import shop.catalog.offer.Offer;
 @Component
 @Transactional
 @RequiredArgsConstructor
-class KnownOfferListener {
+class KnownOfferListener implements KnownOffer {
 
     private final KnownOffers knownOffers;
+
+    @Override
+    public boolean knows(String offerId) {
+        return knownOffers.existsById(offerId);
+    }
 
     @EventListener
     public void handle(Offer offer) {

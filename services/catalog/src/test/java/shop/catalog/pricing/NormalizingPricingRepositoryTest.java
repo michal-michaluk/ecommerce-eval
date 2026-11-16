@@ -160,6 +160,11 @@ class NormalizingPricingRepositoryTest {
         transactional(() -> repository.save(pricingModelWithOneOpenPrice()));
 
         assertThat(recorded.of(PricingModel.class)).hasSize(1);
+        assertThat(recorded.of(PricingChanged.class)).singleElement().satisfies(changed -> {
+            assertThat(changed.offerId()).isEqualTo(OFFER_ID);
+            assertThat(changed.prices()).extracting(PricingChanged.PriceRow::priceId).containsExactly("P-1");
+            assertThat(changed.discounts()).isEmpty();
+        });
         assertThat(recorded.of(PricingEvent.class))
                 .containsExactly(priceScheduled("P-1", pln(30989), MAY_1, null));
     }

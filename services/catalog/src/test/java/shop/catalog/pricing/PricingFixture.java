@@ -1,11 +1,13 @@
 package shop.catalog.pricing;
 
 import shop.catalog.offer.Offer;
+import shop.catalog.offer.ProductDescription;
 
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.List;
 
 /** Instance A of 03 plus the pieces the 10 scenarios need; every instant is explicit, no test reads a wall clock. */
 public class PricingFixture {
@@ -98,6 +100,23 @@ public class PricingFixture {
                 discountId(discountId), new Discount.Kind.Fixed(amount), until(validFrom, validUntil));
     }
 
+    public static PricingService serviceAt(PricingRepository models, Clock clock) {
+        return serviceAt(models, clock, knowingEveryOffer());
+    }
+
+    public static PricingService serviceAt(PricingRepository models, Clock clock, KnownOffer knownOffer) {
+        return new PricingService(models, ActivePriceCalculation.defaultCalculation(), knownOffer, clock);
+    }
+
+    /** The offers this test believes exist: the pricing context only ever asks whether the identity is known (17 RULE-4). */
+    public static KnownOffer knowingEveryOffer() {
+        return offerId -> true;
+    }
+
+    public static KnownOffer knowing(String... offerIds) {
+        return java.util.Set.of(offerIds)::contains;
+    }
+
     public static PricingModelEditor emptyPricingModel() {
         return PricingModelEditor.newPricingModelFor(OFFER_ID);
     }
@@ -120,6 +139,7 @@ public class PricingFixture {
 
     /** The offer snapshot the pricing context listens to: the fact it keeps is only that this offer exists. */
     public static Offer publishedOffer(String offerId) {
-        return new Offer(offerId, Offer.State.PUBLISHED, 1, LocalDate.of(2026, 7, 1));
+        return new Offer(offerId, Offer.State.PUBLISHED, 1, LocalDate.of(2026, 7, 1),
+                ProductDescription.Draft.builder().build(), List.of());
     }
 }

@@ -91,7 +91,7 @@ class PricingServiceTest {
     }
 
     private PricingService serviceAt(Instant instant) {
-        return new PricingService(new FakePricingRepository(), clockAt(instant));
+        return PricingFixture.serviceAt(new FakePricingRepository(), clockAt(instant));
     }
 
     class FakePricingRepository implements PricingRepository {

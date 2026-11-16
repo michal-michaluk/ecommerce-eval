@@ -6,7 +6,11 @@ import shop.catalog.offer.Offer;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * The review context's primary port: every use case of 04 is one load, one command on {@link ReviewProcess} and one save, and
@@ -30,17 +34,21 @@ import java.util.Optional;
 @Transactional
 public class ReviewService {
 
+    private static final int ID_LENGTH = 8;
+
     private final ReviewRepository reviews;
     private final OfferDraftSnapshot offers;
     private final OfferPublication publications;
+    private final QualityFindings quality;
     private final ReviewConfiguration.OverrideSettings settings;
     private final Clock clock;
 
     ReviewService(ReviewRepository reviews, OfferDraftSnapshot offers, OfferPublication publications,
-                  ReviewConfiguration.OverrideSettings settings, Clock clock) {
+                  QualityFindings quality, ReviewConfiguration.OverrideSettings settings, Clock clock) {
         this.reviews = reviews;
         this.offers = offers;
         this.publications = publications;
+        this.quality = quality;
         this.settings = settings;
         this.clock = clock;
     }
@@ -50,6 +58,23 @@ public class ReviewService {
                 request, reviews.reviewsOf(request.offerId()), settings.allowsOverride());
         reviews.save(review);
         return review.toReview();
+    }
+
+    /**
+     * 12's `POST /offers/{offerId}/review`: freezes the candidate from what the offer holds now and from 08's report on exactly that
+     * content (RULE-3, D38) and opens the review the author asked for.
+     *
+     * <p>The capture belongs here and not to the transport: it is two questions to two contract ports, and the override records the
+     * requester as its actor, which is a fact only this context can state (RULE-8). An offer this service cannot find is refused with
+     * this context's failure, because a review cannot be opened over content nobody has.
+     */
+    public Review requestFor(String offerId, String requestedBy, List<String> overriddenRules) {
+        Instant now = Instant.now(clock);
+        OfferContent content = contentOf(offerId);
+        List<ReviewFinding> findings = quality.findingsFor(content);
+        return request(new ReviewRequest(nextReviewId(), offerId, requestedBy, now,
+                new ReviewCandidate(content.description(), content.media(), content.availabilityStart(), findings,
+                        overrideOf(requestedBy, findings, overriddenRules, now))));
     }
 
     /**
@@ -74,6 +99,31 @@ public class ReviewService {
     @Transactional(readOnly = true)
     public Optional<Review> openReviewOf(String offerId) {
         return reviews.reviewsOf(offerId).stream().filter(Review::isOpen).findFirst();
+    }
+
+    /**
+     * The review 12's resource of one offer names: the attempt still open, or — once every attempt is decided — the latest one. The
+     * decided attempt is part of the resource because 09 R6 makes a replayed acceptance answer with the version it published (D15) and
+     * because a rejection keeps its candidate for audit (RULE-5).
+     */
+    @Transactional(readOnly = true)
+    public Optional<Review> latestReviewOf(String offerId) {
+        List<Review> attempts = reviews.reviewsOf(offerId);
+        Optional<Review> open = attempts.stream().filter(Review::isOpen).findFirst();
+        return open.isPresent() ? open : attempts.stream().max(Comparator.comparing(Review::requestedAt));
+    }
+
+    /**
+     * The same review where a decision is due: an offer this service cannot find is 12's `404` (there is no resource to decide), and an
+     * offer that never asked is `409 REVIEW_NOT_OPEN` — the two cases a client acts on differently, so neither is answered with an empty
+     * value it would have to translate.
+     */
+    @Transactional(readOnly = true)
+    public Review reviewToDecide(String offerId) {
+        if (offers.snapshotOf(offerId).isEmpty()) {
+            throw new ReviewException(ReviewException.Error.OFFER_UNKNOWN, offerId);
+        }
+        return latestReviewOf(offerId).orElseThrow(() -> ReviewException.notOpen(offerId));
     }
 
     private Review replayOrDecide(ReviewProcess review, String reviewer) {
@@ -117,5 +167,25 @@ public class ReviewService {
         review.withdraw(requester);
         reviews.save(review);
         return review.toReview();
+    }
+
+    private OfferContent contentOf(String offerId) {
+        return offers.snapshotOf(offerId)
+                .map(OfferSnapshot::content)
+                .orElseThrow(() -> new ReviewException(ReviewException.Error.OFFER_UNKNOWN, offerId));
+    }
+
+    /** RULE-8: the override names the frozen findings it ignores, so the record explains itself without re-reading the report. */
+    private static ReviewOverride overrideOf(
+            String requestedBy, List<ReviewFinding> findings, List<String> overriddenRules, Instant now) {
+        if (overriddenRules.isEmpty()) {
+            return null;
+        }
+        return new ReviewOverride(requestedBy, now,
+                findings.stream().filter(finding -> overriddenRules.contains(finding.rule())).toList());
+    }
+
+    private static String nextReviewId() {
+        return "RV-" + UUID.randomUUID().toString().substring(0, ID_LENGTH).toUpperCase(Locale.ROOT);
     }
 }

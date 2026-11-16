@@ -8,6 +8,8 @@ import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
 
 import shop.catalog.ArchitectureDescription;
+import shop.catalog.CreatedResource;
+import shop.catalog.Scopes;
 import shop.catalog.offer.Media;
 import shop.catalog.offer.Offer;
 import shop.catalog.offer.ProductDescription;
@@ -17,6 +19,10 @@ import static com.tngtech.archunit.core.domain.JavaClass.Predicates.belongToAnyO
 /**
  * PACKAGE is the narrow pattern (no {@code ..}): widen it to {@code shop.catalog.review..} in the commit that adds this
  * context's first {@code protocols/<version>} sub-package (arch-unit.md, archunit.package-pattern-explicit).
+ *
+ * <p>Two root-package types are registered as used, both because 12 puts them on the transport and nowhere else: {@link Scopes}, the one
+ * authorization rule a route rule cannot carry (the decision each caller owns inside the PATCH), and {@link CreatedResource}, the body a
+ * `201` answers with so {@code CreatedResponseAdvice} can name the new resource (D19a). Every other route rule stays in the filter chain.
  */
 @AnalyzeClasses(
         packages = "shop.catalog",
@@ -29,7 +35,8 @@ public class ArchitectureOfReviewTest {
             OfferSnapshot.class, OfferContent.class, ReviewCandidate.class,
             ReviewFinding.class, ReviewOverride.class, Review.class);
     public static final DescribedPredicate<JavaClass> sharedKernelUsed =
-            belongToAnyOf(ProductDescription.class, Media.class, Offer.class, Offer.State.class);
+            belongToAnyOf(ProductDescription.class, Media.class, Offer.class, Offer.State.class,
+                    Scopes.class, CreatedResource.class);
 
     @ArchTest
     public static final ArchRule adaptersDependencies = ArchitectureDescription
