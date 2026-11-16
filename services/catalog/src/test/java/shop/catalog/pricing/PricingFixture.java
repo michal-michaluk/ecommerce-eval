@@ -1,7 +1,10 @@
 package shop.catalog.pricing;
 
+import shop.catalog.offer.Offer;
+
 import java.time.Clock;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.ZoneOffset;
 
 /** Instance A of 03 plus the pieces the 10 scenarios need; every instant is explicit, no test reads a wall clock. */
@@ -13,6 +16,7 @@ public class PricingFixture {
     public static final String JPY = "JPY";
 
     public static final Instant APRIL_20 = Instant.parse("2026-04-20T00:00:00Z");
+    public static final Instant JANUARY_1 = Instant.parse("2026-01-01T00:00:00Z");
     public static final Instant MAY_1 = Instant.parse("2026-05-01T00:00:00Z");
     public static final Instant JUNE_1 = Instant.parse("2026-06-01T00:00:00Z");
     public static final Instant JUNE_15 = Instant.parse("2026-06-15T00:00:00Z");
@@ -112,5 +116,10 @@ public class PricingFixture {
         editor.scheduleDiscount(percentageChange("D-1", 1000, JUNE_20, JULY_1), APRIL_20);
         editor.scheduleDiscount(fixedChange("D-2", pln(2000), JULY_1, JULY_8), APRIL_20);
         return editor;
+    }
+
+    /** The offer snapshot the pricing context listens to: the fact it keeps is only that this offer exists. */
+    public static Offer publishedOffer(String offerId) {
+        return new Offer(offerId, Offer.State.PUBLISHED, 1, LocalDate.of(2026, 7, 1));
     }
 }

@@ -20,6 +20,12 @@ spring:
         jwt:
           issuer-uri: ${JWT_ISSUER_URI:https://keycloak.auth/realms/iot}
 
+catalog:
+  pricing:
+    activation-interval: PT60S
+    order: fixed-first
+    stacking: stacked
+
 server:
   shutdown: graceful
   error:
