@@ -8,6 +8,7 @@ import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
 
 import shop.catalog.ArchitectureDescription;
+import shop.catalog.offer.Offer;
 
 import static com.tngtech.archunit.core.domain.JavaClass.Predicates.belongToAnyOf;
 
@@ -22,7 +23,7 @@ public class ArchitectureOfPricingTest {
     public static final String PACKAGE = "shop.catalog.pricing";
 
     public static final DescribedPredicate<JavaClass> sharedKernelExposed = belongToAnyOf();
-    public static final DescribedPredicate<JavaClass> sharedKernelUsed = belongToAnyOf();
+    public static final DescribedPredicate<JavaClass> sharedKernelUsed = belongToAnyOf(Offer.class);
 
     @ArchTest
     public static final ArchRule adaptersDependencies = ArchitectureDescription

@@ -1,1 +1,192 @@
 databaseChangeLog:
+
+  # The pricing model of one offer: the aggregate's own row, which carries the optimistic lock and when it last changed.
+  - changeSet:
+      id: 0004-pricing-model
+      author: michal.michaluk
+      changes:
+        - createTable:
+            tableName: pricing_model
+            columns:
+              - column:
+                  name: offer_id
+                  type: varchar(255)
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pricing_model_pk
+                    nullable: false
+              - column:
+                  name: changed_at
+                  type: timestamptz
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version
+                  type: bigint
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+
+  # One row per price entry (03 RULE-2): a change closes the predecessor's valid_until and inserts a new row, so the
+  # history is the table. `activated` is the RULE-9 marker — written in the same transaction as the *Activated fact.
+  - changeSet:
+      id: 0004-price-entry
+      author: michal.michaluk
+      changes:
+        - createTable:
+            tableName: price_entry
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: price_entry_pk
+                    nullable: false
+              - column:
+                  name: offer_id
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: price_id
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: amount_minor
+                  type: integer
+                  constraints:
+                    nullable: false
+              - column:
+                  name: currency
+                  type: varchar(3)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: valid_from
+                  type: timestamptz
+                  constraints:
+                    nullable: false
+              - column:
+                  name: valid_until
+                  type: timestamptz
+              - column:
+                  name: activated
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: price_entry
+            columnNames: offer_id, price_id
+            constraintName: price_entry_offer_price_uk
+        - addForeignKeyConstraint:
+            baseTableName: price_entry
+            baseColumnNames: offer_id
+            referencedTableName: pricing_model
+            referencedColumnNames: offer_id
+            constraintName: price_entry_offer_fk
+            onDelete: CASCADE
+        - createIndex:
+            tableName: price_entry
+            indexName: price_entry_activated_idx
+            columns:
+              - column:
+                  name: activated
+
+  # One row per discount (03 RULE-5, RULE-6): a percentage keeps its basis points, a fixed amount its money, so an
+  # absent kind is a NULL column group and never a zero (persistence.null-object-absent).
+  - changeSet:
+      id: 0004-discount
+      author: michal.michaluk
+      changes:
+        - createTable:
+            tableName: discount
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: discount_pk
+                    nullable: false
+              - column:
+                  name: offer_id
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: discount_id
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: kind
+                  type: varchar(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: basis_points
+                  type: integer
+              - column:
+                  name: amount_minor
+                  type: integer
+              - column:
+                  name: currency
+                  type: varchar(3)
+              - column:
+                  name: valid_from
+                  type: timestamptz
+                  constraints:
+                    nullable: false
+              - column:
+                  name: valid_until
+                  type: timestamptz
+              - column:
+                  name: activated
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: discount
+            columnNames: offer_id, discount_id
+            constraintName: discount_offer_discount_uk
+        - addForeignKeyConstraint:
+            baseTableName: discount
+            baseColumnNames: offer_id
+            referencedTableName: pricing_model
+            referencedColumnNames: offer_id
+            constraintName: discount_offer_fk
+            onDelete: CASCADE
+        - createIndex:
+            tableName: discount
+            indexName: discount_activated_idx
+            columns:
+              - column:
+                  name: activated
+
+  # The one fact pricing keeps about the offer context — "this offer exists" (17 RULE-4) — and nothing else.
+  - changeSet:
+      id: 0004-known-offer
+      author: michal.michaluk
+      changes:
+        - createTable:
+            tableName: known_offer
+            columns:
+              - column:
+                  name: offer_id
+                  type: varchar(255)
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: known_offer_pk
+                    nullable: false
+              - column:
+                  name: version
+                  type: bigint
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false

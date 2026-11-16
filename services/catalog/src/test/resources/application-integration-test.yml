@@ -12,3 +12,7 @@ spring:
 outbox:
   delay: PT0.1S
   batch: 1000
+
+catalog:
+  pricing:
+    activation-interval: PT24H   # the activation poll must not fire during unrelated integration tests
