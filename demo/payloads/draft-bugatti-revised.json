@@ -1,0 +1,84 @@
+{
+  "description": {
+    "title": "LEGO Technic Bugatti Bolide 42151 — zestaw kolekcjonerski",
+    "identifiers": {
+      "productNumber": "42151",
+      "eanGtin": "5702017817736",
+      "setName": "Bugatti Bolide"
+    },
+    "brand": {
+      "name": "LEGO",
+      "verified": true
+    },
+    "condition": "NEW",
+    "categoryPath": [
+      "Dziecko",
+      "Zabawki",
+      "Klocki",
+      "LEGO"
+    ],
+    "parameters": [
+      {
+        "code": "condition",
+        "label": "Stan",
+        "valueType": "text",
+        "value": "Nowy"
+      },
+      {
+        "code": "childAge",
+        "label": "Wiek dziecka",
+        "valueType": "rangeFrom",
+        "from": 6,
+        "unit": "lat"
+      },
+      {
+        "code": "pieceCount",
+        "label": "Liczba elementów",
+        "valueType": "integer",
+        "value": 581
+      },
+      {
+        "code": "gender",
+        "label": "Płeć",
+        "valueType": "enumSet",
+        "value": [
+          "boys",
+          "girls",
+          "unisex"
+        ]
+      },
+      {
+        "code": "certificates",
+        "label": "Certyfikaty, opinie, atesty",
+        "valueType": "list",
+        "value": [
+          "CE",
+          "EN 71"
+        ]
+      },
+      {
+        "code": "safetyInfo",
+        "label": "Informacje dot. bezpieczeństwa",
+        "valueType": "text",
+        "value": "Nie nadaje się dla dzieci w wieku poniżej 36 miesięcy"
+      }
+    ],
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "Model Bugatti Bolide do zbudowania z 905 elementów, w skali 1:16, z ruchomym silnikiem W16 i ruchomymi drzwiami. Odkryj nową galaktykę LEGO Star Wars dzięki interaktywnej zabawce konstrukcyjnej X-Wing Czerwona Piątka Luke'a. Ten zestaw Wszystko w jednym, będący częścią serii zestawów obsługiwanych przez system LEGO SMART Play, zawiera wszystkie elementy SMART Play: SMART klocek i ładowarkę, dwie SMART minifigurki LEGO oraz pięć SMART Tagów, które umożliwiają responsywną zabawę, dynamiczne efekty dźwiękowe i świetlne oraz wiele innych funkcji. Model myśliwca X-wing został odwzorowany z dbałością o każdy szczegół i zachowuje charakterystyczną sylwetkę maszyny znanej z filmów, dzięki czemu po złożeniu wygląda doskonale na półce każdego fana sagi."
+      },
+      {
+        "type": "paragraph",
+        "text": "Posłuchaj ryku silnika podczas lotu myśliwca X-wing. Aktywuj dźwięki strzałów laserowych X-winga i wieżyczki imperialnej. Monitoruj komunikację z centrum dowodzenia. Ożyw SMART Luke'a Skywalkera i SMART Księżniczkę Leię. Zatankuj i napraw X-winga za pomocą transportera. Zestaw zachęca do odgrywania scen z ulubionych filmów, a jednocześnie wspiera rozwój wyobraźni przestrzennej i zdolności manualnych dziecka. Wszystkie elementy są wykonane z trwałych, bezpiecznych materiałów, a instrukcja prowadzi krok po kroku przez proces budowy modelu."
+      },
+      {
+        "type": "bulletList",
+        "items": [
+          "Interaktywna zabawka konstrukcyjna ożywia X-winga poprzez zabawę aktywowaną ruchem",
+          "SMART klocek umożliwia korzystanie z systemu SMART Play ze światłami i dźwiękami"
+        ]
+      }
+    ]
+  }
+}

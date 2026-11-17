@@ -1,0 +1,13 @@
+{
+  "discounts": [
+    {
+      "kind": "percentage",
+      "basisPoints": 1000
+    },
+    {
+      "kind": "fixed",
+      "amountMinor": 1500,
+      "currency": "PLN"
+    }
+  ]
+}

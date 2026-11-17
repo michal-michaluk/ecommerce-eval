@@ -1,0 +1,95 @@
+version: "1"
+
+# One scenario per chapter. Every command below runs against the service that `demo/scripts/boot.sh` started:
+# its Postgres, its Kafka and the Keycloak realm of the four scopes. The four tokens arrive in the environment
+# (`source demo/run/env.sh`), so no recorded line ever carries a bearer token.
+timing:
+  command: "2200ms"
+  narration: "2000ms"
+  scenario: "1500ms"
+  closing: "3000ms"
+
+intro:
+  - narration: "catalog — one Spring service, five bounded contexts, no frontend: everything below is HTTP, and the answers are the proof."
+  - narration: "Authors write offers, the quality policy decides what blocks them, reviewers publish, sales price, the shop hears about it on Kafka."
+
+scenarios:
+  - title: "1. Lifecycle — draft, findings, override, publish"
+    actions:
+      - narration: "An author creates the offer: a draft with a title, an EAN and a category path. No version exists yet."
+      - command: "OFFER=$(curl -s --json @demo/payloads/offer-xwing.json $BASE/offers -H \"$AUTH_AUTHOR\" | jq -r .offerId); curl -s $BASE/offers/$OFFER -H \"$AUTH_AUTHOR\" | jq -c ."
+      - narration: "The photographer owns media, the author never touches it — the field-level scope of the draft resource."
+      - command: "curl -s -X PATCH --json @demo/payloads/media.json $BASE/offers/$OFFER/draft -H \"$AUTH_PHOTOGRAPHER\" | jq -c '[.media[] | {mediaId, primary}]'"
+      - narration: "The availability start is derived from today, so the recording cannot depend on a wall-clock accident."
+      - command: "curl -s -X PATCH --json '{\"availabilityStart\":\"'$(date -v+30d +%F)'\"}' $BASE/offers/$OFFER/draft -H \"$AUTH_AUTHOR\" | jq -c '{availabilityStart}'"
+      - narration: "A 47-character description is what the quality policy 08 reports as blocking: QP-6, prose below 1000 characters."
+      - command: "curl -s -X PATCH --json @demo/payloads/draft-thin.json $BASE/offers/$OFFER/draft -H \"$AUTH_AUTHOR\" | jq -c '[.quality.findings[] | {rule, severity}]'"
+      - narration: "So the review request is refused: the author has to take responsibility for the finding first."
+      - command: "curl -s -w ' -> %{http_code}\\n' -X POST --json @demo/payloads/request-plain.json $BASE/offers/$OFFER/review -H \"$AUTH_AUTHOR\""
+      - narration: "The override is the author's, and it opens the review."
+      - command: "curl -s -X POST --json @demo/payloads/request-override.json $BASE/offers/$OFFER/review -H \"$AUTH_AUTHOR\" | jq -c '{state, override: .override.findings}'"
+      - narration: "But an override buys a review, not a publication: accepting a candidate that still carries QP-6 is refused."
+      - command: "curl -s -X PATCH --json @demo/payloads/accept.json $BASE/offers/$OFFER/review -H \"$AUTH_REVIEWER\" | jq -c '{reason, finding: .findings[0].message}'"
+      - narration: "The author writes the description the policy asks for, and the findings empty out."
+      - command: "curl -s -X PATCH --json @demo/payloads/draft-whole.json $BASE/offers/$OFFER/draft -H \"$AUTH_AUTHOR\" | jq -c '{findings: [(.quality.findings // [])[] | .rule]}'"
+      - narration: "A fresh review, this time with nothing to override."
+      - command: "curl -s -X POST --json @demo/payloads/request-plain.json $BASE/offers/$OFFER/review -H \"$AUTH_AUTHOR\" | jq -c '{state, reviewId}'"
+      - narration: "The reviewer accepts. Acceptance is the publication trigger, and it freezes version 1."
+      - command: "curl -s -X PATCH --json @demo/payloads/accept.json $BASE/offers/$OFFER/review -H \"$AUTH_REVIEWER\" | jq -c '{state, publishedOfferVersion}'"
+      - narration: "The offer is live: state published, version 1 — the version, not the draft, is what the shop serves."
+      - command: "curl -s $BASE/offers/$OFFER -H \"$AUTH_AUTHOR\" | jq -c ."
+
+  - title: "2. Privacy and visibility — drafts leak nothing, dates decide"
+    actions:
+      - narration: "The offer is published, and still invisible: its availability start is a month away (element 11, R2)."
+      - command: "curl -s $BASE/offers/$OFFER -H \"$AUTH_AUTHOR\" | jq -c '{offerState, offerVersion, availabilityStart}'"
+      - narration: "A second offer is created and its draft written — editing a draft is not an event."
+      - command: "PAST=$(curl -s --json @demo/payloads/offer-past.json $BASE/offers -H \"$AUTH_AUTHOR\" | jq -r .offerId); curl -s $BASE/offers/$PAST -H \"$AUTH_AUTHOR\" | jq -c ."
+      - command: "curl -s -X PATCH --json @demo/payloads/draft-ninjago.json $BASE/offers/$PAST/draft -H \"$AUTH_AUTHOR\" | jq -c '{offerState, title: .description.title}'"
+      - narration: "The topic agrees: one line per offer that published something, and this offer is not there."
+      - command: "kcat -C -q -b $KAFKA_BOOTSTRAP -t $TOPIC -o beginning -e -f '%k\\n' | sort | uniq -c"
+      - narration: "And the draft never leaves the content roles: sales is refused, with no body at all."
+      - command: "curl -s -w ' -> %{http_code}\\n' $BASE/offers/$PAST/draft -H \"$AUTH_SALES\""
+      - narration: "Now the same offer is made publishable: media from the photographer, an availability start in the past."
+      - command: "curl -s -X PATCH --json @demo/payloads/media.json $BASE/offers/$PAST/draft -H \"$AUTH_PHOTOGRAPHER\" | jq -c '[.media[].mediaId]'"
+      - command: "curl -s -X PATCH --json '{\"availabilityStart\":\"'$(date -v-1d +%F)'\"}' $BASE/offers/$PAST/draft -H \"$AUTH_AUTHOR\" | jq -c '{availabilityStart, findings: [(.quality.findings // [])[] | .rule]}'"
+      - command: "curl -s -X POST --json @demo/payloads/request-plain.json $BASE/offers/$PAST/review -H \"$AUTH_AUTHOR\" | jq -c '{state}'"
+      - command: "curl -s -X PATCH --json @demo/payloads/accept.json $BASE/offers/$PAST/review -H \"$AUTH_REVIEWER\" | jq -c '{state, publishedOfferVersion}'"
+      - narration: "Two published offers: one availability start behind us, one ahead. Element 11 answers VISIBLE for the first and HIDDEN for the second, at read time — chapter 5 shows that verdict on screen."
+      - command: "curl -s \"$BASE/offers?page=0&size=2\" -H \"$AUTH_AUTHOR\" | jq -c '.items[] | {offerState, availabilityStart}'"
+
+  - title: "3. Pricing — current, scheduled, activated"
+    actions:
+      - narration: "Sales sets the price in force. The shop hears about it immediately: PricesChanged."
+      - command: "curl -s -X PATCH --json @demo/payloads/pricing-open.json $BASE/offers/$OFFER/pricing -H \"$AUTH_SALES\" | jq -c '{current: .current.amountMinor, scheduled: [.scheduled[].amountMinor]}'"
+      - narration: "A price scheduled to start in a moment is a plan, not a price: the model carries it and publishes nothing."
+      - command: "curl -s -X PATCH --json '{\"prices\":[{\"currency\":\"PLN\",\"amountMinor\":29900,\"validFrom\":\"'$(date -v+5S -u +%Y-%m-%dT%H:%M:%SZ)'\"}]}' $BASE/offers/$OFFER/pricing -H \"$AUTH_SALES\" | jq -c '{current: .current.amountMinor, scheduled: [.scheduled[] | {amountMinor, validFrom}]}'"
+      - narration: "The offer's events so far: one publication, one price change. Nothing for the scheduled entry."
+      - command: "kcat -C -q -b $KAFKA_BOOTSTRAP -t $TOPIC -o beginning -e -f '%s\\n' | jq -r 'select(.key==\"'$OFFER'\") | \"\\(.eventType) \\(.payload.price.amountMinor // \"\")\"'"
+      - narration: "The activation poll now runs against the clock — a beat — and the entry is no longer scheduled."
+      - command: "sleep 8; curl -s $BASE/offers/$OFFER/pricing -H \"$AUTH_SALES\" | jq -c '{current: .current.amountMinor, scheduled: [.scheduled[].amountMinor], history: [.history[].amountMinor]}'"
+      - narration: "And the activation published it: a second PricesChanged, carrying the price that just started."
+      - command: "kcat -C -q -b $KAFKA_BOOTSTRAP -t $TOPIC -o beginning -e -f '%s\\n' | jq -c 'select(.eventType==\"PricesChanged\") | {key, price: .payload.price.amountMinor, effectiveFrom: .payload.effectiveFrom}' | tail -1"
+      - narration: "Two discounts on the same currency — a percentage and a fixed amount — are accepted together; 10 stacks them and 16 previews the stack."
+      - command: "curl -s -X PATCH --json @demo/payloads/pricing-stack.json $BASE/offers/$OFFER/pricing -H \"$AUTH_SALES\" | jq -c '{active: [.discounts.active[] | {kind, basisPoints, amountMinor}]}'"
+
+  - title: "4. Rejection and recovery"
+    actions:
+      - narration: "A third offer is drafted completely — media, description, a past availability start — and sent to review."
+      - command: "REJ=$(curl -s --json @demo/payloads/offer-review.json $BASE/offers -H \"$AUTH_AUTHOR\" | jq -r .offerId); curl -s -X PATCH --json @demo/payloads/media.json $BASE/offers/$REJ/draft -H \"$AUTH_PHOTOGRAPHER\" | jq -c '[.media[].mediaId]'"
+      - command: "curl -s -X PATCH --json @demo/payloads/draft-bugatti.json $BASE/offers/$REJ/draft -H \"$AUTH_AUTHOR\" | jq -c '{title: .description.title}'"
+      - command: "curl -s -X PATCH --json '{\"availabilityStart\":\"'$(date -v-1d +%F)'\"}' $BASE/offers/$REJ/draft -H \"$AUTH_AUTHOR\" | jq -c '{availabilityStart, findings: [(.quality.findings // [])[] | .rule]}'"
+      - command: "curl -s -X POST --json @demo/payloads/request-plain.json $BASE/offers/$REJ/review -H \"$AUTH_AUTHOR\" | jq -c '{state, reviewId}'"
+      - narration: "The reviewer rejects it, and a rejection without a reason is a broken command, not a decision — so the reason is part of it."
+      - command: "curl -s -X PATCH --json @demo/payloads/reject.json $BASE/offers/$REJ/review -H \"$AUTH_REVIEWER\" | jq -c '{state, reason}'"
+      - narration: "The offer is back in draft: a rejected review published nothing and froze nothing."
+      - command: "curl -s $BASE/offers/$REJ -H \"$AUTH_AUTHOR\" | jq -c ."
+      - narration: "The author revises the description the reviewer asked for."
+      - command: "curl -s -X PATCH --json @demo/payloads/draft-bugatti-revised.json $BASE/offers/$REJ/draft -H \"$AUTH_AUTHOR\" | jq -c '{title: .description.title}'"
+      - narration: "A new attempt is a new review, and this one is accepted."
+      - command: "curl -s -X POST --json @demo/payloads/request-plain.json $BASE/offers/$REJ/review -H \"$AUTH_AUTHOR\" | jq -c '{state, reviewId}'"
+      - command: "curl -s -X PATCH --json @demo/payloads/accept.json $BASE/offers/$REJ/review -H \"$AUTH_REVIEWER\" | jq -c '{state, publishedOfferVersion}'"
+
+outro:
+  - narration: "Four chapters of behaviour, all of it the running service: HTTP in, domain decisions out, and one topic carrying what left the context."
+  - narration: "Chapter 5 shows the three screens of 14, 15 and 16, rendered from the same read models."
