@@ -73,11 +73,4 @@ of 12 over a booted service); `build` excludes it, because it boots Docker, Keyc
 and the touched docs above still match the code.
 
 New service: `scaffold generate microservice-java-spring services/<name> micro_name=<package> db_name=<name>`,
-then `bash hooks/post-generate.sh <package>` and add its row above.
-
-<br />
-
-## Reference example
-
-`.agents/blueprints/microservice-java-spring/` is the generated reference app the docs describe — read it to
-see a pattern applied, never copy from it into a service.
+then add its row above.

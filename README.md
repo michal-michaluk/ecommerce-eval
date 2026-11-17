@@ -34,14 +34,11 @@ services/    one directory per microservice (bounded context)
 | `docs/api/inventree-openapi.json` | InvenTree API 579 OpenAPI 3.0.3 (293 paths, 427 schemas) |
 | `docs/api/warehouse-api.md` | warehouse endpoints in scope and the port they translate into |
 
-`.agents/blueprints/microservice-java-spring/` is the reference example the services are scaffolded from.
-
 ## Adding a service
 
 1. `scaffold generate microservice-java-spring services/<name> micro_name=<package> db_name=<name>`
-2. Run its `hooks/post-generate.sh <package>` (nests the dotted package directory).
-3. Read its `AGENTS.md` — build, quality gates and patterns live there — plus `docs/arch/microservice-java-spring/`.
-4. Add its row to the service table above.
+2. Read its `AGENTS.md` — build, quality gates and patterns live there — plus `docs/arch/microservice-java-spring/`.
+3. Add its row to the service table above.
 
 ## Running a service
 
@@ -52,5 +49,3 @@ cd services/<name>
 ./gradlew build        # compile + tests + quality gates
 ./gradlew bootRun      # needs PostgreSQL, Kafka and a JWT issuer
 ```
-
-Prerequisites per service are documented in its `docs/tech-update.md`.
