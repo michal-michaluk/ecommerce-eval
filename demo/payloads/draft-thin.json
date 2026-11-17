@@ -1,0 +1,20 @@
+{
+  "description": {
+    "title": "LEGO Star Wars SMART Play X-Wing Czerwona Piątka Luke'a 75423",
+    "identifiers": { "productNumber": "75423", "eanGtin": "5702017817705", "setName": "X-Wing Czerwona Piątka" },
+    "brand": { "name": "LEGO", "verified": true },
+    "condition": "NEW",
+    "categoryPath": ["Dziecko", "Zabawki", "Klocki", "LEGO", "Zestawy", "Star Wars"],
+    "parameters": [
+      { "code": "condition",    "label": "Stan",                          "valueType": "text",      "value": "Nowy" },
+      { "code": "childAge",     "label": "Wiek dziecka",                  "valueType": "rangeFrom", "from": 6, "unit": "lat" },
+      { "code": "pieceCount",   "label": "Liczba elementów",              "valueType": "integer",   "value": 581 },
+      { "code": "gender",       "label": "Płeć",                          "valueType": "enumSet",   "value": ["boys", "girls", "unisex"] },
+      { "code": "certificates", "label": "Certyfikaty, opinie, atesty",    "valueType": "list",      "value": ["CE", "EN 71"] },
+      { "code": "safetyInfo",   "label": "Informacje dot. bezpieczeństwa", "valueType": "text",      "value": "Nie nadaje się dla dzieci w wieku poniżej 36 miesięcy" }
+    ],
+    "blocks": [
+      { "type": "paragraph", "text": "Krótki opis, który nie osiąga progu prozy z 08." }
+    ]
+  }
+}

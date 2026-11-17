@@ -1,0 +1,8 @@
+{
+  "media": {
+    "add": [
+      { "kind": "image", "format": "jpg", "position": 1, "primary": true, "url": "https://cdn.example/M-01.jpg" },
+      { "kind": "image", "format": "jpg", "position": 2, "primary": false, "url": "https://cdn.example/M-02.jpg" }
+    ]
+  }
+}
