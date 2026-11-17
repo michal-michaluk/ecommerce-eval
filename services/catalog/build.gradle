@@ -178,6 +178,7 @@ tasks.register("trivyScan", Exec) {
         "--scanners", "vuln,secret,misconfig",
         "--severity", "HIGH,CRITICAL",
         "--exit-code", "1",
+        "--ignorefile", "/project/.trivyignore.yaml",
         "/project"
 }
 

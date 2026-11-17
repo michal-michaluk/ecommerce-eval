@@ -21,6 +21,7 @@ index.scip
 ## linux
 .*
 !.git*
+!.trivyignore.yaml
 !.travis.yml
 !.codecov.yml
 !.agents/

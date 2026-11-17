@@ -1,0 +1,11 @@
+misconfigurations:
+  - id: KSV-0014
+    paths:
+      - "k8s/infra/keycloak.yaml"
+    statement: >-
+      Keycloak 26 `start-dev` always re-augments Quarkus at startup and rewrites
+      $KC_HOME/lib/quarkus/transformed-bytecode.jar, so the container cannot run on a
+      read-only root filesystem; a writable mount over lib/quarkus is not a fix either
+      (the build recreates that directory). read-only rootfs is unsupported upstream —
+      keycloak/keycloak#11286 (open), #41550 (unmerged), and the Keycloak Operator does
+      not set it either (#54543).
