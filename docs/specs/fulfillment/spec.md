@@ -80,6 +80,13 @@ rule in this spec can be verified against Tier B in one hop.
 | D6 | Decision | questions and risks are numbered **per element** — `Q-<element>-n` / `R-<element>-n` — not per spec; the plain sequence collides because 04–09, 11, 12 and 15–18 landed in one parallel batch: `Q16`–`Q24` and `R7`–`R11` were each claimed by two or more files, so an unqualified id resolves to more than one question | accepted | elements 10, 13 and 14 already use the per-element form; 05 and 06 converted to `Q-05-n` / `Q-06-n`; no landed element renumbered; a cross-element reference must name the element and its scoped id (`element 03 Q-03-1`); the Step-3 facts are `F3-n`, so the global register keeps one meaning each for `F3` and `F4` |
 | D7 | Decision | an **explicit resume command** exists — `POST /processing/{processingId}/hold/resume`, granted to both `fulfillment-employee` and `fulfillment-resolver` — because no source names any exit from `onHold`; it succeeds only with zero open issues (element 09 H5/H6) and never on a polled carrier signal | accepted | the hole is closed deliberately, not left to an implementer: element 02 RULE-7, element 09 H5/H6, element 11, element 17 `Q-17-1` |
 | D8 | Decision | closing an issue is a **fact recorded by the resume command** (D7): the request body is `{ "closedIssueIds": ["ISS-2026-0031"] }`, and any issue left open makes it answer `409 ISSUES_REMAIN` with `openIssues` — the issue dashboard stays read-only, and there is no separate resolve endpoint, resolve command or issue lifecycle | accepted | element 04 RULE-1 (`closedAt` is the record's single mutable fact), element 09 H5/H6, element 11 (the one write path), element 17 (no write side) |
+| D9 | Decision | cross-context transport is HTTP — `POST /orders` inbound, no broker, no outbox | accepted | closes spec `Q5` and element 12 `Q-12-1`; `R-11-1` (synchronous call blocks checkout) stays open as a checkout-side risk; a broker path would need `integration-events.md` revised |
+| D10 | Decision | **one parcel per processing** — `Parcel.ofTotal = 1`, `sequence.index = 1`; multi-parcel packing is out of scope | accepted | resolves the element 02 `parcel` (singular) vs element 03/06 `ofTotal > 1` contradiction; narrows element 03 `Q-03-3` to "packing never splits" |
+| D11 | Decision | write triggers the elements left unnamed: warehouse `reserve` on a **granted claim**, parcel `register` on the **first scan** (`assigned → picking`), warehouse `issue` at **readiness**, `release` **never**; unknown ids in `closedIssueIds` answer `404` | accepted | closes the orphaned capability 4 and the parcel-registration trigger; `Q-13-1` (sweeper duration) still open — the default is "no sweeper until a duration is decided" |
+| D12 | Decision | a hold lift publishes the in-process `orderResumed` event | accepted | closes element 09 `Q-09-4`; the resume is otherwise invisible to every read model |
+| D13 | Decision | the customer endpoint accepts **any** `fulfillment-customer` token — no ownership check | accepted with risk | `Order` carries no customer identity, so "only their own processing" is unimplementable; element 18 `Q-18-2` and `UND-30` stay open |
+| D14 | Decision | warehouse and carrier are **ports plus in-test fakes**; real InvenTree/DPD clients are separate specs | accepted | restates `D2` for the plan; no simulator/CLI and no Pact in this repo, because no consumer service exists |
+| D15 | Decision | element 05 (`GoodsIssueNote`) is **out of the implementation plan** | accepted | it cannot be implemented before an invoicing contract exists — no port, DTO or event supplies net/VAT/gross/`amountInWords`, and `RULE-3` forbids reusing buyer or delivery address as `receiver` |
 
 ## Step 2 — Goals, actors, capabilities, properties (accepted)
 
@@ -192,3 +199,367 @@ One-liners, per type, are kept with the associated `Q`/`R` they depend on:
 | 5 Element specification | in progress — 01–18 written; 05 and 06 re-checked against the KB (per-element `Q`/`R` ids per D6, anchors re-verified); consistency review pending |
 | 6 Consistency review | pending |
 | 7 Close-out & booking | pending |
+
+---
+
+## Prove Definition of Done
+
+Executed row by row by the `prove-dod` node; a row that is not executed is a failure.
+
+| # | Row | Command | Pass |
+| --- | --- | --- | --- |
+| 1 | service builds, static analysis and coverage | `cd services/fulfillment && ./gradlew build --no-daemon` | exit 0, SpotBugs 0, JaCoCo ≥ 80 % |
+| 2 | architecture rules | `cd services/fulfillment && ./gradlew test --tests '*Architecture*'` | 0 failures |
+| 3 | domain/architecture style gates | `cd services/fulfillment && sqt check .` | 0 violations |
+| 4 | the whole HTTP contract of element 11 | `cd services/fulfillment && ./gradlew e2eHurl --no-daemon` | every request in `e2e/fulfillment-api.hurl` passes |
+| 5 | spec id namespace | `cd docs/specs/fulfillment && python3 prototypes/check-ids.py` | exit 0 |
+| 6 | one employee per order | hurl: two claims by different employees | second → `409 ALREADY_ASSIGNED` |
+| 7 | an order is never processed twice | hurl: same `orderHash` twice | `201` then `200 duplicate:true`, one row in `GET /orders` |
+| 8 | pick list carries product, quantity, location | hurl: `GET …/pick-list` | every stop has `productNumber`, `quantityToTake`, `location` |
+| 9 | a reservation is placed at claim and consumed at readiness | hurl: claim, then readiness; fake warehouse records both calls | exactly one `reserve` on the granted claim and one `issue` on readiness |
+| 10 | every position confirmed by scanning, idempotently | hurl: same confirmation twice | `200`, same state |
+| 11 | readiness refused while a position is open | hurl: `POST …/readiness` with an open position | `409 NOT_READY` + `reasons[]` |
+| 12 | the parcel has a carrier identifier before the first leg | hurl: `POST …/readiness` | `200`, `parcel.waybill` non-empty |
+| 13 | every delivery leg reaches the customer view | hurl: legs L3–L6 applied, then `GET …/state` | legs present, `assignee` and `issue` absent |
+| 14 | an issue holds the whole order and blocks readiness | hurl: `POST /issues`, then scan and readiness | `201`, state `onHold`, both refused `409` |
+| 15 | a hold is lifted only with zero open issues | hurl: resume with one open, then with none | `409 ISSUES_REMAIN`, then `200` with the pre-hold state |
+| 16 | the issue dashboard is read-only and resolver-scoped | hurl: `GET /issues` as resolver and as employee | `200` / `403` |
+| 17 | no money anywhere | hurl asserts `jsonpath "$..price" not exists` and the same for `amount`, `currency`, `vat` | all pass |
+
+## Tickets
+
+- Spec ticket: [#3](https://github.com/michal-michaluk/ecommerce-eval/issues/3)
+- Plan ticket: [#66](https://github.com/michal-michaluk/ecommerce-eval/issues/66)
+
+---
+
+## Implementation Plan
+
+### Available Infrastructure
+
+- **Build:** Gradle 9.5.1 wrapper, Java 25, Spring Boot (blueprint `microservice-java-spring`), `./gradlew build` = assemble + `test` + SpotBugs + JaCoCo ≥ 80 % instruction.
+- **Test:** JUnit Platform; `@IntegrationTest` + Testcontainers (PostgreSQL, Kafka, Keycloak); ArchUnit 1.4.2.
+- **e2e:** `hurl 7.1.0` driven by a Java fixture, mirroring `services/catalog` on `feat/catalog-domain-model` (`build.gradle:81-90`, `src/test/java/shop/catalog/e2e/HurlSuiteFixture.java`, `CatalogRealmFixture`, `CatalogTopicFixture`, `CatalogE2eVariables`) — `./gradlew e2eHurl` boots the service and runs one hurl file. The scaffold does **not** generate this task; the `scaffold-service` node adds it.
+- **Static:** SpotBugs 4.9.8 + findsecbugs; `sqt` (3 root checks + 51 main + 6 test checks, metric bands); PITest; Trivy fs (`./gradlew trivyScan`, needs Docker-on-podman).
+- **Language:** Java 25, checked `void`-free aggregates, package-private ports with inner adapters.
+- **Baseline branch:** implementation branches from `feat/catalog-domain-model` — it is the only branch where the ArchUnit suite is green (verified `BUILD SUCCESSFUL`) and where a real context (`offer`, `pricing`, `quality`, `reads`, `review`) exists to copy. `main` carries the bare scaffold and a failing `ArchitectureTest` (verified 1 of 2 failed).
+- **Verification skills available:** `scaffold` (generate/update/docs/example), `review` + its procedures, `contract-testing`, `implement`, `demo`, `knowledge`, repo-local `run-apps`.
+- **Architecture docs:** `docs/arch/microservice-java-spring/*` — 19 files, **generated and gitignored** (`.gitignore:19-21`); regenerate with `scaffold docs microservice-java-spring`. Read `index.md` first in every node.
+
+### Clarification Decisions
+
+| # | Issue | Decision |
+| --- | --- | --- |
+| 1 | spec not accepted (Steps 5–7 open, #3 open) | plan written now; the `spec-consistency` node executes the consistency review (Step 6) as executable work |
+| 2 | baseline branch | docs stay on `feat/fulfillment-spec` off `main`; code branches from `feat/catalog-domain-model` |
+| 3 | external integrations (plan reference wants simulator + CLI + Pact) | port + package-private adapter + in-test fake; real InvenTree/DPD clients are their own specs (D2); no Pact — no consumer service exists and the repo precedent is hurl e2e |
+| 4 | element 05 (WZ) has no amount source | out of this plan; registered as `D15` |
+| 5 | views 15–18 | backend read models + JSON only; the Storybook gallery stays a specification artifact |
+| 6 | `reserve`/`register`/`issue` had no trigger | `D11` |
+| 7 | hold lift emitted no event | `D12` |
+| 8 | customer ownership check unimplementable | `D13` |
+
+### Plan
+
+**1. Order processing core**
+ - spec-consistency (spec.md F1 + D9–D13), scaffold-service, security-scopes -> order-value-object -> processing-aggregate -> intake-endpoint -> assignment -> orders-list-projection.
+ - gate at the end of the phase: `./gradlew build` and `./gradlew e2eHurl`.
+
+**2. Warehouse, pick list, picking and packing**
+ - warehouse-port -> pick-list-calculation -> pick-pack-commands, pick-workstation-read.
+ - gate: `./gradlew build`, `./gradlew e2eHurl`.
+
+**3. Delivery, parcel, legs and the customer view**
+ - parcel-aggregate -> readiness-decision -> carrier-port, label-serving, customer-state-projection.
+ - gate: `./gradlew build`, `./gradlew e2eHurl`.
+
+**4. Order processing — the rest**
+ - issues-hold -> issue-dashboard-projection.
+ - gate: `./gradlew build`, `./gradlew e2eHurl` (the whole contract).
+
+**5. Prove of done** — prove-dod.
+
+**6. Evidence** — demo-recording, review-branch.
+
+---
+
+#### spec-consistency
+
+- **Goal:** remove every wire-level contradiction the executable contract exposes, and land the register entries D9–D13 plus the `Prove Definition of Done` table, so later nodes inherit one contract.
+- **Executor:** general
+- **Docs:** `spec.md` F1 cluster; elements 02, 07, 09, 10, 11, 16, 18; `prototypes/fulfillment-api.hurl` (authoritative for the wire, `11-fulfillment-http-api.md:5`)
+- **IN / OUT:** IN: the 18 element files + `spec.md`; OUT: the same files; keeps `check-ids.py` green and does **not** rename ids.
+- **checks:**
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/docs/specs/fulfillment && python3 prototypes/check-ids.py`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/docs/specs/fulfillment && grep -q '| D13 ' spec.md`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/docs/specs/fulfillment && grep -q '## Prove Definition of Done' spec.md`
+- **review_prompt:** Review the work in `/Users/michal/workspace/bottega-ai-mind/eval/ecommerce`; do not inspect any other repository; if a premise below is false, say so and stop. Compare `docs/specs/fulfillment/10-pick-list-calculation.md`, `11-fulfillment-http-api.md`, `02-order-processing.md`, `07-assignment-guard.md`, `09-hold-decision.md`, `16-pick-workstation.md`, `18-order-processing-state-view.md` against `prototypes/fulfillment-api.hurl`: every jsonpath and status the hurl asserts must be producible by the element spec, and every error code the hurl names must appear in the element that owns it. Report every remaining mismatch. Do not edit files — report only.
+
+#### scaffold-service
+
+- **Goal:** generate `services/fulfillment` from the blueprint, add the `e2eHurl` task and the Java hurl harness, seed `e2e/fulfillment-api.hurl` from the spec prototype, and register the service in the repo (README row, run-apps `databases.txt` line, k8s base/overlays, `fulfillment-db` secret).
+- **Executor:** general
+- **Docs:** `spec.md` D1/D2; `docs/arch/microservice-java-spring/index.md`, `code-structure.md`, `testing.md`, `tech-update.md`; `scaffold` skill; `services/catalog` on `feat/catalog-domain-model` as the e2e precedent
+- **IN / OUT:** IN: `blueprints/microservice-java-spring`, the spec prototype hurl; OUT: `services/fulfillment/**` (root package `shop.fulfillment`), `README.md` service table row, `.agents/skills/run-apps/manifests/infra/postgres.yaml`
+- **checks:**
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment && ./gradlew build --no-daemon`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment && sqt check .`
+  - `test -f /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment/e2e/fulfillment-api.hurl`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment && ./gradlew tasks --all | grep -q e2eHurl`
+- **review_prompt:** Review the work in `/Users/michal/workspace/bottega-ai-mind/eval/ecommerce`; do not inspect any other repository; if a premise below is false, say so and stop. Check that `services/fulfillment` is a faithful `microservice-java-spring` scaffold — one root package, no `domain/ application/ infrastructure/` sub-packages, `guardrail_mode=strict` gates present (jacoco ≥ 80 %, SpotBugs failing, three sqt configs) — and that the `e2eHurl` task + fixture actually boot the service rather than skipping. Report structural drift from `docs/arch/microservice-java-spring/code-structure.md`. Do not edit files — report only.
+
+#### security-scopes
+
+- **Goal:** provision the four scopes `fulfillment-employee`, `fulfillment-resolver`, `fulfillment-customer`, `shopping-service` in the test realm, the k8s Keycloak manifest and `AuthFixture`, and record one authN/authZ decision per endpoint of element 11.
+- **Executor:** general
+- **Docs:** `11-fulfillment-http-api.md:24-36`; `docs/arch/microservice-java-spring/security.md`
+- **IN / OUT:** IN: generated realm/`AuthFixture`; OUT: `src/test/resources/iot-realm.json`, `k8s/infra/keycloak.yaml`, `src/test/java/shop/fulfillment/auth/AuthFixture.java`, `docs/security-decisions.md` in the service
+- **checks:**
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment && ./gradlew build --no-daemon`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment && grep -c 'fulfillment-' src/test/resources/iot-realm.json` ≥ 6 (3 scopes × 2 occurrences)
+- **review_prompt:** Review the work in `/Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment`; do not inspect any other repository; if a premise below is false, say so and stop. Check `docs/security-decisions.md` against `docs/specs/fulfillment/11-fulfillment-http-api.md:24-36`: every endpoint has exactly one decision, `permitAll` appears nowhere, `POST /orders` is scoped to `shopping-service` and `POST …/hold/resume` to both employee and resolver. Report gaps. Do not edit files — report only.
+
+#### order-value-object
+
+- **Goal:** `Order` as a shared-kernel value object (`OrderLine`, `Delivery`, `Location`, `Address`, `Payment`, `Invoicing`) with RULE-1…RULE-8 enforced in compact constructors and equality by canonical `orderHash`.
+- **Executor:** general
+- **Docs:** `01-order.md`; `docs/arch/microservice-java-spring/domain-model-value-object.md`; `src/main/java/.sqt.yaml` `vo.*` rules
+- **IN / OUT:** IN: `01-order.md`; OUT: `src/main/java/shop/fulfillment/**/Order*.java`, its fixture and unit tests
+- **checks:**
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment && ./gradlew build --no-daemon`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment && ./gradlew test --tests '*Order*' --no-daemon`
+- **review_prompt:** Review the work in `/Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment`; do not inspect any other repository; if a premise below is false, say so and stop. Check the `Order` type against RULE-1…RULE-8 of `docs/specs/fulfillment/01-order.md`: no identity, price-free, every invariant rejected in the constructor, one location kind enforced, and a canonical form whose ordering is defined by content and not by the caller. Report every invariant that is unenforced or enforced in the wrong layer. Do not edit files — report only.
+
+#### processing-aggregate
+
+- **Goal:** `OrderProcessing` aggregate — id minting, `ProcessingState`/`PositionState` machine, positions derived from order lines, domain event list, command methods that own every transition.
+- **Executor:** general
+- **Docs:** `02-order-processing.md` (RULE-1…RULE-7, edges `:40-64`); `domain-model-aggregate.md`, `domain-model-events.md`, `error-handling.md`
+- **IN / OUT:** IN: `02`; OUT: `src/main/java/shop/fulfillment/**/OrderProcessing*.java`, `ProcessingState`, `PositionState`, unit tests
+- **checks:**
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment && ./gradlew build --no-daemon`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment && ./gradlew test --tests '*OrderProcessing*' --no-daemon`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment && sqt check .`
+- **review_prompt:** Review the work in `/Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment`; do not inspect any other repository; if a premise below is false, say so and stop. Compare the aggregate with `docs/specs/fulfillment/02-order-processing.md:40-64`: the edge table must match the code one-to-one, no edge may exist from `pending`/`assigned` to `onHold`, `state` may only change through command methods, and position state may never regress. Report each divergence. Do not edit files — report only.
+
+#### intake-endpoint
+
+- **Goal:** `POST /orders` — `shopping-service` scope, incomplete order → `422 ORDER_INCOMPLETE` with `missing[]`, repeat `orderHash` → `200 duplicate:true` with no second processing, success → `201 {processingId,state}` plus `OrderProcessingStarted`.
+- **Executor:** general
+- **Docs:** `12-order-handover.md`; `11-fulfillment-http-api.md:13-16,42-48`; `http-adapter.md`, `error-handling.md`, `persistence-adapters.md`, `ports.md`
+- **IN / OUT:** IN: `order-value-object`, `processing-aggregate`; OUT: controller, command record, `OrderProcessingRepository` port + adapter, Liquibase changelog, hurl intake section
+- **checks:**
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment && ./gradlew build --no-daemon`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment && ./gradlew e2eHurl --no-daemon`
+- **review_prompt:** Review the work in `/Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment`; do not inspect any other repository; if a premise below is false, say so and stop. Check that the controller is thin (validation, mapping, one service call), that `422` is raised by `Order`'s invariants and translated by the one `FulfillmentException` advice, that `401`/`403`/`422`/`201`/`200` all match `docs/specs/fulfillment/12-order-handover.md:11-21`, and that a duplicate sends no second event. Report mismatches. Do not edit files — report only.
+
+#### assignment
+
+- **Goal:** `AssignmentGuard` decision (DT-07-1…DT-07-6) + `AssignOrder` command + `POST …/assignment` + `employee assigned to order fulfilment`, with `reserve` called on a granted claim (D11).
+- **Executor:** general
+- **Docs:** `07-assignment-guard.md`; `02-order-processing.md:68-73`; `domain-model-policy.md`
+- **IN / OUT:** IN: `processing-aggregate`, `warehouse-port` port interface (stub fake allowed); OUT: `AssignmentGuard*`, command, endpoint, tests, hurl assignment section
+- **checks:**
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment && ./gradlew build --no-daemon`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment && ./gradlew e2eHurl --no-daemon`
+- **review_prompt:** Review the work in `/Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment`; do not inspect any other repository; if a premise below is false, say so and stop. Check the decision table `docs/specs/fulfillment/07-assignment-guard.md:17-22` against the code and its tests row by row, that the policy is pure (no repository, no clock, no retry), that atomicity is enforced by the service/transaction rather than the policy, and that a refusal never clears an assignee. Report divergences. Do not edit files — report only.
+
+#### orders-list-projection
+
+- **Goal:** the orders-list read model fed by the phase-1 events and `GET /orders` (employee scope, hold marker, position progress, no money).
+- **Executor:** general
+- **Docs:** `15-orders-list-view.md`; `11-fulfillment-http-api.md:14`; `projection.md`, `persistence-adapters.md`
+- **IN / OUT:** IN: the phase-1 events; OUT: projection, read-model records, read controller, tests, hurl list section
+- **checks:**
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment && ./gradlew build --no-daemon`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment && ./gradlew e2eHurl --no-daemon`
+- **review_prompt:** Review the work in `/Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment`; do not inspect any other repository; if a premise below is false, say so and stop. Check the projection against `docs/specs/fulfillment/15-orders-list-view.md:45-70`: every listed event handled exactly once, find-or-create plus full recompute, the read controller depends on the projection only, and no field of the row comes from the write model. Report gaps. Do not edit files — report only.
+
+#### warehouse-port
+
+- **Goal:** `WarehouseStock` port (five operations), a package-private adapter, `FakeWarehouseStock` for tests, the owned mapping state S1/S3, the stale-allocation sweeper S2 and the stock-change poller raising `stock changed`.
+- **Executor:** general
+- **Docs:** `13-warehouse-port.md`; `docs/api/warehouse-api.md`, `docs/api/inventree-openapi.json`; `protocol-adapters.md`, `ports.md`
+- **IN / OUT:** IN: `13`; OUT: `WarehouseStock`, `StockAtLocation`, `ProductId`, `LocationCode`, `ReservationId`, `PickedItem`, `IssueNote`, `StockCursor`, `StockChangePage`, adapter + fake, sweeper, poller, tests
+- **checks:**
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment && ./gradlew build --no-daemon`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment && ./gradlew test --tests '*Warehouse*' --no-daemon`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment && sqt check .`
+- **review_prompt:** Review the work in `/Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment`; do not inspect any other repository; if a premise below is false, say so and stop. Check the port signatures against `docs/specs/fulfillment/13-warehouse-port.md:21-49` and its RULE-1…RULE-7: no invented retry/backoff/fallback, `release` idempotent, `issue` at-most-once per reservation, no cached stock presented as fresh, and the public-port visibility exception recorded rather than silently taken. Report divergences. Do not edit files — report only.
+
+#### pick-list-calculation
+
+- **Goal:** `PickListCalculation` producing `PickList`/`Stop`/`Shortfall` from positions plus `stockAt` observations, and `GET …/pick-list`.
+- **Executor:** general
+- **Docs:** `10-pick-list-calculation.md` (RULE-1…RULE-9, DT-1…DT-10, defaults `:97-107`); `11-fulfillment-http-api.md:14`
+- **IN / OUT:** IN: `warehouse-port`, `processing-aggregate`; OUT: the calculation, its value objects, query handler, read controller, tests, hurl pick-list section
+- **checks:**
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment && ./gradlew build --no-daemon`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment && ./gradlew e2eHurl --no-daemon`
+- **review_prompt:** Review the work in `/Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment`; do not inspect any other repository; if a premise below is false, say so and stop. Check the calculation against `docs/specs/fulfillment/10-pick-list-calculation.md`: every `pending` position appears, take + shortfall equals the position quantity, one stop per (position, location), the port result arrives as a parameter rather than being called inside the calculation, and a port failure yields no list. Report each violated rule. Do not edit files — report only.
+
+#### pick-pack-commands
+
+- **Goal:** scan confirmation (`POST …/positions/{productNumber}`) and packing (`POST …/packing`), the `assigned → picking → packed` edges, and the `GET /processing/{id}` snapshot.
+- **Executor:** general
+- **Docs:** `02-order-processing.md:68-73`; `11-fulfillment-http-api.md:14-16`; `16-pick-workstation.md:43-54`; `http-adapter.md`
+- **IN / OUT:** IN: `processing-aggregate`; OUT: command records, service methods, controllers, snapshot DTO, tests, hurl scan/pack/snapshot sections
+- **checks:**
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment && ./gradlew build --no-daemon`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment && ./gradlew e2eHurl --no-daemon`
+- **review_prompt:** Review the work in `/Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment`; do not inspect any other repository; if a premise below is false, say so and stop. Check that one scan closes one position, a repeat scan is a `200` no-op, packing only accepts `picked` positions and answers `409` otherwise, `packed` is derived from the position set rather than written by the controller, and the snapshot exposes exactly the fields the hurl asserts. Report divergences. Do not edit files — report only.
+
+#### pick-workstation-read
+
+- **Goal:** the pick-workstation read model — positions with line names, counters, locations from the pick list, and the optional stock-per-location panel.
+- **Executor:** general
+- **Docs:** `16-pick-workstation.md:25-41`; `projection.md`
+- **IN / OUT:** IN: `pick-list-calculation`, `pick-pack-commands`; OUT: the read model, its controller, tests
+- **checks:**
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment && ./gradlew build --no-daemon`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment && ./gradlew e2eHurl --no-daemon`
+- **review_prompt:** Review the work in `/Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment`; do not inspect any other repository; if a premise below is false, say so and stop. Check the workstation payload against `docs/specs/fulfillment/16-pick-workstation.md:25-41`: no money, no field the spec does not name, the unscanned position state is the one the spec settles on, and the screen cannot offer an action of another view's actor. Report gaps. Do not edit files — report only.
+
+#### parcel-aggregate
+
+- **Goal:** the `Parcel` aggregate — registration at the first scan (D11) minting our `reference`, the carrier waybill as the only carrier identity, forward-only legs with `(waybill, leg)` idempotency, `delivery number generated`.
+- **Executor:** general
+- **Docs:** `03-parcel.md` (RULE-1…RULE-7); `domain-model-aggregate.md`
+- **IN / OUT:** IN: `03`, `carrier-port` interface; OUT: `Parcel`, `Leg`, `LegState`, repository port + adapter, tests
+- **checks:**
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment && ./gradlew build --no-daemon`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment && ./gradlew test --tests '*Parcel*' --no-daemon`
+- **review_prompt:** Review the work in `/Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment`; do not inspect any other repository; if a premise below is false, say so and stop. Check `Parcel` against `docs/specs/fulfillment/03-parcel.md`: no physical record before a waybill returns, the waybill is never invented or parsed from a label, legs move forward only, an unknown status leaves `legState` untouched but stores the raw payload, and re-applying `(waybill, leg)` changes nothing. Report divergences. Do not edit files — report only.
+
+#### readiness-decision
+
+- **Goal:** `ReadyForDeliveryDecision` plus `POST …/readiness` — the decision table in its data-defined order, both effects (local mark and carrier collection request) in one command, `409 NOT_READY` with reasons.
+- **Executor:** general
+- **Docs:** `08-ready-for-delivery-decision.md` (RULE-1…RULE-6, DT order `:31`); `11-fulfillment-http-api.md:16`
+- **IN / OUT:** IN: `parcel-aggregate`, `carrier-port`; OUT: the decision, orchestration in the service, endpoint, tests, hurl readiness section
+- **checks:**
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment && ./gradlew build --no-daemon`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment && ./gradlew e2eHurl --no-daemon`
+- **review_prompt:** Review the work in `/Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment`; do not inspect any other repository; if a premise below is false, say so and stop. Check that the decision table order at `docs/specs/fulfillment/08-ready-for-delivery-decision.md:31` is preserved as data, that no-undo and replay-idempotency hold, that the carrier call happens once per grant, and that `reason` values are the decision's own rather than a re-derived issue check. Report divergences. Do not edit files — report only.
+
+#### carrier-port
+
+- **Goal:** `CarrierPort` (register, label, requestCollection, status) with a package-private adapter and fake, the status poller, and leg application L3–L6 into `Parcel`.
+- **Executor:** general
+- **Docs:** `14-carrier-port.md` (RULE-1…RULE-9); `03-parcel.md:70-73`; `protocol-adapters.md`
+- **IN / OUT:** IN: `parcel-aggregate`; OUT: port + value objects (`ParcelReference`, `RegistrationRequest`, `Registration`, `CarrierIdentity`, `LabelRequest`, `LabelDocument`, `CollectionRequest`, `CollectionHandle`, `LegObservation`), adapter, fake, poller, tests
+- **checks:**
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment && ./gradlew build --no-daemon`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment && ./gradlew test --tests '*Carrier*' --no-daemon`
+- **review_prompt:** Review the work in `/Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment`; do not inspect any other repository; if a premise below is false, say so and stop. Check the port against `docs/specs/fulfillment/14-carrier-port.md:28-55`: carrier-agnostic names, our reference and the carrier identity never merged, blind retry of `register` refused, `requestCollection` guarded to one open request per parcel, an unknown status stored and not mapped, and no money stored. Report divergences. Do not edit files — report only.
+
+#### label-serving
+
+- **Goal:** `GET …/documents/label` serving the carrier's stored bytes as `application/pdf`; a reprint reuses the waybill and never registers.
+- **Executor:** general
+- **Docs:** `06-consignment-note.md` (RULE-2, RULE-9); `11-fulfillment-http-api.md:19`
+- **IN / OUT:** IN: `carrier-port`; OUT: the document controller, the stored-bytes adapter, tests, hurl label section
+- **checks:**
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment && ./gradlew build --no-daemon`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment && ./gradlew e2eHurl --no-daemon`
+- **review_prompt:** Review the work in `/Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment`; do not inspect any other repository; if a premise below is false, say so and stop. Check that the service never authors a carrier-owned field, that the response is the carrier's document rather than a template we render, that a reprint does not call `register`, and that an absent label answers a refusal rather than an empty PDF. Report divergences. Do not edit files — report only.
+
+#### customer-state-projection
+
+- **Goal:** `GET /processing/{processingId}/state` as a separate customer resource — lines, delivery target, state in customer words, the L1–L6 timeline, hold marker, and never `assignee` or `issue`.
+- **Executor:** general
+- **Docs:** `18-order-processing-state-view.md`; `11-fulfillment-http-api.md:33,76`
+- **IN / OUT:** IN: `carrier-port` legs, `processing-aggregate` state; OUT: the projection, read model, controller, tests, hurl customer section (including the absent-field assertions)
+- **checks:**
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment && ./gradlew build --no-daemon`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment && ./gradlew e2eHurl --no-daemon`
+- **review_prompt:** Review the work in `/Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment`; do not inspect any other repository; if a premise below is false, say so and stop. Check the customer payload against `docs/specs/fulfillment/18-order-processing-state-view.md:26-40` and `11-fulfillment-http-api.md:76`: `assignee` and `issue` are absent from the JSON (not null), the timeline never regresses, one timestamp per state is when we received the event, and no ETA, percentage, raw carrier status or tracking link appears. Report gaps. Do not edit files — report only.
+
+#### issues-hold
+
+- **Goal:** `FulfillmentIssue` (append-only, free-form kind, single mutable `closedAt`), `HoldDecision` (H1–H7), `POST …/issues`, `POST …/hold/resume` with `closedIssueIds`, and the in-process `orderResumed` event (D12).
+- **Executor:** general
+- **Docs:** `04-fulfillment-issue.md` (RULE-1…RULE-8); `09-hold-decision.md` (RULE-1…RULE-10, H1–H7); `11-fulfillment-http-api.md:15-16`; `spec.md` D7/D8
+- **IN / OUT:** IN: `pick-pack-commands`; OUT: the issue record, decision, both commands, endpoints, `orderResumed`, tests, hurl issue/resume sections
+- **checks:**
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment && ./gradlew build --no-daemon`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment && ./gradlew e2eHurl --no-daemon`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment && sqt check .`
+- **review_prompt:** Review the work in `/Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment`; do not inspect any other repository; if a premise below is false, say so and stop. Check H1–H7 of `docs/specs/fulfillment/09-hold-decision.md:18-24` and RULE-1…RULE-8 of `04-fulfillment-issue.md` against the code and tests: an issue never becomes a state, `closedAt` is the only mutable fact, a hold blocks readiness only, resume is the only exit, and a resume that leaves an issue open answers `409 ISSUES_REMAIN`. Report divergences. Do not edit files — report only.
+
+#### issue-dashboard-projection
+
+- **Goal:** `GET /issues` — resolver scope only, read-only, grouped by order, no quantity column, no resolve action, unknown kinds shown verbatim.
+- **Executor:** general
+- **Docs:** `17-issue-dashboard.md`; `11-fulfillment-http-api.md:32,36`
+- **IN / OUT:** IN: `issues-hold`; OUT: the projection, read model, read controller, tests, hurl dashboard section incl. the `403`
+- **checks:**
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment && ./gradlew build --no-daemon`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment && ./gradlew e2eHurl --no-daemon`
+- **review_prompt:** Review the work in `/Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/fulfillment`; do not inspect any other repository; if a premise below is false, say so and stop. Check that the dashboard has no write path, that `POST …/hold/resume` is the only close path, that no issue kind is enumerated or rejected, and that an employee token receives `403`. Report gaps. Do not edit files — report only.
+
+#### prove-dod
+
+- **Goal:** execute every row of `spec.md` §Prove Definition of Done and report per row.
+- **Executor:** general
+- **Docs:** `spec.md` §Prove Definition of Done
+- **IN / OUT:** IN: `spec.md`; OUT: `docs/prove-of-done.md` — row → command → observed → pass/fail
+- **checks:**
+  - `test -f /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/docs/prove-of-done.md`
+  - `test "$(grep -c '^| ' /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/docs/prove-of-done.md)" -ge 17`
+- **review_prompt:** Review the work in `/Users/michal/workspace/bottega-ai-mind/eval/ecommerce`; do not inspect any other repository; if a premise below is false, say so and stop. Check `docs/prove-of-done.md` against `docs/specs/fulfillment/spec.md` §Prove Definition of Done; report every row missing, unexecuted, or marked pass without an observed result. Do not edit files — report only.
+
+#### demo-recording
+
+- **Goal:** record a chaptered demo of the finished context — apply the `demo` skill (scenarios → one video → chapters), attach the video and its public URL to the spec ticket #3.
+- **Executor:** general
+- **Docs:** `spec.md` §Prove Definition of Done (the scenarios); `demo` skill
+- **IN / OUT:** IN: the running service (`./gradlew e2eHurl` harness or `bootRun` + infra); OUT: `demo/scenarios.md`, `demo/record.js`, `demo/chapters.json`, `demo/fulfillment.webm`, `demo/fulfillment.chapters.mkv`
+- **checks:**
+  - `test -f /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/demo/scenarios.md`
+  - `test -f /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/demo/fulfillment.chapters.mkv`
+  - `ffprobe -v error -show_entries chapter=start_time,end_time:chapter_tags=title /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/demo/fulfillment.chapters.mkv | grep -q 'TAG:title='`
+- **review_prompt:** Review the work in `/Users/michal/workspace/bottega-ai-mind/eval/ecommerce`; do not inspect any other repository; if a premise below is false, say so and stop. Check the demo chapters against the prove-of-done rows: report every row missing from the chapter list or not demonstrated on screen. Do not edit files — report only.
+
+#### review-branch
+
+- **Goal:** review every change on the feature branch against `spec.md` and the architecture docs; report findings, edit nothing.
+- **Executor:** review
+- **Docs:** `spec.md`; `docs/arch/microservice-java-spring/index.md` and the docs its task routing names for each touched area
+- **IN / OUT:** IN: the branch diff (merge-base → HEAD) plus the spec; OUT: a findings report (issues · risks · gaps, each with `file:line`) as the final message
+
+### Spec Corrections Applied
+
+- register `D9` — transport is HTTP `POST /orders`; closes spec `Q5` and element 12 `Q-12-1`; broker/outbox deferred.
+- register `D10` — one parcel per processing; `Parcel.ofTotal = 1`, multi-parcel packing out of scope; narrows element 03 `Q-03-3`.
+- register `D11` — write triggers: warehouse `reserve` on a granted claim, parcel `register` on the first scan (`assigned → picking`), warehouse `issue` at readiness, `release` never; unknown ids in `closedIssueIds` answer `404`.
+- register `D12` — a hold lift publishes the in-process `orderResumed`; closes element 09 `Q-09-4`.
+- register `D13` — the customer endpoint accepts any `fulfillment-customer` token; ownership mapping is out of scope; element 18 `Q-18-2` and `R-11-1` stay open.
+- register `D14` — external integrations are ports plus in-test fakes; real InvenTree/DPD clients are separate specs (restates `D2` for the plan).
+- register `D15` — element 05 (WZ) is out of this plan; it cannot be implemented before an invoicing contract exists.
+- added §Prove Definition of Done (17 rows) and §Tickets.
+- element-level contradictions listed in *Open Topics* are fixed by the `spec-consistency` node, not by hand.
+
+### Issues & Resolutions
+
+| Node | Issue | Fix |
+| --- | --- | --- |
+| — | none yet — the plan has not been executed | — |
+
+### Open Topics
+
+- **F1 wire contract** — `GET /processing/{id}` shape/scope, pick-list `stops[]` vs `lines[].locations`, missing 409 codes, `NOT_READY.reasons[]`, `ORDER_INCOMPLETE.missing[]`, assignment no-op status, pagination (hurl has none, arch mandates `Pageable`, element 15 says "no pagination") — assigned to `spec-consistency`.
+- **F2 element 05** — no invoicing contract, no `receiver` source, numbering undecided (`Q-05-1`, `Q-05-2`) — out of plan (`D15`).
+- **F3 customer authorization** — no customer identity on `Order` — `D13`.
+- **F4 orphan operations** — `reserve`/`release`/`issue`/`register` triggers — `D11`; `release` has no path at all (`R-03-1`).
+- **F5 adapter internals** — no polling intervals, no carrier-status mapping, `stockChanges` is an unratified fifth port method (`13-warehouse-port.md:77-80`) — deferred with the adapters.
+- **F6 model defects** — `stateBeforeHold` has no field (resume derivation must be written), issue is singular on the aggregate while resume needs a set, `OP-`/`PCL-`/`ISS-` id generation undefined, `assignee`/`reportedBy` JWT claim unmapped — to be settled inside the owning nodes and recorded in the element docs.
+- **No Pact** — `plan/references/distributed-system.md` mandates consumer-driven contracts, but no consumer service exists in this repo and the repo precedent is a hurl e2e suite; recorded as a deliberate deviation.
+- **No simulator/CLI** — `plan/references/external-system-integration.md` wants them per external system; out of scope per `D14`.
+- **`docs/arch/` is generated and gitignored** — every node must run `scaffold docs microservice-java-spring` if it is stale; the source of truth is `blueprints/microservice-java-spring/docs/arch/`.
+
+### Verification Skill Gaps
+
+- `lizard` (arch workflow phase 10, complexity) is not installed — complexity is gated by the sqt metric bands instead.
+- `kustomize` is not installed — k8s manifest validation cannot run; `kubectl apply --dry-run=client` is the only local substitute.
+- No skill covers hurl suite authoring beyond `contract-testing`, which targets Pact; the e2e harness shape had to be copied from `services/catalog` on `feat/catalog-domain-model`.
