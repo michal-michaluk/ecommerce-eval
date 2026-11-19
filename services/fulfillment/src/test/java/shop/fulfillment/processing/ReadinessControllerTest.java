@@ -15,10 +15,12 @@ import java.util.List;
 import shop.fulfillment.HttpFixture;
 import shop.fulfillment.IntegrationTest;
 import shop.fulfillment.kernel.CarrierPort;
+import shop.fulfillment.kernel.OrderProcessingId;
 import shop.fulfillment.kernel.WarehouseStock;
 import shop.fulfillment.parcel.FakeCarrierPort;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
@@ -40,6 +42,10 @@ class ReadinessControllerTest {
     ProcessingService work;
     @Autowired
     CarrierPort carrier;
+    @Autowired
+    WarehouseStock stock;
+    @Autowired
+    ProcessingReservationRepository reservations;
 
     MockMvc mvc;
 
@@ -114,6 +120,37 @@ class ReadinessControllerTest {
     private MockHttpServletResponse readiness(String processingId) throws Exception {
         return HttpFixture.as(HttpFixture.EMPLOYEE_SCOPE, HttpFixture.EMPLOYEE, mvc,
                 post("/processing/" + processingId + "/readiness"));
+    }
+
+    @Test
+    void booksTheGoodsOutOnceAtReadinessAndKeepsTheNote() throws Exception {
+        String processingId = packedProcessing();
+        int issuedBefore = warehouse().issuesTaken();
+
+        readiness(processingId);
+        readiness(processingId);
+
+        assertThat(warehouse().issuesTaken() - issuedBefore).isEqualTo(1);
+        assertThat(reservations.findFor(new OrderProcessingId(processingId))).singleElement().satisfies(reservation -> {
+            assertThat(reservation.issued()).isTrue();
+            assertThat(reservation.issueDocument()).isEqualTo("WZ-2026-0001");
+        });
+    }
+
+    @Test
+    void keepsTheOrderUnreadyAndRecordsNothingWhenTheWarehouseCannotIssue() {
+        String processingId = packedProcessing();
+        warehouse().failingOnIssue(new IllegalStateException("removal refused"));
+
+        assertThatThrownBy(() -> work.markReady(processingId))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("removal refused");
+        assertThat(reservations.findFor(new OrderProcessingId(processingId)))
+                .allSatisfy(reservation -> assertThat(reservation.issued()).isFalse());
+    }
+
+    private FakeWarehouseStock warehouse() {
+        return (FakeWarehouseStock) stock;
     }
 
     private String assignedProcessing() {

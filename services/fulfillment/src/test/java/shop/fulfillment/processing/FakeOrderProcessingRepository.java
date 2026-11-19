@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import shop.fulfillment.kernel.IssueId;
 import shop.fulfillment.kernel.OrderProcessingId;
 import shop.fulfillment.kernel.ParcelId;
 
@@ -21,6 +22,7 @@ class FakeOrderProcessingRepository implements OrderProcessingRepository {
     final Map<String, OrderFulfillmentProcess> processings = new LinkedHashMap<>();
     final List<String> saved = new ArrayList<>();
     private int minted;
+    private int issuesMinted;
 
     @Override
     public Optional<OrderFulfillmentProcess> get(String processingId) {
@@ -44,6 +46,11 @@ class FakeOrderProcessingRepository implements OrderProcessingRepository {
     @Override
     public OrderProcessingId nextIdentity() {
         return new OrderProcessingId("OP-2026-%04d".formatted(++minted));
+    }
+
+    @Override
+    public IssueId nextIssueIdentity() {
+        return new IssueId("ISS-2026-%04d".formatted(++issuesMinted));
     }
 
     @Override

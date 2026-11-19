@@ -1,0 +1,30 @@
+databaseChangeLog:
+
+  # Two corrections to the dashboard's own rows, both found by review:
+  # - `issue_dashboard` needs the optimistic-version column every read entity of this context carries
+  #   (`persistence.optimistic-version`), so two writers cannot silently overwrite one row.
+  # - the order side kept the whole handover payload, buyer name and invoicing address included, to read one line name. The row
+  #   now keeps the lines only: the resolver's read model stores no personal data at all (element 17, spec D5's spirit).
+  - changeSet:
+      id: 0013-issue-dashboard-version
+      author: michal.michaluk
+      changes:
+        - addColumn:
+            tableName: issue_dashboard
+            columns:
+              - column:
+                  name: version
+                  type: bigint
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 0013-issue-dashboard-order-lines
+      author: michal.michaluk
+      changes:
+        - renameColumn:
+            tableName: issue_dashboard_order
+            oldColumnName: order_document
+            newColumnName: lines
+            columnDataType: jsonb

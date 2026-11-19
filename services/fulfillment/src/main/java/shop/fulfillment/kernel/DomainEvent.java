@@ -69,8 +69,13 @@ public sealed interface DomainEvent {
             implements DomainEvent {
     }
 
-    /** An employee reported a warehouse reality gap. */
-    record IssueReported(IssueId issueId, OrderProcessingId processingId, String kind) implements DomainEvent {
+    /**
+     * An employee reported a warehouse reality gap. The payload carries the whole record the employee wrote — what, for
+     * which product, by whom and when — because the resolver's dashboard of element 17 shows exactly those facts and may not
+     * read them back from the write model ({@code projection.no-cross-context-read}).
+     */
+    record IssueReported(IssueId issueId, OrderProcessingId processingId, String kind, String productNumber,
+                         String reportedBy, Instant reportedAt) implements DomainEvent {
     }
 
     /** The whole order is held because an issue was reported. */

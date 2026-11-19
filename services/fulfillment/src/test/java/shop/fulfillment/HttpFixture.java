@@ -27,6 +27,7 @@ public class HttpFixture {
 
     public static final String EMPLOYEE = "employee-42";
     public static final String OTHER_EMPLOYEE = "employee-17";
+    public static final String RESOLVER = "resolver-7";
     public static final String CUSTOMER = "customer-1";
     public static final String SHOPPING = "shopping-service";
 

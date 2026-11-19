@@ -32,6 +32,7 @@ public class FakeWarehouseStock implements WarehouseStock {
     private int available = 10;
     private int failingFromReserve = Integer.MAX_VALUE;
     private RuntimeException failure;
+    private RuntimeException issueFailure;
     private StockChangePage changes = WarehouseFixture.anEmptyPage();
 
     FakeWarehouseStock withAvailable(int quantity) {
@@ -53,6 +54,11 @@ public class FakeWarehouseStock implements WarehouseStock {
     FakeWarehouseStock failingOnReserveNumber(int number, RuntimeException cause) {
         this.failure = cause;
         this.failingFromReserve = number;
+        return this;
+    }
+
+    FakeWarehouseStock failingOnIssue(RuntimeException cause) {
+        this.issueFailure = cause;
         return this;
     }
 
@@ -80,6 +86,9 @@ public class FakeWarehouseStock implements WarehouseStock {
     @Override
     public IssueNote issue(ReservationId reservationId, List<PickedItem> picked) {
         calls.add("issue " + reservationId.value());
+        if (issueFailure != null) {
+            throw issueFailure;
+        }
         return WarehouseFixture.anIssueNote();
     }
 
@@ -91,6 +100,10 @@ public class FakeWarehouseStock implements WarehouseStock {
 
     private int reservationsTaken() {
         return (int) calls.stream().filter(call -> call.startsWith("reserve")).count();
+    }
+
+    int issuesTaken() {
+        return (int) calls.stream().filter(call -> call.startsWith("issue")).count();
     }
 
     private void failOnReserveCallNumber(int callNumber) {

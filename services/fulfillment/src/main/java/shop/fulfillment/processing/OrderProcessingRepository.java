@@ -2,6 +2,7 @@ package shop.fulfillment.processing;
 
 import java.util.Optional;
 
+import shop.fulfillment.kernel.IssueId;
 import shop.fulfillment.kernel.OrderProcessingId;
 import shop.fulfillment.kernel.ParcelId;
 
@@ -29,6 +30,15 @@ interface OrderProcessingRepository {
     Optional<OrderFulfillmentProcess> findByParcelId(ParcelId parcelId);
 
     OrderProcessingId nextIdentity();
+
+    /**
+     * Mints the identity of one reported issue — {@code ISS-YYYY-NNNN}, from the sequence the database owns, for the same
+     * reason {@link #nextIdentity} lives here: two employees reporting at once must not draw the same id, and an id minted in
+     * a service counter is one every instance shares.
+     *
+     * @return the identity the issue record is written under
+     */
+    IssueId nextIssueIdentity();
 
     void save(OrderFulfillmentProcess processing);
 }

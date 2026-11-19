@@ -21,6 +21,8 @@ class AssignmentServiceTest {
 
     final FakeOrderProcessingRepository processings = new FakeOrderProcessingRepository();
     final FakeWarehouseStock warehouse = new FakeWarehouseStock();
+    final FakeProcessingReservations reservations = new FakeProcessingReservations();
+
     final AssignmentService assignments = assignmentsWith(Optional.of(warehouse));
 
     @BeforeEach
@@ -143,7 +145,18 @@ class AssignmentServiceTest {
                         .isEqualTo(FulfillmentException.Error.WAREHOUSE_NOT_WIRED));
     }
 
+    @Test
+    void recordsTheReservationOfEveryPositionItTook() {
+        assignments.claim(ProcessingFixture.PROCESSING_ID.value(), ProcessingFixture.EMPLOYEE);
+
+        assertThat(reservations.recorded()).singleElement().satisfies(reservation -> {
+            assertThat(reservation.processingId()).isEqualTo(ProcessingFixture.PROCESSING_ID);
+            assertThat(reservation.productNumber().value()).isEqualTo(OrderFixture.PRODUCT_NUMBER);
+            assertThat(reservation.issued()).isFalse();
+        });
+    }
+
     private AssignmentService assignmentsWith(Optional<shop.fulfillment.kernel.WarehouseStock> stock) {
-        return new AssignmentService(processings, new WarehouseReservationsIntegration(stock));
+        return new AssignmentService(processings, new WarehouseReservationsIntegration(stock, reservations));
     }
 }

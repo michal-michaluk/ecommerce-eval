@@ -28,9 +28,11 @@ import shop.fulfillment.kernel.ProcessingState;
  * events delivered in any order end in the same row ({@code projection.idempotent-recompute}, {@code order-independent}) and
  * a repeated delivery rewrites the row it already wrote.
  *
- * <p>The row carries the facts and derives the state from them — phase 1 knows two facts, the order and its assignee, and
- * the later events of the lane add theirs to the same derivation. The progress counters and the hold marker are derived when
- * the list is served, the way a clock-derived field is: they are answers about the row as it stands, not facts to store.
+ * <p>The row carries the facts and derives the state from them — the order and its assignee, whether the order is held, and the
+ * state a lift of that hold restored. Picking and packing facts land with their own nodes; the hold facts arrive here, because a
+ * hold holds the whole order and the list must say so (elements 15 and 09 RULE-2). The progress counters and the hold marker
+ * are derived when the list is served, the way a clock-derived field is: they are answers about the row as it stands, not facts
+ * to store.
  */
 @Component
 @Transactional
@@ -49,6 +51,20 @@ class OrdersListProjection {
     public void handle(DomainEvent.EmployeeAssigned assigned) {
         OrdersListRow row = rowOf(assigned.processingId().value());
         rows.save(row.assignedTo(assigned.assignee()));
+    }
+
+    /** The hold is the state the order is in, and it holds the whole order — the list has one marker for it (element 09 RULE-2). */
+    @EventListener
+    public void handle(DomainEvent.HoldPlaced hold) {
+        OrdersListRow row = rowOf(hold.processingId().value());
+        rows.save(row.held());
+    }
+
+    /** The lift restores the state the order was held from, as the event reports it (register D12, element 09 H5). */
+    @EventListener
+    public void handle(DomainEvent.OrderResumed resumed) {
+        OrdersListRow row = rowOf(resumed.processingId().value());
+        rows.save(row.resumed(resumed.state()));
     }
 
     /**
@@ -84,6 +100,8 @@ class OrdersListProjection {
         private long version;
         @Column(name = "state")
         private String state;
+        @Column(name = "restored_state")
+        private String restoredState;
         @Column(name = "assignee")
         private String assignee;
         @Column(name = "recipient")
@@ -94,6 +112,8 @@ class OrdersListProjection {
         private int positionsTotal;
         @Column(name = "positions_packed")
         private int positionsPacked;
+        @Column(name = "held")
+        private boolean held;
 
         protected OrdersListRow() {
         }
@@ -144,9 +164,22 @@ class OrdersListProjection {
             return refreshed();
         }
 
+        /** The fact an issue carries on the whole order: one hold, however many issues name it (element 09 H1/H2). */
+        OrdersListRow held() {
+            this.held = true;
+            return refreshed();
+        }
+
+        /** The fact a resume carries: the hold is gone and the state it was held from is the one the order is in again. */
+        OrdersListRow resumed(ProcessingState restored) {
+            this.held = false;
+            this.restoredState = restored.name();
+            return refreshed();
+        }
+
         /**
-         * The whole state, recomputed from the row's own facts: packed once every position is in the box, assigned once
-         * somebody holds it, pending until then.
+         * The whole state, recomputed from the row's own facts: on hold while an issue holds it, the state a lift restored once
+         * it was lifted, packed once every position is in the box, assigned once somebody holds it, pending until then.
          */
         private OrdersListRow refreshed() {
             this.state = derivedState().name();
@@ -154,6 +187,12 @@ class OrdersListProjection {
         }
 
         private ProcessingState derivedState() {
+            if (held) {
+                return ProcessingState.ON_HOLD;
+            }
+            if (restoredState != null) {
+                return ProcessingState.valueOf(restoredState);
+            }
             if (positionsTotal > 0 && positionsPacked == positionsTotal) {
                 return ProcessingState.PACKED;
             }

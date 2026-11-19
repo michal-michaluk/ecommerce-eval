@@ -25,9 +25,13 @@ public class OrderHandoverFixture {
     }
 
     public static OrderHandover aTwoLineHandover() {
+        return aTwoLineHandover(OrderFixture.ORDER_HASH);
+    }
+
+    public static OrderHandover aTwoLineHandover(String orderHash) {
         List<OrderLine> lines = List.of(OrderFixture.aLine(),
                 OrderFixture.aLine("99881", "LEGO Orchidea 99881", 3));
-        return new OrderHandover(OrderFixture.ORDER_HASH, OrderFixture.PLACED_AT, lines,
+        return new OrderHandover(orderHash, OrderFixture.PLACED_AT, lines,
                 OrderFixture.aDelivery(), OrderFixture.aPayment(), OrderFixture.anInvoicing());
     }
 

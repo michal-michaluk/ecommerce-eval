@@ -18,16 +18,24 @@ import shop.fulfillment.kernel.ParcelState;
  * spelling — {@code assignee}, {@code parcel} and {@code issue} are explicit nulls, never absent keys: an absent key means
  * "not part of this payload", never "empty" (element 11:41).
  *
+ * <p>Two commands add to it and nothing else does: {@code issues} answers the {@code issueId} it just wrote beside
+ * {@code orderState} — the same value as {@code state}, under the name the contract fixed — and {@code hold/resume} answers
+ * the {@code closedIssueIds} it vouched for. Both additions are absent keys on every other answer, which is what "adds to
+ * it" means on the wire.
+ *
  * <p>The {@code orderHash} is deliberately not part of it: a client addresses the processing by its own identity, and the
  * idempotency key of the handover is no business of any screen. No price, amount, currency or total appears here (spec D5).
  *
- * @param processingId the identity the resource is addressed by
- * @param state        the processing state, as the contract spells it
- * @param assignee     the employee holding the order, or an explicit {@code null} while unclaimed
- * @param positions    one entry per order line
- * @param parcel       the parcel carrying the order, or an explicit {@code null} until the first scan registers it
- * @param issue        the issue the order is held for, or an explicit {@code null} while none is open
- * @param openIssues   how many issues of this processing are still open
+ * @param processingId   the identity the resource is addressed by
+ * @param state          the processing state, as the contract spells it
+ * @param assignee       the employee holding the order, or an explicit {@code null} while unclaimed
+ * @param positions      one entry per order line
+ * @param parcel         the parcel carrying the order, or an explicit {@code null} until the first scan registers it
+ * @param issue          the issue the order is held for, or an explicit {@code null} while none is open
+ * @param openIssues     how many issues of this processing are still open
+ * @param issueId        the issue the {@code issues} command wrote, and only on that answer
+ * @param orderState     {@code state} under the contract's second name, and only on the {@code issues} answer
+ * @param closedIssueIds the issues the {@code hold/resume} command closed, and only on that answer
  */
 @JsonInclude(JsonInclude.Include.ALWAYS)
 @Builder
@@ -38,7 +46,10 @@ record ProcessingSnapshot(
         List<Position> positions,
         Parcel parcel,
         Issue issue,
-        int openIssues) {
+        int openIssues,
+        @JsonInclude(JsonInclude.Include.NON_NULL) String issueId,
+        @JsonInclude(JsonInclude.Include.NON_NULL) String orderState,
+        @JsonInclude(JsonInclude.Include.NON_NULL) List<String> closedIssueIds) {
 
     ProcessingSnapshot {
         positions = List.copyOf(positions);
@@ -105,7 +116,20 @@ record ProcessingSnapshot(
     static ProcessingSnapshot of(OrderProcessing processing, Optional<ParcelState> parcel) {
         return new ProcessingSnapshot(processing.processingId().value(), processing.state().wireName(),
                 processing.assignee(), processing.positions().stream().map(Position::of).toList(),
-                parcel.map(Parcel::of).orElse(null), openIssueOf(processing), openIssuesOf(processing));
+                parcel.map(Parcel::of).orElse(null), openIssueOf(processing), openIssuesOf(processing), null, null,
+                null);
+    }
+
+    /** The same answer, carrying the issue the {@code issues} command wrote (element 11). */
+    ProcessingSnapshot withIssueId(String reportedIssueId) {
+        return new ProcessingSnapshot(processingId, state, assignee, positions, parcel, issue, openIssues,
+                reportedIssueId, state, closedIssueIds);
+    }
+
+    /** The same answer, carrying the issues the {@code hold/resume} command closed (element 11). */
+    ProcessingSnapshot withClosedIssueIds(List<String> closed) {
+        return new ProcessingSnapshot(processingId, state, assignee, positions, parcel, issue, openIssues, issueId,
+                orderState, List.copyOf(closed));
     }
 
     private static Issue openIssueOf(OrderProcessing processing) {

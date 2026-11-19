@@ -242,6 +242,67 @@ class OrderFulfillmentProcessTest {
     }
 
     @Test
+    void announcesTheIssueAndTheHoldItCausedAsTwoFacts() {
+        OrderFulfillmentProcess processing = AggregateFixture.aPickingProcessing();
+
+        processing.reportIssue(ProcessingFixture.anIssue());
+
+        assertThat(processing.events).filteredOn(DomainEvent.IssueReported.class::isInstance)
+                .hasOnlyOneElementSatisfying(event -> {
+                    DomainEvent.IssueReported reported = (DomainEvent.IssueReported) event;
+                    assertThat(reported.issueId()).isEqualTo(ProcessingFixture.ISSUE_ID);
+                    assertThat(reported.productNumber()).isEqualTo(OrderFixture.PRODUCT_NUMBER);
+                    assertThat(reported.reportedBy()).isEqualTo(ProcessingFixture.EMPLOYEE);
+                    assertThat(reported.reportedAt()).isEqualTo(ProcessingFixture.REPORTED_AT);
+                });
+        assertThat(processing.events).filteredOn(DomainEvent.HoldPlaced.class::isInstance).singleElement();
+    }
+
+    @Test
+    void refusesAnIssueBeforePickingStarted() {
+        assertThatThrownBy(() -> AggregateFixture.aPendingProcessing().reportIssue(ProcessingFixture.anIssue()))
+                .isInstanceOfSatisfying(FulfillmentException.class, refused -> {
+                    assertThat(refused.error()).isEqualTo(FulfillmentException.Error.HOLD_REFUSED);
+                    assertThat(refused.details()).contains(HoldDecision.Reason.NOT_STARTED);
+                });
+        assertThatThrownBy(() -> AggregateFixture.anAssignedProcessing().reportIssue(ProcessingFixture.anIssue()))
+                .isInstanceOfSatisfying(FulfillmentException.class, refused -> assertThat(refused.error())
+                        .isEqualTo(FulfillmentException.Error.HOLD_REFUSED));
+    }
+
+    @Test
+    void refusesAnIssueAfterTheOrderLeftTheWarehouse() {
+        assertThatThrownBy(() -> AggregateFixture.aReadyProcessing().reportIssue(ProcessingFixture.anIssue()))
+                .isInstanceOfSatisfying(FulfillmentException.class, refused -> {
+                    assertThat(refused.error()).isEqualTo(FulfillmentException.Error.HOLD_REFUSED);
+                    assertThat(refused.details()).contains(HoldDecision.Reason.PAST_HANDOVER);
+                });
+        assertThatThrownBy(() -> AggregateFixture.aDeliveredProcessing().reportIssue(ProcessingFixture.anIssue()))
+                .isInstanceOfSatisfying(FulfillmentException.class, refused -> assertThat(refused.details())
+                        .contains(HoldDecision.Reason.PAST_HANDOVER));
+    }
+
+    @Test
+    void answersAResumeOfAnOrderThatIsNotHeldWithTheStateItAlreadyHad() {
+        OrderFulfillmentProcess processing = AggregateFixture.aPickingProcessing();
+
+        processing.resume(List.of(), Instant.parse("2026-11-19T12:00:00Z"));
+
+        assertThat(processing.toSnapshot().state()).isEqualTo(ProcessingState.PICKING);
+        assertThat(processing.events).noneMatch(DomainEvent.OrderResumed.class::isInstance);
+    }
+
+    @Test
+    void holdsAnOrderWhosePositionsAreAllPackedToo() {
+        OrderFulfillmentProcess processing = AggregateFixture.aPackedProcessing();
+
+        processing.reportIssue(ProcessingFixture.anIssue());
+
+        assertThat(processing.toSnapshot().state()).isEqualTo(ProcessingState.ON_HOLD);
+        assertThat(processing.toSnapshot().heldState()).isEqualTo(ProcessingState.PACKED);
+    }
+
+    @Test
     void keepsTheParcelAClaimedOrderCarries() {
         OrderFulfillmentProcess processing = AggregateFixture.aReadyProcessing();
 

@@ -76,7 +76,8 @@ class AppConfiguration {
                 .requestMatchers(pathPattern("/orders")).hasAuthority(EMPLOYEE);
     }
 
-    /** The commands of the processing resource: only the employee who works an order issues them (element 11). */
+    /** The commands of the processing resource: the employee works an order, and a hold is lifted by the employee or the
+     * resolver (register D7, element 09 RULE-8). */
     private static AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry processingCommands(
             AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth) {
         return auth
@@ -87,18 +88,25 @@ class AppConfiguration {
                 .requestMatchers(pathPattern(POST, "/processing/{processingId}/packing"))
                 .hasAuthority(EMPLOYEE)
                 .requestMatchers(pathPattern(POST, "/processing/{processingId}/readiness"))
-                .hasAuthority(EMPLOYEE);
+                .hasAuthority(EMPLOYEE)
+                .requestMatchers(pathPattern(POST, "/processing/{processingId}/issues"))
+                .hasAuthority(EMPLOYEE)
+                .requestMatchers(pathPattern(POST, "/processing/{processingId}/hold/resume"))
+                .hasAnyAuthority(EMPLOYEE, RESOLVER);
     }
 
     /**
      * The reads of the processing resource: the employee works from them and the resolver may open the state (element 11's
      * auth matrix). The workstation route is this service's own — element 11 names none — and belongs to the employee who
      * scans. The label is a document the warehouse prints, and the customer's state is a separate resource that scope alone
-     * reaches (element 18, D-11-4).
+     * reaches (element 18, D-11-4). The issue dashboard is the resolver's alone, so an employee token answers {@code 403}
+     * (element 17).
      */
     private static AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry processingReads(
             AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth) {
         return auth
+                .requestMatchers(pathPattern(GET, "/issues"))
+                .hasAuthority(RESOLVER)
                 .requestMatchers(pathPattern(GET, "/processing/{processingId}/pick-list"))
                 .hasAuthority(EMPLOYEE)
                 .requestMatchers(pathPattern(GET, "/processing/{processingId}/pick-workstation"))

@@ -26,17 +26,18 @@ token's own `scope` claim and no protocol mapper can produce a second one.
 | 9 | `POST /processing/{processingId}/readiness` | bearer JWT required | `fulfillment-employee` only | declaring the order done is the warehouse employee's own action (element 08); the guard reads the order's state, not the caller, and no source ties `mark done` to the assignee (Q-08-4) |
 | 10 | `GET /processing/{processingId}/documents/label` | bearer JWT required | `fulfillment-employee` only | the consignment note of element 06 is printed in the warehouse by the employee who packs. The bytes are the carrier's own document, so nothing here reveals an internal state a wider scope would have to be trusted with anyway |
 | 11 | `GET /processing/{processingId}/state` | bearer JWT required | `fulfillment-customer` only | element 18's resource is the customer's own view, and D-11-4 keeps it separate so `assignee` and `issue` cannot be reached by this scope. No ownership check exists — the order carries no customer identity to compare against (register D13), so the scope alone decides |
-| 12 | `GET /actuator/health/**` | none | public | Kubernetes probes |
-| 13 | `GET /actuator/info` | none | public | build information |
-| 14 | `GET /actuator/**` (any other actuator endpoint) | bearer JWT required | any authenticated caller | metrics and environment are not public, and no scope is invented for them |
-| 15 | `/error` | none | public | Spring's error dispatch, not a business route: without it a container-level failure is answered by the security chain instead of by the status it carries. No handler of this service is reachable through it |
+| 12 | `POST /processing/{processingId}/issues` | bearer JWT required | `fulfillment-employee` only | reporting a warehouse reality gap is the picking employee's own call (element 04 RULE-2, `mark problems with fulfillment`), and the caller must additionally be the assignee — the aggregate refuses anybody else with `409 ACTOR_NOT_ALLOWED` (phase-2 P2-19b). A resolver reads the gaps, he does not report them |
+| 13 | `POST /processing/{processingId}/hold/resume` | bearer JWT required | `fulfillment-employee` **or** `fulfillment-resolver` | the one write that closes an issue (registers D7/D8). Element 09 RULE-8 grants it to both: the resolver works the dashboard and must be able to lift the hold he closed, and no other scope is granted. No assignee check applies here — an assignee check would make the resolver unable to lift a hold he is the only one to see (element 09 RULE-8) |
+| 14 | `GET /issues` | bearer JWT required | `fulfillment-resolver` only | the dashboard of element 17 is the resolver's screen: an employee token answers `403`, asserted in the hurl. Read-only, so no scope here can act for another view's actor; the board carries no resolver-side command at all |
+| 15 | `GET /actuator/health/**` | none | public | Kubernetes probes |
+| 16 | `GET /actuator/info` | none | public | build information |
+| 17 | `GET /actuator/**` (any other actuator endpoint) | bearer JWT required | any authenticated caller | metrics and environment are not public, and no scope is invented for them |
+| 18 | `/error` | none | public | Spring's error dispatch, not a business route: without it a container-level failure is answered by the security chain instead of by the status it carries. No handler of this service is reachable through it |
 
 ## Not yet exposed
 
-The routes of phase 4 — `POST …/issues`, `GET /issues`, `POST …/hold/resume` — do not exist yet, and neither does
-`GET …/documents/goods-issue-note`, which is out of the implementation plan entirely (register D15). Their decisions are already
-fixed by element 11's matrix and land with the nodes that add them; until then `denyAll()` answers every one of them, so a route
-cannot appear unauthenticated by accident.
+`GET …/documents/goods-issue-note` does not exist: element 05 is out of the implementation plan entirely (register D15), so
+`denyAll()` answers it and no row of this table grants it. Every other route of element 11 is granted above.
 
 ## Refusals on the wire
 

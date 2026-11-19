@@ -8,6 +8,7 @@ import shop.fulfillment.kernel.DomainEvent;
 import shop.fulfillment.kernel.OrderFixture;
 import shop.fulfillment.kernel.OrderProcessingId;
 import shop.fulfillment.kernel.ProcessingFixture;
+import shop.fulfillment.kernel.ProcessingState;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -97,6 +98,55 @@ class OrdersListProjectionTest {
 
         assertThat(projection.findAllCurrent()).singleElement()
                 .satisfies(row -> assertThat(row.positionProgress()).isEqualTo("0/2 packed"));
+    }
+
+    @Test
+    void marksTheWholeOrderOnHoldAndSaysSo() {
+        projection.handle(started(ProcessingFixture.PROCESSING_ID, OrderFixture.anOrder()));
+        projection.handle(assigned(ProcessingFixture.PROCESSING_ID, ProcessingFixture.EMPLOYEE));
+
+        projection.handle(held(ProcessingFixture.PROCESSING_ID));
+
+        assertThat(projection.findAllCurrent()).singleElement().satisfies(row -> {
+            assertThat(row.state()).isEqualTo("onHold");
+            assertThat(row.onHold()).isTrue();
+            assertThat(row.assignee()).isEqualTo(ProcessingFixture.EMPLOYEE);
+        });
+    }
+
+    @Test
+    void showsTheStateTheLiftRestoredAndDropsTheHoldMarker() {
+        projection.handle(started(ProcessingFixture.PROCESSING_ID, OrderFixture.anOrder()));
+        projection.handle(assigned(ProcessingFixture.PROCESSING_ID, ProcessingFixture.EMPLOYEE));
+        projection.handle(held(ProcessingFixture.PROCESSING_ID));
+
+        projection.handle(resumed(ProcessingFixture.PROCESSING_ID, ProcessingState.PICKING));
+
+        assertThat(projection.findAllCurrent()).singleElement().satisfies(row -> {
+            assertThat(row.state()).isEqualTo("picking");
+            assertThat(row.onHold()).isFalse();
+        });
+    }
+
+    @Test
+    void keepsTheHoldWhateverElseIsReplayedAfterwards() {
+        projection.handle(started(ProcessingFixture.PROCESSING_ID, OrderFixture.anOrder()));
+        projection.handle(held(ProcessingFixture.PROCESSING_ID));
+
+        projection.handle(assigned(ProcessingFixture.PROCESSING_ID, ProcessingFixture.EMPLOYEE));
+
+        assertThat(projection.findAllCurrent()).singleElement().satisfies(row -> {
+            assertThat(row.state()).isEqualTo("onHold");
+            assertThat(row.assignee()).isEqualTo(ProcessingFixture.EMPLOYEE);
+        });
+    }
+
+    private static DomainEvent.HoldPlaced held(OrderProcessingId processingId) {
+        return new DomainEvent.HoldPlaced(processingId, ProcessingFixture.REPORTED_AT);
+    }
+
+    private static DomainEvent.OrderResumed resumed(OrderProcessingId processingId, ProcessingState state) {
+        return new DomainEvent.OrderResumed(processingId, state);
     }
 
     private static DomainEvent.OrderProcessingStarted started(OrderProcessingId processingId,

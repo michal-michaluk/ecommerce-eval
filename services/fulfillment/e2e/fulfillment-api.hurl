@@ -1,13 +1,14 @@
 # Fulfillment API — the executable contract of element 11, phase 1 (order processing core), phase 2 (pick list, scan,
-# packing, the processing snapshot) and phase 3 (parcel registration, readiness, the label, the customer state view).
+# packing, the processing snapshot), phase 3 (parcel registration, readiness, the label, the customer state view) and
+# phase 4 (issues, the hold and its resume, the resolver's dashboard).
 # Run — six variables are required:
 #   hurl --test --variable BASE_URL=http://localhost:8081 \
 #     --variable shoppingToken=$SHOP --variable employeeToken=$EMP --variable otherEmployeeToken=$EMP2 \
 #     --variable resolverToken=$RES --variable customerToken=$CUS \
 #     e2e/fulfillment-api.hurl
 # No money appears in any payload (spec D5).
-# Sections this file does not carry yet — issues, resume, the goods issue note — belong to the later phases of the
-# implementation plan and land with them; the goods issue note is out of the plan entirely (register D15).
+# One section the contract has is missing on purpose: the goods issue note is out of the implementation plan entirely
+# (register D15), so `GET …/documents/goods-issue-note` is not asked here.
 #
 # Two deliberate differences from docs/specs/fulfillment/prototypes/fulfillment-api.hurl remain, recorded in
 # docs/phase-1-decisions.md: the processing id is captured instead of asserted as the literal "OP-2026-0001" (the id is
@@ -252,6 +253,162 @@ HTTP 409
 jsonpath "$.error" == "NOT_READY"
 jsonpath "$.reasons" exists
 jsonpath "$.reasons[0]" == "notPacked"
+
+# ── Issues and hold (elements 04, 09, 17) ─────────────────────────────────
+# the second order is `picking` with one position still open: one issue holds the whole order (H1)
+POST {{BASE_URL}}/processing/{{openProcessingId}}/issues
+Authorization: Bearer {{employeeToken}}
+Content-Type: application/json
+{ "kind": "LOST", "productNumber": "99881" }
+HTTP 201
+[Captures]
+issueId: jsonpath "$.issueId"
+[Asserts]
+jsonpath "$.issueId" exists
+jsonpath "$.orderState" == "onHold"
+jsonpath "$.state" == "onHold"
+jsonpath "$.openIssues" == 1
+
+# a second issue on a held order is recorded, and places no second hold (H2)
+POST {{BASE_URL}}/processing/{{openProcessingId}}/issues
+Authorization: Bearer {{employeeToken}}
+Content-Type: application/json
+{ "kind": "WRONG_LOCATION", "productNumber": "99881" }
+HTTP 201
+[Captures]
+secondIssueId: jsonpath "$.issueId"
+[Asserts]
+jsonpath "$.orderState" == "onHold"
+jsonpath "$.openIssues" == 2
+
+# a hold blocks every command of the order, the scan of an open position included
+POST {{BASE_URL}}/processing/{{openProcessingId}}/positions/99881
+Authorization: Bearer {{employeeToken}}
+Content-Type: application/json
+{ "confirmation": "picked" }
+HTTP 409
+[Asserts]
+jsonpath "$.error" == "ON_HOLD"
+
+# … readines too, with the decision's own reason
+POST {{BASE_URL}}/processing/{{openProcessingId}}/readiness
+Authorization: Bearer {{employeeToken}}
+HTTP 409
+[Asserts]
+jsonpath "$.error" == "NOT_READY"
+jsonpath "$.reasons[0]" == "onHold"
+
+# the resolver's dashboard carries the open gaps
+GET {{BASE_URL}}/issues
+Authorization: Bearer {{resolverToken}}
+HTTP 200
+[Asserts]
+jsonpath "$.items[0].issueId" exists
+jsonpath "$.items[0].kind" exists
+jsonpath "$.items[0].issueId" == "{{issueId}}"
+jsonpath "$.items[0].orderState" == "onHold"
+jsonpath "$.items[0].product.productNumber" == "99881"
+
+# resolver endpoints are closed to the employee scope
+GET {{BASE_URL}}/issues
+Authorization: Bearer {{employeeToken}}
+HTTP 403
+
+# a resume that leaves an issue open is refused, and says how many remain (H6)
+POST {{BASE_URL}}/processing/{{openProcessingId}}/hold/resume
+Authorization: Bearer {{resolverToken}}
+Content-Type: application/json
+{ "closedIssueIds": ["{{issueId}}"] }
+HTTP 409
+[Asserts]
+jsonpath "$.error" == "ISSUES_REMAIN"
+jsonpath "$.openIssues" == 1
+
+# an issue the order does not account for is the unknown resource it is (register D11)
+POST {{BASE_URL}}/processing/{{openProcessingId}}/hold/resume
+Authorization: Bearer {{resolverToken}}
+Content-Type: application/json
+{ "closedIssueIds": ["ISS-2026-9999"] }
+HTTP 404
+[Asserts]
+jsonpath "$.error" == "ISSUE_UNKNOWN"
+
+# the resume that names every open issue lifts the hold to the state it was held from (H5)
+POST {{BASE_URL}}/processing/{{openProcessingId}}/hold/resume
+Authorization: Bearer {{resolverToken}}
+Content-Type: application/json
+{ "closedIssueIds": ["{{issueId}}", "{{secondIssueId}}"] }
+HTTP 200
+[Asserts]
+jsonpath "$.state" == "picking"
+jsonpath "$.openIssues" == 0
+jsonpath "$.issue" == null
+jsonpath "$.closedIssueIds[0]" == "{{issueId}}"
+
+# the dashboard drops the order whose hold was lifted
+GET {{BASE_URL}}/issues
+Authorization: Bearer {{resolverToken}}
+HTTP 200
+[Asserts]
+jsonpath "$.items[0]" not exists
+
+# a resume of an order that is not held is the no-op of H7; the employee scope may call it too
+POST {{BASE_URL}}/processing/{{openProcessingId}}/hold/resume
+Authorization: Bearer {{employeeToken}}
+Content-Type: application/json
+{ "closedIssueIds": [] }
+HTTP 200
+[Asserts]
+jsonpath "$.state" == "picking"
+jsonpath "$.closedIssueIds" isEmpty
+
+# a third order, held for a gap nobody closed yet: an empty request cannot vouch for it
+POST {{BASE_URL}}/orders
+Authorization: Bearer {{shoppingToken}}
+Content-Type: application/json
+{
+  "orderHash": "sha256:3c9d7e21",
+  "placedAt": "2026-11-19T10:41:09Z",
+  "lines": [{ "productNumber": "75423", "name": "LEGO X-Wing 75423", "quantity": 1 }],
+  "delivery": { "methodCode": "PARCEL_LOCKER", "location": { "kind": "PICKUP_POINT", "pointId": "KRA01M" } },
+  "payment": { "methodCode": "PAY_DEFERRED" },
+  "invoicing": { "buyerName": "Jan Kowalski", "nip": null,
+                 "address": { "street": "ul. Mineralna 5A", "city": "Kraków", "postalCode": "30-001", "country": "PL" } }
+}
+HTTP 201
+[Captures]
+heldProcessingId: jsonpath "$.processingId"
+[Asserts]
+jsonpath "$.state" == "pending"
+
+POST {{BASE_URL}}/processing/{{heldProcessingId}}/assignment
+Authorization: Bearer {{employeeToken}}
+HTTP 201
+
+POST {{BASE_URL}}/processing/{{heldProcessingId}}/positions/75423
+Authorization: Bearer {{employeeToken}}
+Content-Type: application/json
+{ "confirmation": "picked" }
+HTTP 200
+[Asserts]
+jsonpath "$.state" == "picking"
+
+POST {{BASE_URL}}/processing/{{heldProcessingId}}/issues
+Authorization: Bearer {{employeeToken}}
+Content-Type: application/json
+{ "kind": "STOLEN", "productNumber": "75423" }
+HTTP 201
+[Asserts]
+jsonpath "$.orderState" == "onHold"
+
+POST {{BASE_URL}}/processing/{{heldProcessingId}}/hold/resume
+Authorization: Bearer {{employeeToken}}
+Content-Type: application/json
+{ "closedIssueIds": [] }
+HTTP 409
+[Asserts]
+jsonpath "$.error" == "ISSUES_REMAIN"
+jsonpath "$.openIssues" == 1
 
 # ── Documents (elements 05, 06) ───────────────────────────────────────────
 GET {{BASE_URL}}/processing/{{processingId}}/documents/label

@@ -25,9 +25,12 @@ import shop.fulfillment.kernel.WarehouseStock;
 class WarehouseReservationsIntegration {
 
     private final Optional<WarehouseStock> warehouse;
+    private final ProcessingReservationRepository reservations;
 
-    WarehouseReservationsIntegration(Optional<WarehouseStock> warehouse) {
+    WarehouseReservationsIntegration(Optional<WarehouseStock> warehouse,
+                                     ProcessingReservationRepository reservations) {
         this.warehouse = warehouse;
+        this.reservations = reservations;
     }
 
     /**
@@ -36,9 +39,9 @@ class WarehouseReservationsIntegration {
      * @param claimed the processing as the granted claim left it
      */
     void reserveClaim(OrderProcessing claimed) {
-        WarehouseReservations reservations = WarehouseReservations.on(answeringWarehouse());
-        releaseWhenTheTransactionFails(reservations);
-        reservations.reserveEvery(claimed.positions());
+        WarehouseReservations taken = WarehouseReservations.on(answeringWarehouse());
+        releaseWhenTheTransactionFails(taken);
+        taken.reserveEvery(claimed.processingId(), claimed.positions()).forEach(reservations::record);
     }
 
     private WarehouseStock answeringWarehouse() {

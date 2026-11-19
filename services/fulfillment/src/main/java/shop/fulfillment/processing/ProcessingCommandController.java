@@ -1,7 +1,9 @@
 package shop.fulfillment.processing;
 
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,6 +26,11 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
  * with the parcel it now carries, a refusal {@code 409 NOT_READY} with the decision's own reasons, and a replay the state it
  * already had — no second collection is booked (RULE-5). The actor is not checked: no source ties {@code mark done} to the
  * assignee (Q-08-4).
+ *
+ * <p>The last two routes are the issue area (elements 04, 09): reporting an issue answers {@code 201} with the record it wrote
+ * — a report is a fact that did not exist before, whether it placed the hold or joined one — and the resume answers {@code 200}
+ * with the issues it closed. Neither builds a refusal here: the aggregate decides, and the one advice answers {@code 409} with
+ * the code the contract gives that refusal.
  */
 @RestController
 @RequiredArgsConstructor
@@ -48,6 +55,20 @@ class ProcessingCommandController {
     ProcessingSnapshot markReady(@PathVariable String processingId,
                                  @RequestBody(required = false) @Valid MarkOrderReady command) {
         return processings.markReady(processingId);
+    }
+
+    @PostMapping(path = "/processing/{processingId}/issues", consumes = APPLICATION_JSON_VALUE,
+            produces = APPLICATION_JSON_VALUE)
+    ProcessingSnapshot reportIssue(@PathVariable String processingId, @RequestBody @Valid ReportIssue issue,
+                                   HttpServletResponse response) {
+        response.setStatus(HttpStatus.CREATED.value());
+        return processings.reportIssue(processingId, issue, caller());
+    }
+
+    @PostMapping(path = "/processing/{processingId}/hold/resume", consumes = APPLICATION_JSON_VALUE,
+            produces = APPLICATION_JSON_VALUE)
+    ProcessingSnapshot resume(@PathVariable String processingId, @RequestBody @Valid ResumeHold hold) {
+        return processings.resume(processingId, hold.closedIssueIds());
     }
 
     /** The employee the token authenticates as; who may confirm is not the caller's choice (element 16). */

@@ -149,7 +149,8 @@ class OrderFulfillmentProcess {
         ensureIssueIsAccepted(verdict);
         ensureIssueIsReportedHere(issue);
         issues.add(issue);
-        events.add(new DomainEvent.IssueReported(issue.issueId(), processingId, issue.kind()));
+        events.add(new DomainEvent.IssueReported(issue.issueId(), processingId, issue.kind(), issue.productNumber(),
+                issue.reportedBy(), issue.reportedAt()));
         placeHoldWhenGranted(verdict, issue.reportedAt());
     }
 
@@ -235,7 +236,8 @@ class OrderFulfillmentProcess {
 
     private void ensureHoldIsLiftable(HoldDecision.Verdict verdict, List<IssueId> remaining) {
         if (verdict instanceof HoldDecision.Verdict.Refuse) {
-            throw new FulfillmentException(FulfillmentException.Error.ISSUES_REMAIN, processingId, remaining);
+            throw new FulfillmentException(FulfillmentException.Error.ISSUES_REMAIN, processingId, remaining,
+                    remaining.size());
         }
     }
 

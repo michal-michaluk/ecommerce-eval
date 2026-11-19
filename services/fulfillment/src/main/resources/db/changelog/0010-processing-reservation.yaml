@@ -1,0 +1,51 @@
+databaseChangeLog:
+
+  # The processing → reservation correlation (register D11's third write trigger, element 13 state S1). The claim takes one
+  # allocation per position and readiness books the goods out against them; without this row the correlation would live only in
+  # the memory of the claim, and the goods issue would have nothing to address (phase-3 decision 18).
+  - changeSet:
+      id: 0010-processing-reservation
+      author: michal.michaluk
+      changes:
+        - createTable:
+            tableName: processing_reservation
+            columns:
+              - column:
+                  name: reservation_id
+                  type: varchar(64)
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: processing_reservation_pkey
+                    nullable: false
+              - column:
+                  name: processing_id
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: product_number
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: location
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: quantity
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: issue_document
+                  type: varchar(64)
+              - column:
+                  name: issue_date
+                  type: date
+        - createIndex:
+            tableName: processing_reservation
+            indexName: processing_reservation_processing_idx
+            columns:
+              - column:
+                  name: processing_id

@@ -46,6 +46,17 @@ public class ProcessingFixture {
         return issue(issueId, processingId, EMPLOYEE);
     }
 
+    /** One issue as the processing slice announces it — the fact the resolver's dashboard is built from (element 04). */
+    public static DomainEvent.IssueReported anIssueReported() {
+        return anIssueReported(ISSUE_ID, PROCESSING_ID, IssueKinds.LOST);
+    }
+
+    public static DomainEvent.IssueReported anIssueReported(IssueId issueId, OrderProcessingId processingId,
+                                                            String kind) {
+        return new DomainEvent.IssueReported(issueId, processingId, kind, OrderFixture.PRODUCT_NUMBER, EMPLOYEE,
+                REPORTED_AT);
+    }
+
     /** The carrier's leg as the parcel slice raises it: the order's own input from a neighbour (element 02). */
     public static DomainEvent.DeliveryStateNotified aLegNotified(ParcelId parcelId, Leg leg) {
         return new DomainEvent.DeliveryStateNotified(parcelId, leg, leg.name());

@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Optional;
 
 import shop.fulfillment.kernel.DomainEvent;
+import shop.fulfillment.kernel.IssueId;
 import shop.fulfillment.kernel.OrderProcessingId;
 import shop.fulfillment.kernel.ParcelId;
 
@@ -43,6 +44,7 @@ import shop.fulfillment.kernel.ParcelId;
 class DocumentOrderProcessingRepository implements OrderProcessingRepository {
 
     private static final String MINTED_ID = "OP-%d-%04d";
+    private static final String MINTED_ISSUE_ID = "ISS-%d-%04d";
 
     private final Processings processings;
     private final ApplicationEventPublisher publisher;
@@ -73,6 +75,12 @@ class DocumentOrderProcessingRepository implements OrderProcessingRepository {
     public OrderProcessingId nextIdentity() {
         long number = Optional.ofNullable(processings.nextIdentity()).orElse(1L);
         return new OrderProcessingId(MINTED_ID.formatted(Year.now(clock).getValue(), number));
+    }
+
+    @Override
+    public IssueId nextIssueIdentity() {
+        long number = Optional.ofNullable(processings.nextIssueIdentity()).orElse(1L);
+        return new IssueId(MINTED_ISSUE_ID.formatted(Year.now(clock).getValue(), number));
     }
 
     @Override
@@ -114,6 +122,9 @@ class DocumentOrderProcessingRepository implements OrderProcessingRepository {
 
         @Query(value = "select nextval('order_processing_id_seq')", nativeQuery = true)
         Long nextIdentity();
+
+        @Query(value = "select nextval('issue_id_seq')", nativeQuery = true)
+        Long nextIssueIdentity();
     }
 
     @Entity

@@ -227,3 +227,66 @@ Numbered `P3-n`.
   answers `denyAll()`.
 - The carrier adapter is exercised against recorded payloads only; a live carrier is `R-14-1`/`R-14-2`, unchanged.
 - Issues, hold and resume belong to phase 4.
+
+---
+
+# Phase 4 decisions and deviations — issues, the hold, and the resolver's dashboard
+
+The same file, the same rules: what phase 4 of the plan had to choose, and where it departs from a rule it was built to follow.
+Numbered `P4-n`.
+
+## 19. Issues and hold (`issues-hold`)
+
+| # | Question | Decision |
+| --- | --- | --- |
+| P4-1 | Element 04's board event is `issues: {processingId, issueId, kind}`, and element 17's dashboard shows the product, the reporter and the moment | `DomainEvent.IssueReported` carries the whole record the employee wrote — `kind`, `productNumber`, `reportedBy`, `reportedAt` besides the two ids. The addition is forced by `projection.no-cross-context-read`: the read slice may not open the aggregate for three fields, and the event is in-process only (D9 — no broker, no persisted contract to migrate) |
+| P4-2 | Where an `IssueId` comes from (element 04 states the format, nothing states the generator) | a sequence, `issue_id_seq`, formatted `ISS-<year>-%04d` — the reasoning of phase-1 2.1 verbatim: two employees report at once and only a sequence gives both a number that is theirs. It mints behind `OrderProcessingRepository.nextIssueIdentity()`, the same recorded exception as `nextIdentity` (phase-1 2.3) |
+| P4-3 | Element 11 says "one payload, one shape … two commands add to it" | `ProcessingSnapshot` grows three components — `issueId`, `orderState` (the same value as `state` under the name the contract fixed) and `closedIssueIds` — each an **absent key** unless that command wrote it (per-component `@JsonInclude(NON_NULL)`), so the state read and the other commands keep the shape they had. A wrapper record with `@JsonUnwrapped` was rejected: it puts a serialization trick behind a contract the hurl reads field by field |
+| P4-4 | A second issue on a held order (H2) still creates a record | the answer is `201` for both H1 and H2 — a report is a fact that did not exist before, and the hold it did not place is visible as `openIssues: 2` and as the missing second `HoldPlaced`. The `200`-replay row of element 11's status table does not apply: nothing was re-applied |
+| P4-5 | The refusal codes of the two new routes | `HOLD_REFUSED` answers the decision's own reason as the code — `NOT_STARTED` (H3) and `PAST_HANDOVER` (H4), both `409`, both element 11's derived rows. `ISSUE_NOT_REPORTED_BY_ASSIGNEE` answers `409 ACTOR_NOT_ALLOWED`, the code phase 2 established for "this actor may not" (P2-19b) — the assignee check itself is the aggregate's existing `ensureIssueIsReportedHere`, reused, not a second rule |
+| P4-6 | An unknown id versus a malformed one in `closedIssueIds` | both are `404` (register D11 names the unknown case), but each keeps its own code — `ISSUE_UNKNOWN` and `ISSUE_ID_MALFORMED` — so a client can tell an id this order does not account for from a typo. Answering `409` for the malformed one would have made element 11's rule 3 ("unknown resource → 404, refused precondition → 409") say two things at once |
+| P4-7 | `409 ISSUES_REMAIN` carries `openIssues` | the count is a detail of the exception (`ISSUES_REMAIN, processingId, remaining, remaining.size()`) and the one advice turns it into the `openIssues` field beside `error`. It is the same number the snapshot reports, so the two can never disagree |
+| P4-8 | What `closedIssueIds` in the resume answer means | the ids that command **actually** closed, read back from the snapshot after the command — not an echo of the request. On H7 (nothing was held, nothing named) it is `[]`; on H5 it is the named ids; an id the request named that was never ours never reaches the answer, because it answers `404` first |
+| P4-9 | Who may report and who may resume | reporting requires the assignee (element 04 RULE-2, enforced by the aggregate). Resuming checks no assignee: element 09 RULE-8 grants the lift to the resolver, who never holds the order, so an assignee check would make the resolver unable to work his own dashboard. Both routes are scoped per element 11's matrix (`employee` for `issues`, `employee` **and** `resolver` for `hold/resume`) |
+| P4-10 | The hold blocks the whole order — what the suite proves on the wire | the e2e asks a scan (`409 ON_HOLD`) and a readiness (`409 NOT_READY`, `reasons[0] == "onHold"`) of a held order, then resumes and scans again (`200`). `NOT_READY.reasons[]` keeps the decision's own spelling (P3-13) |
+
+## 20. The warehouse `issue` at readiness (`readiness-decision`, closing phase-3 gap 9)
+
+| # | Question | Decision |
+| --- | --- | --- |
+| P4-11 | The processing → reservation correlation, which the aggregate must not carry | `WarehouseReservations` now **returns** what it took (one `ProcessingReservation` per position: the reservation id, the product, the location the units were allocated from and the quantity) and `WarehouseReservationsIntegration` writes those rows through the new `ProcessingReservationRepository` → `processing_reservation`. The aggregate stays exactly as wide as it was; readiness addresses the reservations by the processing id |
+| P4-12 | Why a second reservation table instead of widening `warehouse_reservation` | the two describe different things and need opposite transaction rules. `warehouse_reservation` is the **warehouse's** side: it addresses the allocation rows and is written in `REQUIRES_NEW` transactions because a real allocation outlives a claim that fails (P2-14a). `processing_reservation` is **ours**: one row per reservation a claim of this order took, written in the claim's own transaction, so a claim that rolls back leaves no correlation behind. It also carries the two facts only the claim knows — the product and the location — without which `issue` could not name what left the shelf. Recorded as a deviation from the literal "reuse its repository" of the node's brief |
+| P4-13 | How many `issue` calls a readiness makes | one per reservation, each **at most once** (`issued()` skips a row that already has a document; the adapter is idempotent too, P2-6). `prove-dod` row 9's "one `issue` on readiness" is the one-place order; a two-place order reserved twice and is issued twice, which is the same rule element 13 states ("at most once per reservation") |
+| P4-14 | The order of the three effects, and what a failure leaves behind | RF1 (the local mark) is written, then RF2 (the collection request), then RF3 (`issue`) — all the one transaction the command owns, so a warehouse failure rolls the local mark back with it and an order is **never** left marked ready with no goods issue. The residual is the carrier's: a collection already requested cannot be un-asked (P3-25 restates it), and a warehouse that fails *after* an earlier reservation was booked out leaves that removal made, with no invented compensation (element 13 RULE-7) |
+| P4-15 | A deployment with no warehouse adapter | a readiness for an order that holds **no** reservation of ours still succeeds — there is nothing to book out, and `WarehouseStock` is `Optional`-wired. The moment a reservation exists and nobody answers the port, the command is refused `WAREHOUSE_NOT_WIRED` rather than pretending the goods left (phase-1 2.6 stays true) |
+| P4-16 | Where the goods issue note is read later | on the correlation row: `issue_document` + `issue_date`, stamped from the `IssueNote` the port answered, so a later reader (the WZ of element 05, out of the plan per D15) reads the document we numbered instead of asking the warehouse again. The adapter stamps its own row too (P2-6), so the two agree without a second call |
+
+## 21. The issue dashboard (`issue-dashboard-projection`)
+
+| # | Question | Decision |
+| --- | --- | --- |
+| P4-17 | Where the read slice lives | `shop.fulfillment.issues`, the fourth read slice beside `orders` and `customer`: it imports no write model, reaches the processing only through the events and the kernel, and `ArchitectureTest` gained the same six rules plus `issuesDependsOnNoWriteSlice` — and `writeSlicesDependOnNoReadSlice` / `kernelDependsOnNoSlice` name the new package too. No rule was deleted or narrowed |
+| P4-18 | Element 17 says "grouped by order", the prototype reads `$.items[0].issueId` | the rows are **flat** and the grouping is the ordering: every row repeats its order (`processingId`, `orderState`, `assignee`), rows of one order sit together and the group reported first comes first (element 17's "oldest first" default). A nested `{order, issues[]}` envelope would have broken the one assertion the contract makes about this collection |
+| P4-19 | Two tables | `issue_dashboard` (one row per issue: kind, product, reporter, reported-at, closed-at) and `issue_dashboard_order` (state, assignee, and the handover payload the product **name** is read from — the `projection.copy-of-foreign-payload` pattern of P3-18). A row whose order never arrived is not served, never served half (`projection.absent-read-model-is-null`) |
+| P4-20 | How a row leaves the list | `closed_at`, set on `OrderResumed` for every open issue of that order. A partial lift cannot exist — H6 refuses a resume that leaves one open — and register D12's payload stays state-only, so the projection closes by order rather than by id list. Deleted rows were rejected: a replayed event would resurrect them, a stamped row cannot |
+| P4-21 | `age` | served as `ageSeconds`, read at the moment the list is served from the projection's clock. No deadline, SLA, escalation or badge exists in any source (element 09 RULE-5), so nothing heavier than a number is invented |
+| P4-22 | What the row must not carry | no quantity (element 04 Q-04-5: a partial close has no expression), no location (Q-17-2: the pick list owns locations), no money (D5), no action. There is no POST route on `/issues` at all — the security matrix denies every verb but `GET`, and a test asserts the `403` |
+| P4-23 | The row's order-state field is called `orderState` | the issues command already answers that spelling for the same value, and a row on this list is an issue first, an order second; `state` beside `issueId` would read as the issue's own state, which no source gives it (element 04 RULE-7) |
+
+## 22. Gates
+
+| # | Question | Decision |
+| --- | --- | --- |
+| P4-24 | Coverage | **96.20 % instruction / 84.79 % branch**, up from 95.40 % / 84.89 %: the new read slice, the reservation store and the goods issue are all exercised, the adapter paths are exercised through their translation tests as before |
+| P4-25 | `sqt` after two new routes and a read slice | `0 error`. New hints/warnings, all recorded rather than silenced: `vo.builder-when-wide` on `IssueReported` (six components; a domain event carries no builder anywhere in this context) and on `IssueDashboardEntry` (built by its own `ofNullable` factory, like `OrdersListEntry`), three `function_statements` warnings (`markReady`, the resolved-hold handler, `findOpen`) and one more `api.path-no-rpc-verb` for the `/processing/…` contract paths (phase-1 3.3, P2-27) |
+| P4-26 | The executable contract | **46 requests**, up from 30: phase 4 appended the prototype's issue/dashboard/resume block in the prototype's order — issue (H1), second issue (H2), scan and readiness refused under the hold, dashboard `200` for the resolver and `403` for the employee, `409 ISSUES_REMAIN` with `openIssues`, `404 ISSUE_UNKNOWN`, the lift (H5), the emptied dashboard, the H7 no-op, and the prototype's third-order `409 ISSUES_REMAIN` (that order is handed over in the suite instead of assumed, phase-1 1.2's reasoning). Two assertions are the suite's own, not the prototype's: `$.items[0].orderState` on a dashboard row and `$.items[0] not exists` once the last hold is lifted |
+
+## 23. Known gaps owned by later nodes
+
+- The goods issue note has a home (P4-16) but no read route: element 05 is out of the plan (D15), so `GET …/documents/goods-issue-note`
+  stays unimplemented and the matrix answers `denyAll()`.
+- The stale-allocation sweeper (P2-14) and the adapter's behaviour against a live instance (R-13-2) stay open, unchanged.
+- `release` still has no caller (D11 says "never"), so a reservation whose order is never marked ready holds its units — R-13-1
+  remains a real risk and nothing in phase 4 shortens it.
+- A resume closes every open issue of an order by construction (P4-20); if element 09 later allows a partial lift, the dashboard
+  needs the closed ids on the event and this decision has to be revisited.

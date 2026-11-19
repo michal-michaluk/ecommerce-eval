@@ -1,0 +1,12 @@
+databaseChangeLog:
+
+  # The identity of one reported issue (element 04). A sequence for the same reason the processing id is one: two employees
+  # report at once, and only a sequence gives both of them a number that is theirs.
+  - changeSet:
+      id: 0009-issue-identity
+      author: michal.michaluk
+      changes:
+        - createSequence:
+            sequenceName: issue_id_seq
+            startValue: 1
+            incrementBy: 1

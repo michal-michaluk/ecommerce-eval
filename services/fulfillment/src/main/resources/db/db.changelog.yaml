@@ -46,3 +46,21 @@ databaseChangeLog:
   - include:
       file: db/changelog/0008-order-processing-parcel.yaml
       relativeToChangelogFile: false
+  - include:
+      file: db/changelog/0009-processing-issues.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/0010-processing-reservation.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/0011-issue-dashboard.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/0012-orders-list-held.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/0013-issue-dashboard-corrections.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/0014-orders-list-restored-state.yaml
+      relativeToChangelogFile: false

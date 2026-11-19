@@ -2,12 +2,18 @@ package shop.fulfillment.processing;
 
 import org.junit.jupiter.api.Test;
 
+import java.time.Clock;
+import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Optional;
 
 import shop.fulfillment.kernel.DomainEvent;
 import shop.fulfillment.kernel.FulfillmentException;
+import shop.fulfillment.kernel.LocationCode;
 import shop.fulfillment.kernel.OrderFixture;
 import shop.fulfillment.kernel.PositionState;
+import shop.fulfillment.kernel.ProductId;
+import shop.fulfillment.kernel.ReservationId;
 import shop.fulfillment.kernel.ProcessingFixture;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -22,7 +28,11 @@ class ProcessingServiceTest {
 
     final FakeOrderProcessingRepository processings = new FakeOrderProcessingRepository();
     final FakeParcels parcels = new FakeParcels();
-    final ProcessingService work = new ProcessingService(processings, parcels);
+    final FakeProcessingReservations reservations = new FakeProcessingReservations();
+
+    final ProcessingService work = new ProcessingService(processings, parcels,
+            new WarehouseGoodsIssueIntegration(Optional.empty(), reservations),
+            Clock.fixed(ProcessingFixture.REPORTED_AT, ZoneOffset.UTC));
 
     @Test
     void closesOnePositionByScanningIt() {
