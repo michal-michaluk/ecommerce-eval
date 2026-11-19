@@ -13,9 +13,10 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 /**
  * The kernel/slice boundary of the fulfillment context, executable.
  *
- * <p>The context is one root package split into three: {@code kernel} is the jointly owned, immutable and public
- * model every slice reads, {@code processing} and {@code parcel} are the slices that own a mutable aggregate each and
- * never see one another. The six shared rule factories are instantiated once per package.
+ * <p>The context is one root package split into four: {@code kernel} is the jointly owned, immutable and public model
+ * every slice reads, {@code processing} and {@code parcel} are the slices that own a mutable aggregate each and never see one
+ * another, and {@code orders} is the read slice that sees neither of them — it is fed by the domain events and answers the
+ * orders list of element 15. The six shared rule factories are instantiated once per package.
  *
  * <p>A slice's {@code sharedKernelUsed} is the kernel package — that is the one foreign package it may depend on. A
  * slice's {@code sharedKernelExposed} is the kernel package as well, which subtracts nothing: every type the slice
@@ -32,6 +33,7 @@ class ArchitectureTest {
     public static final String KERNEL = "shop.fulfillment.kernel";
     public static final String PROCESSING = "shop.fulfillment.processing";
     public static final String PARCEL = "shop.fulfillment.parcel";
+    public static final String ORDERS = "shop.fulfillment.orders";
 
     public static final DescribedPredicate<JavaClass> sharedKernelExposed = resideInAPackage(KERNEL + "..");
     public static final DescribedPredicate<JavaClass> sharedKernelUsed = resideInAPackage(KERNEL + "..");
@@ -87,6 +89,40 @@ class ArchitectureTest {
     @ArchTest
     public static final ArchRule kernelModelIsolation =
             ArchitectureDescription.modelIsolation(KERNEL, sharedKernelExposed).allowEmptyShould(true);
+
+    @ArchTest
+    public static final ArchRule ordersAdaptersDependencies =
+            ArchitectureDescription.adaptersDependencies(ORDERS, sharedKernelUsed).allowEmptyShould(true);
+
+    @ArchTest
+    public static final ArchRule ordersServicesDependencies =
+            ArchitectureDescription.servicesDependencies(ORDERS, sharedKernelUsed).allowEmptyShould(true);
+
+    @ArchTest
+    public static final ArchRule ordersModelDependencies =
+            ArchitectureDescription.modelDependencies(ORDERS, sharedKernelUsed);
+
+    @ArchTest
+    public static final ArchRule ordersAdaptersIsolation =
+            ArchitectureDescription.adaptersIsolation(ORDERS).allowEmptyShould(true);
+
+    @ArchTest
+    public static final ArchRule ordersServicesIsolation =
+            ArchitectureDescription.servicesIsolation(ORDERS, ArchitectureDescription.mediators).allowEmptyShould(true);
+
+    @ArchTest
+    public static final ArchRule ordersModelIsolation =
+            ArchitectureDescription.modelIsolation(ORDERS, sharedKernelExposed);
+
+    @ArchTest
+    public static final ArchRule ordersDependsOnNoWriteSlice =
+            noClasses().that().resideInAPackage(ORDERS + "..")
+                    .should().dependOnClassesThat().resideInAnyPackage(PROCESSING + "..", PARCEL + "..");
+
+    @ArchTest
+    public static final ArchRule writeSlicesDependOnNoReadSlice =
+            noClasses().that().resideInAnyPackage(PROCESSING + "..", PARCEL + "..")
+                    .should().dependOnClassesThat().resideInAPackage(ORDERS + "..");
 
     @ArchTest
     public static final ArchRule processingDependsOnNoSlice =

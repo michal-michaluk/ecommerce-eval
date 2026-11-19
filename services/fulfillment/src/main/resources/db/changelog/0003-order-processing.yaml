@@ -1,0 +1,50 @@
+databaseChangeLog:
+
+  # The identity of one order processing. It is a database sequence on purpose: the id is minted at intake, two intakes may
+  # run at once, and only a sequence gives both of them a number that is theirs (element 02, register D4).
+  - changeSet:
+      id: 0003-order-processing-identity
+      author: michal.michaluk
+      changes:
+        - createSequence:
+            sequenceName: order_processing_id_seq
+            startValue: 1
+            incrementBy: 1
+
+  # The processing as a document snapshot: the aggregate's own snapshot in one JSONB column, and the one column a query
+  # reads without opening it — the order's canonical hash, which is the idempotency key of the handover (element 12 RULE-2).
+  - changeSet:
+      id: 0003-order-processing
+      author: michal.michaluk
+      changes:
+        - createTable:
+            tableName: order_processing
+            columns:
+              - column:
+                  name: processing_id
+                  type: varchar(32)
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: order_processing_pkey
+                    nullable: false
+              - column:
+                  name: version
+                  type: bigint
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+              - column:
+                  name: order_hash
+                  type: varchar(128)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: snapshot
+                  type: jsonb
+                  constraints:
+                    nullable: false
+        # One processing per order, enforced by the schema as well as by the intake: a second delivery of the same order
+        # finds this row and answers it instead of opening another one.
+        - sql:
+            sql: |
+              CREATE UNIQUE INDEX order_processing_order_hash_idx ON order_processing (order_hash);

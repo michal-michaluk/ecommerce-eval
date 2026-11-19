@@ -39,7 +39,7 @@ public record Order(
         addIfMissing(missing, payment == null, "payment");
         addIfMissing(missing, invoicing == null, "invoicing");
         ensureNothingIsMissing(missing);
-        lines = lines.stream().sorted(Comparator.comparing(OrderLine::productNumber)).toList();
+        lines = List.copyOf(lines.stream().sorted(Comparator.comparing(OrderLine::productNumber)).toList());
         ensureLinesAreDistinct(lines);
     }
 

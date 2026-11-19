@@ -1,0 +1,26 @@
+version: 1
+
+# `structure.slice-package-private` — the slice owns its types, so nothing outside the slice may name one, and the slice's own
+# adapters sit in this package and reach them without widening anything. Only the root-level `kernel/` package is `public`.
+
+utils:
+  has.public-modifier:
+    has: { stopBy: neighbor, kind: modifiers, regex: '\bpublic\b' }
+
+  is.top-level:
+    inside: { stopBy: neighbor, kind: program }
+
+checks:
+  - id: structure.slice-package-private
+    language: Java
+    severity: error
+    message: a type a slice owns must be package-private — only the shared kernel package is public
+    filter:
+      all:
+        - matches: is.top-level
+        - any:
+            - { kind: class_declaration }
+            - { kind: record_declaration }
+            - { kind: interface_declaration }
+            - { kind: enum_declaration }
+    rule: { matches: has.public-modifier }

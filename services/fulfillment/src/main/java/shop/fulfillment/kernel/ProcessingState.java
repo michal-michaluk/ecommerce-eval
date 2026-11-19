@@ -25,4 +25,22 @@ public enum ProcessingState {
     public ProcessingState afterPacking(boolean allPositionsPacked) {
         return allPositionsPacked ? PACKED : this;
     }
+
+    /**
+     * The state as the contract of element 11 spells it: the element examples write every state in lower camel case and a
+     * client branches on that word, so the one vocabulary lives here instead of in each adapter that renders a state.
+     *
+     * @return the wire name of this state
+     */
+    public String wireName() {
+        return switch (this) {
+            case PENDING -> "pending";
+            case ASSIGNED -> "assigned";
+            case PICKING -> "picking";
+            case PACKED -> "packed";
+            case READY_FOR_DELIVERY -> "readyForDelivery";
+            case ON_HOLD -> "onHold";
+            case DELIVERED -> "delivered";
+        };
+    }
 }

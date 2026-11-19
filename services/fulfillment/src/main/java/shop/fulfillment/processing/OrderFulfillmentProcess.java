@@ -181,7 +181,7 @@ class OrderFulfillmentProcess {
      * @return the state as the read side serves it
      */
     OrderProcessing toSnapshot() {
-        return new OrderProcessing(processingId, order.orderHash(), assignee, state,
+        return new OrderProcessing(processingId, order, order.orderHash(), assignee, state, heldState,
                 List.copyOf(positions), parcelId, List.copyOf(issues));
     }
 

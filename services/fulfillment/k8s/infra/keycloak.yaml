@@ -5,63 +5,312 @@ metadata:
   namespace: fulfillment
 data:
   iot-realm.json: |
-    {
-      "realm": "iot",
-      "enabled": true,
-      "sslRequired": "external",
-      "registrationAllowed": false,
-      "loginWithEmailAllowed": true,
-      "roles": {
-        "realm": [
-          { "name": "user", "description": "Regular user" },
-          { "name": "admin", "description": "Administrator" }
-        ]
-      },
-      "users": [
-        {
-          "username": "john",
-          "enabled": true,
-          "email": "john@test.com",
-          "firstName": "John",
-          "lastName": "Doe",
-          "credentials": [{ "type": "password", "value": "john" }],
-          "realmRoles": ["user"]
+      {
+        "realm": "iot",
+        "enabled": true,
+        "sslRequired": "none",
+        "registrationAllowed": false,
+        "loginWithEmailAllowed": true,
+        "resetPasswordAllowed": false,
+        "accessTokenLifespan": 3600,
+        "roles": {
+          "realm": [
+            {
+              "name": "user",
+              "description": "Regular user"
+            },
+            {
+              "name": "admin",
+              "description": "Administrator"
+            }
+          ]
         },
-        {
-          "username": "jane",
-          "enabled": true,
-          "email": "jane@test.com",
-          "firstName": "Jane",
-          "lastName": "Doe",
-          "credentials": [{ "type": "password", "value": "jane" }],
-          "realmRoles": ["user"]
-        },
-        {
-          "username": "admin",
-          "enabled": true,
-          "email": "admin@test.com",
-          "firstName": "Admin",
-          "lastName": "User",
-          "credentials": [{ "type": "password", "value": "admin" }],
-          "realmRoles": ["admin"]
-        }
-      ],
-      "clients": [
-        {
-          "clientId": "iot-service",
-          "enabled": true,
-          "publicClient": false,
-          "secret": "secret",
-          "directAccessGrantsEnabled": true,
-          "serviceAccountsEnabled": false,
-          "standardFlowEnabled": false,
-          "protocol": "openid-connect",
-          "attributes": {
-            "access.token.lifespan": "3600"
+        "users": [
+          {
+            "username": "john",
+            "enabled": true,
+            "email": "john@test.com",
+            "emailVerified": true,
+            "firstName": "John",
+            "lastName": "Doe",
+            "credentials": [
+              {
+                "type": "password",
+                "value": "john",
+                "temporary": false
+              }
+            ],
+            "realmRoles": [
+              "user"
+            ]
+          },
+          {
+            "username": "jane",
+            "enabled": true,
+            "email": "jane@test.com",
+            "emailVerified": true,
+            "firstName": "Jane",
+            "lastName": "Doe",
+            "credentials": [
+              {
+                "type": "password",
+                "value": "jane",
+                "temporary": false
+              }
+            ],
+            "realmRoles": [
+              "user"
+            ]
+          },
+          {
+            "username": "admin",
+            "enabled": true,
+            "email": "admin@test.com",
+            "emailVerified": true,
+            "firstName": "Admin",
+            "lastName": "User",
+            "credentials": [
+              {
+                "type": "password",
+                "value": "admin",
+                "temporary": false
+              }
+            ],
+            "realmRoles": [
+              "admin"
+            ]
+          },
+          {
+            "username": "employee",
+            "enabled": true,
+            "email": "employee@test.com",
+            "emailVerified": true,
+            "firstName": "Ewa",
+            "lastName": "Magazynier",
+            "credentials": [
+              {
+                "type": "password",
+                "value": "employee",
+                "temporary": false
+              }
+            ],
+            "realmRoles": []
+          },
+          {
+            "username": "other-employee",
+            "enabled": true,
+            "email": "other-employee@test.com",
+            "emailVerified": true,
+            "firstName": "Olek",
+            "lastName": "Magazynier",
+            "credentials": [
+              {
+                "type": "password",
+                "value": "other-employee",
+                "temporary": false
+              }
+            ],
+            "realmRoles": []
+          },
+          {
+            "username": "resolver",
+            "enabled": true,
+            "email": "resolver@test.com",
+            "emailVerified": true,
+            "firstName": "Renata",
+            "lastName": "Resolver",
+            "credentials": [
+              {
+                "type": "password",
+                "value": "resolver",
+                "temporary": false
+              }
+            ],
+            "realmRoles": []
+          },
+          {
+            "username": "customer",
+            "enabled": true,
+            "email": "customer@test.com",
+            "emailVerified": true,
+            "firstName": "Celina",
+            "lastName": "Klient",
+            "credentials": [
+              {
+                "type": "password",
+                "value": "customer",
+                "temporary": false
+              }
+            ],
+            "realmRoles": []
+          },
+          {
+            "username": "shopping",
+            "enabled": true,
+            "email": "shopping@test.com",
+            "emailVerified": true,
+            "firstName": "Sonia",
+            "lastName": "Checkout",
+            "credentials": [
+              {
+                "type": "password",
+                "value": "shopping",
+                "temporary": false
+              }
+            ],
+            "realmRoles": []
           }
-        }
-      ]
-    }
+        ],
+        "clientScopes": [
+          {
+            "name": "basic",
+            "description": "Keycloak's standard basic claims; the resource server reads `sub` as the caller's identity",
+            "protocol": "openid-connect",
+            "attributes": {
+              "include.in.token.scope": "false",
+              "display.on.consent.screen": "false"
+            },
+            "protocolMappers": [
+              {
+                "name": "sub",
+                "protocol": "openid-connect",
+                "protocolMapper": "oidc-sub-mapper",
+                "config": {
+                  "access.token.claim": "true",
+                  "introspection.token.claim": "true"
+                }
+              }
+            ]
+          },
+          {
+            "name": "fulfillment-employee",
+            "description": "element 11: lists and claims orders, picks, packs, marks ready, reports issues, resumes a hold, prints both documents",
+            "protocol": "openid-connect",
+            "attributes": {
+              "include.in.token.scope": "true",
+              "display.on.consent.screen": "false"
+            }
+          },
+          {
+            "name": "fulfillment-resolver",
+            "description": "element 11: reads the issue dashboard and resumes a hold",
+            "protocol": "openid-connect",
+            "attributes": {
+              "include.in.token.scope": "true",
+              "display.on.consent.screen": "false"
+            }
+          },
+          {
+            "name": "fulfillment-customer",
+            "description": "element 11: reads one order processing state",
+            "protocol": "openid-connect",
+            "attributes": {
+              "include.in.token.scope": "true",
+              "display.on.consent.screen": "false"
+            }
+          },
+          {
+            "name": "shopping-service",
+            "description": "element 11: hands a finished order over on POST /orders",
+            "protocol": "openid-connect",
+            "attributes": {
+              "include.in.token.scope": "true",
+              "display.on.consent.screen": "false"
+            }
+          }
+        ],
+        "clients": [
+          {
+            "clientId": "iot-service",
+            "enabled": true,
+            "publicClient": false,
+            "secret": "secret",
+            "directAccessGrantsEnabled": true,
+            "serviceAccountsEnabled": false,
+            "standardFlowEnabled": false,
+            "protocol": "openid-connect",
+            "attributes": {
+              "access.token.lifespan": "3600"
+            },
+            "defaultClientScopes": [
+              "basic"
+            ],
+            "optionalClientScopes": []
+          },
+          {
+            "clientId": "fulfillment-employee-client",
+            "enabled": true,
+            "publicClient": false,
+            "secret": "secret",
+            "directAccessGrantsEnabled": true,
+            "serviceAccountsEnabled": false,
+            "standardFlowEnabled": false,
+            "protocol": "openid-connect",
+            "attributes": {
+              "access.token.lifespan": "3600"
+            },
+            "defaultClientScopes": [
+              "basic",
+              "fulfillment-employee"
+            ],
+            "optionalClientScopes": []
+          },
+          {
+            "clientId": "fulfillment-resolver-client",
+            "enabled": true,
+            "publicClient": false,
+            "secret": "secret",
+            "directAccessGrantsEnabled": true,
+            "serviceAccountsEnabled": false,
+            "standardFlowEnabled": false,
+            "protocol": "openid-connect",
+            "attributes": {
+              "access.token.lifespan": "3600"
+            },
+            "defaultClientScopes": [
+              "basic",
+              "fulfillment-resolver"
+            ],
+            "optionalClientScopes": []
+          },
+          {
+            "clientId": "fulfillment-customer-client",
+            "enabled": true,
+            "publicClient": false,
+            "secret": "secret",
+            "directAccessGrantsEnabled": true,
+            "serviceAccountsEnabled": false,
+            "standardFlowEnabled": false,
+            "protocol": "openid-connect",
+            "attributes": {
+              "access.token.lifespan": "3600"
+            },
+            "defaultClientScopes": [
+              "basic",
+              "fulfillment-customer"
+            ],
+            "optionalClientScopes": []
+          },
+          {
+            "clientId": "shopping-service-client",
+            "enabled": true,
+            "publicClient": false,
+            "secret": "secret",
+            "directAccessGrantsEnabled": true,
+            "serviceAccountsEnabled": false,
+            "standardFlowEnabled": false,
+            "protocol": "openid-connect",
+            "attributes": {
+              "access.token.lifespan": "3600"
+            },
+            "defaultClientScopes": [
+              "basic",
+              "shopping-service"
+            ],
+            "optionalClientScopes": []
+          }
+        ]
+      }
 ---
 apiVersion: v1
 kind: Service

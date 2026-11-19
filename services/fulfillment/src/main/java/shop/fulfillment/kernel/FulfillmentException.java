@@ -14,6 +14,8 @@ public class FulfillmentException extends RuntimeException {
     /** The context's whole error vocabulary, each constant owning its message template. */
     public enum Error {
         ORDER_INCOMPLETE("the order is incomplete, missing %s"),
+        PROCESSING_NOT_FOUND("no order processing %s"),
+        WAREHOUSE_NOT_WIRED("the warehouse port has no implementation, %s is impossible"),
         ISSUE_INCOMPLETE("the issue is incomplete, missing %s"),
         ORDER_LINE_DUPLICATE("product %s appears more than once in the order"),
         QUANTITY_NOT_POSITIVE("quantity must be at least 1, got %s"),
@@ -68,11 +70,23 @@ public class FulfillmentException extends RuntimeException {
         this.details = Collections.unmodifiableList(Arrays.asList(details));
     }
 
-    Error error() {
+    /**
+     * The error type this failure carries — the name of the constant is the reason a client branches on, so the transport
+     * reads it instead of matching a message.
+     *
+     * @return the error type
+     */
+    public Error error() {
         return error;
     }
 
-    List<Object> details() {
+    /**
+     * The domain values the error template was formatted with, so an adapter can name them on the wire without parsing the
+     * message.
+     *
+     * @return the detail values, in the order the template names them
+     */
+    public List<Object> details() {
         return details;
     }
 }

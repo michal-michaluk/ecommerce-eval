@@ -66,6 +66,27 @@ configurations {
 test {
     useJUnitPlatform()
     finalizedBy jacocoTestReport
+    // The HTTP contract is its own task: the e2e suite boots the application and runs the whole prototype of element 11,
+    // which costs minutes and needs hurl — `./gradlew build` stays the second-scale gate.
+    exclude "**/e2e/**"
+}
+
+/**
+ * The HTTP contract of element 11 over a booted application.
+ *
+ * It is a Test task so the suite gets the same classpath, test runtime and Testcontainers config as every integration
+ * test: the harness starts PostgreSQL and Keycloak itself, and `hurl --test` exits non-zero on any failing request, which
+ * fails this task and therefore the gate.
+ */
+tasks.register("e2eHurl", Test) {
+    description = "Runs the element 11 contract (e2e/fulfillment-api.hurl) against the booted service"
+    group = "verification"
+    useJUnitPlatform()
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    include "**/e2e/**"
+    systemProperty "fulfillment.e2e.suite", layout.projectDirectory.file("e2e/fulfillment-api.hurl").asFile.absolutePath
+    outputs.upToDateWhen { false }
 }
 
 jacoco {
