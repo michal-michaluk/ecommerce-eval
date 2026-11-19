@@ -13,6 +13,19 @@
 **/.opencode/
 **/.pi/
 
+# architecture docs and blueprint templates — generated copies of the workspace blueprints repo
+/docs/arch/
+**/.agents/blueprints/
+
+# run-apps skill runtime state (kubeconfig, scoped tokens, port-forward pids)
+**/.agents/runtime/
+**/__pycache__/
+
 # isolated storybook gallery (spec prototype) — deps and static build stay out of git
 **/.storybook/node_modules/
 **/.storybook/storybook-static/
+
+# demo recording scratch (scripts, payloads and chapter JSON are versioned; runs are not)
+demo/run/
+demo/*.webm
+demo/.chapters.ffmetadata
