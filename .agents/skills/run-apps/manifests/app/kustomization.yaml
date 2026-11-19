@@ -1,0 +1,28 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# The app manifests are the service's own k3d overlay; this kustomization only adds what the
+# service tree cannot carry: the realm the resource server actually trusts, the collector the
+# overlay points its OTel exporter at, and the address of the shop-wide Postgres. Nothing here
+# duplicates the service's manifests.
+namespace: catalog
+
+resources:
+  - ../../../../../services/catalog/k8s/overlays/k3d
+  - ../../../../../services/catalog/k8s/infra/otel-collector.yaml
+
+configMapGenerator:
+  # The overlay still names the blueprint's `iot` realm; the service's realm document is `catalog`
+  # and the tokens the contract suite needs only exist there.
+  - name: catalog
+    behavior: merge
+    literals:
+      - JWT_ISSUER_URI=http://catalog-keycloak:8080/realms/catalog
+
+secretGenerator:
+  # The overlay's datasource still points at the retired per-service `catalog-db-postgresql` Service.
+  # The shop-wide instance is `postgresql`; the app keeps its own `catalog` role and `catalog` database.
+  - name: catalog-db
+    behavior: merge
+    literals:
+      - jdbc-url=jdbc:postgresql://postgresql:5432/catalog
