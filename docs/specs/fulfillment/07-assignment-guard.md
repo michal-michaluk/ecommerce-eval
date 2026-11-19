@@ -26,6 +26,10 @@ Rows are evaluated DT-07-1 → DT-07-6, first match wins. DT-07-3's state list s
 refused as `pastPicking` (DT-07-5) even when an employee still holds it — the hold on an order is a state, not a flag
 (09 Decision table).
 
+**Wire codes.** Each REFUSE row answers `409` with one `error` code — `ACTOR_NOT_ALLOWED` (DT-07-2), `ALREADY_ASSIGNED`
+(DT-07-3), `PAST_PICKING` (DT-07-5), `CLOSED` (DT-07-6) — and a NO-OP answers `200` with the unchanged state; the envelope,
+its null policy and the status split are element 11's.
+
 Row provenance, with this spec's default where the source is silent:
 
 | Rule    | Source status | Spec decision |

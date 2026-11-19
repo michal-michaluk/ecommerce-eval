@@ -30,7 +30,7 @@ processing got.
 | quantity to take | position / line quantity | **P2** `[seg 130]`, `[seg 133-134]`, KB `pick-list.md:10` |
 | location(s) on the warehouse | location resolved through the warehouse port (element 13) | **P3** `[seg 119]`, `[seg 129]`, board annotation "locations of products on warehouse" (`eventstorming.json:146`), KB `pick-list.md:11` |
 | walk order (row order) | `PickListCalculation` output (element 10) | **P5** `[seg 118-119]` — optimisation claimed, criterion missing (`spec.md` Q2, UND-23 `undecided-register.md:64`) |
-| position state | `positions[].state` — pre-scan (unnamed, PS1), `picked` (PS2), `packed` (PS3) | `[seg 121]` W2, `[seg 120]`, KB `picking-and-packing.md:22-28`; `position packed` (`eventstorming.json:129`) |
+| position state | `positions[].state` — pre-scan `awaitingScan` (PS1, named by element 02), `picked` (PS2), `packed` (PS3) | `[seg 121]` W2, `[seg 120]`, KB `picking-and-packing.md:22-28`; `position packed` (`eventstorming.json:129`) |
 | processing state of the order | `OrderProcessing.state` | `[seg 121]` W1, element 02 |
 | positions packed `n/m` | derived from position states | element 02 RULE-3 — a **derived** counter, not a source field |
 | assignee | `OrderProcessing.assignee` | `[seg 114]`, element 02 RULE-1 — **default:** shown so the employee sees he owns the screen |
@@ -116,7 +116,7 @@ Stories, each with a screenshot: [`scan-idle`](prototypes/shots/fulfillment-pick
   and its kinds are all unstated (KB `issues-and-hold.md:112-126` question 3, UND-22
   `undecided-register.md:63`). **Default:** one of the named kinds (lost / destroyed / stolen / wrong location, `[seg 141]`,
   `[seg 150-151]`) plus free text — never a closed list, the expert ends his own enumeration with "whatever" `[seg 141]`.
-- **R-16-1 open:** the position state **before scanning has no name in any source** (PS1, KB `picking-and-packing.md:26`) and
-  must not borrow the order-level word `pending`. Whatever label this screen shows is invented vocabulary in a context
-  whose vocabulary is already undefined (UND-20) — and it leaks: the same label reaches the customer view (18) unless it
-  is deliberately kept internal.
+- **R-16-1 open:** the position state **before scanning has no name in any source** (PS1, KB `picking-and-packing.md:26`) — the
+  spec settles it to `awaitingScan` (element 02) rather than borrowing the order-level word `pending`, so the label is
+  invented vocabulary in a context whose vocabulary is already undefined (UND-20) — and it leaks: the same label reaches the
+  customer view (18) unless it is deliberately kept internal.

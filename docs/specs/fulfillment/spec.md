@@ -87,6 +87,7 @@ rule in this spec can be verified against Tier B in one hop.
 | D13 | Decision | the customer endpoint accepts **any** `fulfillment-customer` token — no ownership check | accepted with risk | `Order` carries no customer identity, so "only their own processing" is unimplementable; element 18 `Q-18-2` and `UND-30` stay open |
 | D14 | Decision | warehouse and carrier are **ports plus in-test fakes**; real InvenTree/DPD clients are separate specs | accepted | restates `D2` for the plan; no simulator/CLI and no Pact in this repo, because no consumer service exists |
 | D15 | Decision | element 05 (`GoodsIssueNote`) is **out of the implementation plan** | accepted | it cannot be implemented before an invoicing contract exists — no port, DTO or event supplies net/VAT/gross/`amountInWords`, and `RULE-3` forbids reusing buyer or delivery address as `receiver` |
+| D16 | Decision | `GET /orders` and `GET /issues` are **unpaginated** in v1 — one `{ "items": [ … ] }` envelope and no `page`/`size` parameter | accepted | closes the pagination clause of `spec.md` F1: the hurl is the contract and calls both collections with no parameter, no volume figure exists anywhere, and no arch doc mandates paging (checked `blueprints/microservice-java-spring/docs/arch/`); the shape is held by element 11 D-11-5 |
 
 ## Step 2 — Goals, actors, capabilities, properties (accepted)
 
@@ -224,7 +225,7 @@ Executed row by row by the `prove-dod` node; a row that is not executed is a fai
 | 14 | an issue holds the whole order and blocks readiness | hurl: `POST /issues`, then scan and readiness | `201`, state `onHold`, both refused `409` |
 | 15 | a hold is lifted only with zero open issues | hurl: resume with one open, then with none | `409 ISSUES_REMAIN`, then `200` with the pre-hold state |
 | 16 | the issue dashboard is read-only and resolver-scoped | hurl: `GET /issues` as resolver and as employee | `200` / `403` |
-| 17 | no money anywhere | hurl asserts `jsonpath "$..price" not exists` and the same for `amount`, `currency`, `vat` | all pass |
+| 17 | no money anywhere | `rg -n 'BigDecimal|price|amount|currency|vatRate|gross|netValue' services/fulfillment/src/main/java` | matches only in javadoc prose, never as a field, parameter or record component |
 
 ## Tickets
 
@@ -389,7 +390,7 @@ Executed row by row by the `prove-dod` node; a row that is not executed is a fai
 
 #### pick-list-calculation
 
-- **Goal:** `PickListCalculation` producing `PickList`/`Stop`/`Shortfall` from positions plus `stockAt` observations, and `GET …/pick-list`.
+- **Goal:** `PickListCalculation` producing `PickList`/`PickListLine`/`Stop`/`Shortfall` from positions plus `stockAt` observations, and `GET …/pick-list`.
 - **Executor:** general
 - **Docs:** `10-pick-list-calculation.md` (RULE-1…RULE-9, DT-1…DT-10, defaults `:97-107`); `11-fulfillment-http-api.md:14`
 - **IN / OUT:** IN: `warehouse-port`, `processing-aggregate`; OUT: the calculation, its value objects, query handler, read controller, tests, hurl pick-list section
@@ -537,6 +538,8 @@ Executed row by row by the `prove-dod` node; a row that is not executed is a fai
 - register `D13` — the customer endpoint accepts any `fulfillment-customer` token; ownership mapping is out of scope; element 18 `Q-18-2` and `R-11-1` stay open.
 - register `D14` — external integrations are ports plus in-test fakes; real InvenTree/DPD clients are separate specs (restates `D2` for the plan).
 - register `D15` — element 05 (WZ) is out of this plan; it cannot be implemented before an invoicing contract exists.
+- register `D16` — collections are unpaginated in v1 (`{items: []}`, no `page`/`size`); closes the pagination clause of `F1`
+  and contradicts no arch doc.
 - added §Prove Definition of Done (17 rows) and §Tickets.
 - element-level contradictions listed in *Open Topics* are fixed by the `spec-consistency` node, not by hand.
 
@@ -548,7 +551,7 @@ Executed row by row by the `prove-dod` node; a row that is not executed is a fai
 
 ### Open Topics
 
-- **F1 wire contract** — `GET /processing/{id}` shape/scope, pick-list `stops[]` vs `lines[].locations`, missing 409 codes, `NOT_READY.reasons[]`, `ORDER_INCOMPLETE.missing[]`, assignment no-op status, pagination (hurl has none, arch mandates `Pageable`, element 15 says "no pagination") — assigned to `spec-consistency`.
+- **F1 wire contract** — closed by the `spec-consistency` pass: pick-list shape nested per line (`10:36-46`), snapshot + scope (`11:61-69`), the three hurl-asserted 409 codes plus four derived ones with an `Origin` column (`11:86-109`), `NOT_READY.reasons[]` and `ORDER_INCOMPLETE.missing[]` shapes, re-claim `200` (`07:29-33`), pagination recorded as `D16`/`D-11-5` (the earlier claim that the arch docs mandate `Pageable` was false), pre-scan position state `awaitingScan`.
 - **F2 element 05** — no invoicing contract, no `receiver` source, numbering undecided (`Q-05-1`, `Q-05-2`) — out of plan (`D15`).
 - **F3 customer authorization** — no customer identity on `Order` — `D13`.
 - **F4 orphan operations** — `reserve`/`release`/`issue`/`register` triggers — `D11`; `release` has no path at all (`R-03-1`).

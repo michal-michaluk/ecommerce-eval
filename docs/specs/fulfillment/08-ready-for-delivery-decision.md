@@ -37,6 +37,11 @@ DT-08-5 ignores `positionsAllPacked` on purpose — once an order has crossed in
 by definition, and a replay must be a no-op. `readyForDelivery` appears in DT-08-5 alone and `delivered` in DT-08-6 alone, so
 no row is shadowed by an earlier one.
 
+**Output.** `GRANT` | `NO-OP` | `REFUSE(reasons[])` — `reasons` is a list of **strings**, each the refused row's reason value
+spelled as in the table (`positionsOpen`, `notPacked`, `onHold`, `noParcel`, `pastHandover`). Evaluation is first-match-wins,
+so a refusal carries exactly one reason today; it stays a list because the wire carries a `reasons` array (`409 NOT_READY`,
+element 11) and a second reason must never change a client.
+
 Row provenance:
 
 | Rule    | Source status | Spec decision |
@@ -73,7 +78,8 @@ No variant list: one rule set, no configuration key, no tenant dimension — no 
 - GRANT, effect 2: `Parcel.requestCollection()` through the carrier port; the parcel goes `parcelRegistered →
   parcelReady` (03), and the carrier's L2 leg (`[seg 125]`) later confirms it
 - GRANT is ordered local-then-remote, as the source sentence itself is ordered `[seg 122]`
-- REFUSE → neither effect runs; the reason is returned to the workstation; nothing is written
+- REFUSE → neither effect runs; the reasons are returned to the workstation (`reasons[]`, one string per refusal), nothing
+  is written
 - NO-OP → neither effect, in particular no duplicate RF2
 
 ## Domain rules

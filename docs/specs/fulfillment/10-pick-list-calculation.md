@@ -5,6 +5,12 @@ port `stockAt` (element 13), and produces the `pick list` read model (`eventstor
 `GET /processing/{processingId}/pick-list` serves (element 11). It has no Editor, stores nothing, and emits no event:
 run it twice on the same inputs and the same list comes out.
 
+**Wire shape:** `PickList` reaches the wire as `lines[]` — one `PickListLine` per position, each holding its own `locations[]`
+stops — because the hurl asserts `$.lines[0].productNumber`, `.quantity` and `.locations`
+(`prototypes/fulfillment-api.hurl:92-94`) and the hurl is the contract. `name` and the position state move up to the line,
+where they belong (they describe the position, not a shelf); every other stop field, `productNumber` included, stays on the
+stop so a stop is self-describing.
+
 **Definition:** the ordered walk an assigned employee performs — for each order position the product, the quantity to
 take, the warehouse location(s) to take it from and how much is free at each. "that's the optimized list, which product
 needs to be taken from the warehouse and put into the package" `[seg 118]`, with "locations of products on warehouse"
@@ -24,13 +30,18 @@ location of the product" `[seg 129]`.
 | `List<StockAtLocation>` per product | Integration (external) | port `stockAt`, element 13 · `docs/api/warehouse-api.md:29-30`, `:42` |
 | location *code* string, ordered lexicographically | Integration (external) — the only ordering key the warehouse gives us | `docs/api/warehouse-api.md:42`; format unowned (`UND-23`) |
 
-Output — one `PickList` value object per request, and one `Stop` per (position, location) pair actually walked:
+Output — one `PickList` value object per request, one `PickListLine` per position still to be walked, one `Stop` per (position,
+location) pair actually walked, and one `Shortfall` per position the shelf cannot cover:
 
 | Value object | Values | Origin |
 | --- | --- | --- |
-| `PickList` | `processingId`, `generatedAt`, `stops[]`, `shortfalls[]` | Calculation (this element) |
-| `Stop` | `walkOrder`, `productNumber`, `name`, `location`, `quantityToTake`, `available`, `reserved`, `positionState` | Calculation, except `available`/`reserved` per location which are **Integration** (`stockAt`) |
+| `PickList` | `processingId`, `generatedAt`, `lines[]`, `shortfalls[]` | Calculation (this element) |
+| `PickListLine` | `productNumber`, `name`, `quantity`, `state`, `locations[]` | Calculation, except `name` (element 01) and `state` (element 02) |
+| `Stop` | `walkOrder`, `productNumber`, `location`, `quantityToTake`, `available`, `reserved` | Calculation, except `available`/`reserved` per location which are **Integration** (`stockAt`) |
 | `Shortfall` | `productNumber`, `missingQuantity` | Calculation |
+
+`locations` is present on **every** line — `[]` when the shelf cannot cover the position, never an absent key
+(`$.lines[0].locations exists`; element 11's null rule, "an absent key never means empty").
 
 No price, amount, currency or total appears in either value object (`spec.md` D5, element 01 RULE-8).
 
@@ -39,15 +50,13 @@ No price, amount, currency or total appears in either value object (`spec.md` D5
 ```yaml
 processingId: "OP-2026-0001"
 generatedAt: "2026-11-19T09:41:03Z"
-stops:
-  - walkOrder: 1
-    productNumber: "75423"
+lines:
+  - productNumber: "75423"
     name: "LEGO Star Wars SMART Play X-Wing Czerwona Piątka Luke'a 75423"
-    location: "M-02-01"
-    quantityToTake: 1
-    available: 4
-    reserved: 0
-    positionState: pending
+    quantity: 1
+    state: awaitingScan
+    locations:
+      - { walkOrder: 1, productNumber: "75423", location: "M-02-01", quantityToTake: 1, available: 4, reserved: 0 }
 shortfalls: []
 ```
 
@@ -57,9 +66,14 @@ shortfalls: []
 # processing later, on hold, with its positions packed
 processingId: "OP-2026-0002"
 generatedAt: "2026-11-19T09:44:12Z"
-stops:
-  - { walkOrder: 1, productNumber: "75423", name: "LEGO Star Wars SMART Play X-Wing Czerwona Piątka Luke'a 75423", location: "M-01-03", quantityToTake: 1, available: 1, reserved: 0, positionState: pending }
-  - { walkOrder: 2, productNumber: "75423", name: "LEGO Star Wars SMART Play X-Wing Czerwona Piątka Luke'a 75423", location: "M-02-01", quantityToTake: 2, available: 4, reserved: 0, positionState: pending }
+lines:
+  - productNumber: "75423"
+    name: "LEGO Star Wars SMART Play X-Wing Czerwona Piątka Luke'a 75423"
+    quantity: 3
+    state: awaitingScan
+    locations:
+      - { walkOrder: 1, productNumber: "75423", location: "M-01-03", quantityToTake: 1, available: 1, reserved: 0 }
+      - { walkOrder: 2, productNumber: "75423", location: "M-02-01", quantityToTake: 2, available: 4, reserved: 0 }
 shortfalls: []
 ```
 
@@ -71,19 +85,21 @@ model or a warehouse topology (KB `fulfillment/order-processing/pick-list.md:19-
 
 ```text
 PickList(processing, at) =
-    stops = []
-    for p in positions(processing) where p.state = pending
+    lines = []
+    for p in positions(processing) where p.state = awaitingScan
         places = [s for s in stockAt(p.productNumber) where s.available > 0]
                  ordered by s.code ascending                        # DEFAULT-1, DEFAULT-2
+        line = PickListLine(p.productNumber, p.name, p.quantity, p.state)
         left = p.quantity
         for s in places while left > 0
             take = min(left, s.available)
-            stops.append(Stop(p.productNumber, s.code, take, s.available, s.reserved))
+            line.locations.append(Stop(p.productNumber, s.code, take, s.available, s.reserved))
             left = left - take
+        lines.append(line)
         if left > 0
             shortfalls.append(Shortfall(p.productNumber, left))
-    stops ordered by (code ascending, productNumber ascending) → walkOrder = 1..n   # DEFAULT-1
-    PickList(processing.id, at, stops, shortfalls)
+    all stops ordered by (code ascending, productNumber ascending) → walkOrder = 1..n   # DEFAULT-1
+    PickList(processing.id, at, lines, shortfalls)
 
 units      : integer units of product — order quantities are integers ≥ 1 (element 01 RULE-4); no rounding anywhere
 determinism: total order (code, then productNumber); equal inputs ⇒ equal list
@@ -115,22 +131,22 @@ inventing one is exactly what the KB forbids ("do not adopt a routing heuristic 
 
 | Scenario | product | qty | stock per location (`code: available/reserved`) | position | expected |
 | --- | --- | --- | --- | --- | --- |
-| S1 | 75423 | 1 | `M-02-01: 4/0` | pending | 1 stop, `M-02-01`, take 1, walkOrder 1, no shortfall |
-| S2 | 75423 | 3 | `M-01-03: 1/0`, `M-02-01: 4/0` | pending | 2 stops: `M-01-03` take 1, `M-02-01` take 2 |
-| S3 | 75423 | 1 | `M-02-01: 0/0` | pending | 0 stops, `Shortfall(1)` |
-| S4 | 75423 | 2 | `M-02-01: 0/3` | pending | 0 stops, `Shortfall(2)` — `available` gates the stop, not `reserved` |
-| S5 | 75423 | 1 | `M-02-01: 4/0` | `packed` | 0 stops — the position is already in the box |
-| S6 | 75423 | 3 | `M-01-03: 1/0`, `M-02-01: 1/0` | pending | 2 stops, take 1 + 1, `Shortfall(1)` |
-| S7 | 75423 + 12345 | 1 + 1 | 75423 at `M-02-01: 4/0`, 12345 at `M-01-03: 2/0` | both pending | `M-01-03` walkOrder 1, `M-02-01` walkOrder 2 — the walk interleaves products |
-| S8 | 75423 + 12345 | 1 + 1 | both products at `M-02-01` | both pending | 2 stops with equal code, `75423` first (productNumber tie-break), walkOrder 1 and 2 — stops are never merged |
-| S9 | 75423 | 1 | `stockAt` fails | pending | no list; the failure surfaces, no partial list |
-| S10 | 75423 | 1 | `M-02-01: 3/1` | pending, order `onHold` (issue on another position) | 1 stop, take 1, `available 3`, `reserved 1` — the hold does not change what is on the shelf |
+| S1 | 75423 | 1 | `M-02-01: 4/0` | awaitingScan | 1 line, 1 stop `M-02-01`, take 1, walkOrder 1, no shortfall |
+| S2 | 75423 | 3 | `M-01-03: 1/0`, `M-02-01: 4/0` | awaitingScan | 1 line, 2 stops: `M-01-03` take 1, `M-02-01` take 2 |
+| S3 | 75423 | 1 | `M-02-01: 0/0` | awaitingScan | 1 line with no stop, `Shortfall(1)` |
+| S4 | 75423 | 2 | `M-02-01: 0/3` | awaitingScan | 1 line with no stop, `Shortfall(2)` — `available` gates the stop, not `reserved` |
+| S5 | 75423 | 1 | `M-02-01: 4/0` | `packed` | no line — the position is already in the box |
+| S6 | 75423 | 3 | `M-01-03: 1/0`, `M-02-01: 1/0` | awaitingScan | 1 line, 2 stops, take 1 + 1, `Shortfall(1)` |
+| S7 | 75423 + 12345 | 1 + 1 | 75423 at `M-02-01: 4/0`, 12345 at `M-01-03: 2/0` | both awaitingScan | 2 lines; `M-01-03` walkOrder 1, `M-02-01` walkOrder 2 — the walk interleaves products, the payload groups them by position |
+| S8 | 75423 + 12345 | 1 + 1 | both products at `M-02-01` | both awaitingScan | 2 lines, 1 stop each, equal code, `75423` first (productNumber tie-break), walkOrder 1 and 2 — stops are never merged |
+| S9 | 75423 | 1 | `stockAt` fails | awaitingScan | no list; the failure surfaces, no partial list |
+| S10 | 75423 | 1 | `M-02-01: 3/1` | awaitingScan, order `onHold` (issue on another position) | 1 line, 1 stop, take 1, `available 3`, `reserved 1` — the hold does not change what is on the shelf |
 
 ## Domain rules
 
 - **RULE-1 One list per processing.** The command is per order `[seg 117]`; batching several orders into one walk is not
   in any source (KB `pick-list.md:28`, G4) and no variant implies it.
-- **RULE-2 Positions come from the order, quantities are the order's.** Every `pending` position appears; Σ
+- **RULE-2 Positions come from the order, quantities are the order's.** Every `awaitingScan` position appears; Σ
   `quantityToTake` + `Shortfall.missingQuantity` = the position quantity, always (element 02 RULE-3, element 01 RULE-4).
 - **RULE-3 Locations are the warehouse's.** No location is stored, invented, normalised or reordered structurally; a code
   is an opaque string used verbatim (`docs/api/warehouse-api.md:42`). Owning a location model would mean owning the
@@ -153,14 +169,14 @@ inventing one is exactly what the KB forbids ("do not adopt a routing heuristic 
 
 | # | Condition | Outcome | Rule |
 | --- | --- | --- | --- |
-| DT-1 | `available = 0` at every location of a product | no stops; `Shortfall(quantity)`; the position stays visible so the gap is not hidden | RULE-2, RULE-4 |
+| DT-1 | `available = 0` at every location of a product | a line with no stops; `Shortfall(quantity)`; the position stays visible so the gap is not hidden | RULE-2, RULE-4 |
 | DT-2 | one location covers the whole quantity | one stop, `quantityToTake = quantity` | RULE-2 |
 | DT-3 | several locations together cover it, none alone | split in ascending code order until `left = 0` | DEFAULT-2 |
 | DT-4 | Σ `available` < quantity | take everything available, `Shortfall(quantity − Σ take)`; the walk is not silently short `[seg 134]` | RULE-2 |
 | DT-5 | position already `picked` | not listed — the units are in hand (element 02) | RULE-2 |
 | DT-6 | position already `packed` | not listed — `[seg 120]`, `eventstorming.json:129` | RULE-2 |
 | DT-7 | order `onHold` | the list renders unchanged; the hold is element 09's concern, not the shelf's | RULE-7 |
-| DT-8 | two positions at one location code | two adjacent stops, tie broken by `productNumber` | RULE-6 |
+| DT-8 | two positions at one location code | two stops with consecutive `walkOrder` values, tie broken by `productNumber`, each in its own line's `locations[]` | RULE-6 |
 | DT-9 | `stockAt` fails for any product | no list at all; the failure is surfaced (no retry policy invented — `UND-31`) | RULE-8 |
 | DT-10 | `available` shrinks between two lists | a new list reflects the **same** pinned order — only the stops and shortfalls change, never the quantity ordered (element 01 RULE-2) | RULE-2 |
 

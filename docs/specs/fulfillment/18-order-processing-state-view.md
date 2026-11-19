@@ -39,6 +39,20 @@ course, for the customer where he is notified about all those states" `[seg 136]
 Not shown: **any money** (spec.md D5); warehouse locations or stock; the issue kind; the assignee; the pick list; internal state
 names that no customer word covers.
 
+## Payload — `GET /processing/{processingId}/state`
+
+The customer resource is separate from the employee snapshot (element 11 D-11-4), so its payload is small and fixed:
+
+| Field | Content | Note |
+| --- | --- | --- |
+| `state` | `OrderProcessing.state` **verbatim** — `pending` … `delivered` | the wire keeps the internal enum value (`$.state == "readyForDelivery"` in the hurl); any customer-word mapping is **presentational only** — no source gives the customer a vocabulary (Q-18-1), so the wire stays comparable with the employee scope |
+| `legs[]` | the delivery legs, oldest first — `{ leg, at }` per `Parcel.legs` | `at` is when **we** received the event `[seg 138]`, never the carrier's own timestamp; append-only, never reordered (element 03 RULE-4) |
+| `assignee` | **absent** — not `null` | `$.assignee not exists` in the hurl; the customer never learns who holds the order |
+| `issue` | **absent** — not `null` | `$.issue not exists` in the hurl; a hold reaches the customer only as `state = onHold` (paused marker, Q-18-1) |
+
+The order summary at the top of the view (lines, quantities, delivery target) is `Order.lines` / `Order.delivery` read through
+the projection; it carries no money (element 01 RULE-8, `spec.md` D5) and no seller party.
+
 ## Actions
 
 | Action | Effect | Precondition | Resulting event |

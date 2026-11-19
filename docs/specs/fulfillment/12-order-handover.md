@@ -18,7 +18,10 @@ nothing (KB `shopping/checkout-order/order.md:7-25`).
 | absent | prices, totals, currency, seller party, order number | `spec.md` D5, F4 |
 
 Response: `201` with `processingId` + `state: pending`, or `200` with `duplicate: true` when the same `orderHash` is
-delivered again, or `422 ORDER_INCOMPLETE` with `missing[]`.
+delivered again, or `422 ORDER_INCOMPLETE` with `missing[]` — one **string** per failed order part, the path of the absent or
+invalid part of the payload (`lines`, `delivery`, `payment`, `invoicing`, or a nested path such as
+`delivery.location.pointId`); that member format is a **default** (the hurl asserts only that the key exists) and the
+payload is element 11's.
 
 ## Why these and nothing else
 

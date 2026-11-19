@@ -32,7 +32,11 @@ issue: { issueId: "ISS-2026-0031", kind: LOST, productNumber: "75423", reportedB
 ```
 
 Position states use the transcript's own words — "we mark those positions basically as packed" `[seg 120]`, board event
-`position packed` (`eventstorming.json:129`).
+`position packed` (`eventstorming.json:129`); `picked` is the second confirmed state `[seg 121]`. **The enum is
+`awaitingScan → picked → packed`, forward only** (RULE-3). `awaitingScan` is the pre-scan state, which has no name in any
+source (PS1, KB `picking-and-packing.md:26`) and takes the spec's own value rather than borrowing the order-level word
+`pending` — named here, once, and used by every payload and screen that shows a position (element 10, element 16,
+element 11).
 
 ## State machine
 
@@ -66,7 +70,7 @@ Edge provenance (KB `order-assignment.md:50-72`), with this spec's decision wher
 ## Behaviour
 
 - `assign` → exclusive claim; a second claim is refused, never queued (element 07)
-- `pick(position)` → position `pending → picked`, order `assigned → picking`
+- `pick(position)` → position `awaitingScan → picked`, order `assigned → picking`
 - `pack(position)` → position `picked → packed`; the last one → order `packed`
 - `markReady` → order `packed → readyForDelivery` **and** collection requested on the parcel (element 08)
 - `reportIssue` → order → `onHold`, issue recorded (element 09)

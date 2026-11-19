@@ -32,6 +32,7 @@ another warehouse employee" `[seg 149]` (A2, KB `README.md:27`; spec.md Step-2 a
 | Field | Source concept | Provenance |
 | --- | --- | --- |
 | processing reference | `OrderProcessing.processingId` | element 02, spec.md D4 — no order number exists (UND-20) |
+| issue id | `FulfillmentIssue.issueId` | element 04 — the key the resume command names in `closedIssueIds` (`spec.md` D8), so the row must carry it (`$.items[0].issueId`, `prototypes/fulfillment-api.hurl`) |
 | issue kind | `FulfillmentIssue.kind` — **open taxonomy** | lost / destroyed / stolen `[seg 141]` (T1–T3, KB `issues-and-hold.md:27-29`); wrong location `[seg 150-151]` (T4, `:30`); the expert closes with "whatever" `:34`. `damaged` is **not admissible** — T6 `:32`, appears only in the superseded doc |
 | product | issue's position → `productNumber` + `Order.lines[].name` | `[seg 140]` "we have two last units, but we cannot find them"; element 04 — **default:** a resolver needs the piece to look for |
 | reporter | `FulfillmentIssue.reportedBy` | `[seg 139-141]`, element 02 example |
