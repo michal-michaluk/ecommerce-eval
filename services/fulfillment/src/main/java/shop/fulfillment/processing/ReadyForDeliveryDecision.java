@@ -1,10 +1,13 @@
 package shop.fulfillment.processing;
 
+import shop.fulfillment.kernel.CarrierPort;
+import shop.fulfillment.kernel.ProcessingState;
+
 /**
  * The decision that a packed order leaves the warehouse's hands — the only place where "the order is done" is decided
  * (element 08).
  *
- * <p>A grant has two effects in one command: the local mark on {@link OrderProcessingEditor} and the carrier's
+ * <p>A grant has two effects in one command: the local mark on {@link OrderFulfillmentProcess} and the carrier's
  * collection request through {@link CarrierPort}. It is pure — it reads its three inputs and answers; the caller
  * executes, local effect first, as the source sentence is ordered. The hold is a state, never a flag beside one, so a
  * held order is simply {@code onHold} and is refused as such.

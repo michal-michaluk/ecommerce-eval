@@ -6,6 +6,12 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
+import shop.fulfillment.kernel.FulfillmentException;
+import shop.fulfillment.kernel.OrderPosition;
+import shop.fulfillment.kernel.PositionState;
+import shop.fulfillment.kernel.ProductId;
+import shop.fulfillment.kernel.StockAtLocation;
+
 /**
  * The ordered walk a picker performs, computed from the processing's positions and the warehouse's stock observations
  * (element 10).

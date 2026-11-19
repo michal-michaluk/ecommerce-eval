@@ -2,11 +2,13 @@ package shop.fulfillment.processing;
 
 import java.util.Objects;
 
+import shop.fulfillment.kernel.ProcessingState;
+
 /**
  * The decision that an employee's claim on one order is accepted — the only concurrency control the sources name:
  * one employee per order, exclusive and not advisory (element 07).
  *
- * <p>It owns no state: the assignee lives in {@link OrderProcessingEditor}, and this record only computes GRANT,
+ * <p>It owns no state: the assignee lives in {@link OrderFulfillmentProcess}, and this record only computes GRANT,
  * NO-OP or REFUSE. It is pure — no I/O, no clock, no timeout, no retry — and a refusal never clears the existing
  * assignee. The table is {@link Rule}, declared in evaluation order, first match wins.
  */

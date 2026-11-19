@@ -1,9 +1,11 @@
 package shop.fulfillment.processing;
 
+import shop.fulfillment.kernel.ProcessingState;
+
 /**
  * The decision that one issue stops one whole order, of what a hold blocks, and of what may lift it (element 09).
  *
- * <p>A hold is the state {@code onHold} on {@link OrderProcessingEditor}, not a flag beside it, and it is clock-free:
+ * <p>A hold is the state {@code onHold} on {@link OrderFulfillmentProcess}, not a flag beside it, and it is clock-free:
  * no carrier event, warehouse event or elapsed time lifts it. Only a resume that leaves zero open issues does, and
  * that same command is the one place an issue's {@code closedAt} is ever written.
  *

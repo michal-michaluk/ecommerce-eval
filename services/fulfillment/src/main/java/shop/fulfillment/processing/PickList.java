@@ -5,6 +5,11 @@ import lombok.Builder;
 import java.time.Instant;
 import java.util.List;
 
+import shop.fulfillment.kernel.FulfillmentException;
+import shop.fulfillment.kernel.LocationCode;
+import shop.fulfillment.kernel.OrderProcessingId;
+import shop.fulfillment.kernel.PositionState;
+
 /**
  * The ordered walk an assigned employee performs, generated at one instant: one stop per (position, location) pair
  * actually walked, and one shortfall per position the shelf cannot cover.
