@@ -23,16 +23,20 @@ token's own `scope` claim and no protocol mapper can produce a second one.
 | 6 | `GET /processing/{processingId}/pick-workstation` | bearer JWT required | `fulfillment-employee` only | the one screen an assigned employee works from (element 16). The route is this service's own — element 11 names no path for that screen — and it is read-only, so nothing here can act for another view's actor |
 | 7 | `POST /processing/{processingId}/positions/{productNumber}` | bearer JWT required | `fulfillment-employee` only | one scan closes one position (element 02, element 16). The scope is the endpoint's; the caller must additionally be the assignee, and the aggregate refuses anybody else with `409 ACTOR_NOT_ALLOWED` (element 16, "never let a non-assignee confirm") |
 | 8 | `POST /processing/{processingId}/packing` | bearer JWT required | `fulfillment-employee` only | the bulk packing step (element 02, element 16), with the same assignee rule as the scan |
-| 9 | `GET /actuator/health/**` | none | public | Kubernetes probes |
-| 10 | `GET /actuator/info` | none | public | build information |
-| 11 | `GET /actuator/**` (any other actuator endpoint) | bearer JWT required | any authenticated caller | metrics and environment are not public, and no scope is invented for them |
-| 12 | `/error` | none | public | Spring's error dispatch, not a business route: without it a container-level failure is answered by the security chain instead of by the status it carries. No handler of this service is reachable through it |
+| 9 | `POST /processing/{processingId}/readiness` | bearer JWT required | `fulfillment-employee` only | declaring the order done is the warehouse employee's own action (element 08); the guard reads the order's state, not the caller, and no source ties `mark done` to the assignee (Q-08-4) |
+| 10 | `GET /processing/{processingId}/documents/label` | bearer JWT required | `fulfillment-employee` only | the consignment note of element 06 is printed in the warehouse by the employee who packs. The bytes are the carrier's own document, so nothing here reveals an internal state a wider scope would have to be trusted with anyway |
+| 11 | `GET /processing/{processingId}/state` | bearer JWT required | `fulfillment-customer` only | element 18's resource is the customer's own view, and D-11-4 keeps it separate so `assignee` and `issue` cannot be reached by this scope. No ownership check exists — the order carries no customer identity to compare against (register D13), so the scope alone decides |
+| 12 | `GET /actuator/health/**` | none | public | Kubernetes probes |
+| 13 | `GET /actuator/info` | none | public | build information |
+| 14 | `GET /actuator/**` (any other actuator endpoint) | bearer JWT required | any authenticated caller | metrics and environment are not public, and no scope is invented for them |
+| 15 | `/error` | none | public | Spring's error dispatch, not a business route: without it a container-level failure is answered by the security chain instead of by the status it carries. No handler of this service is reachable through it |
 
 ## Not yet exposed
 
-The routes of phases 3 and 4 — `POST …/readiness`, `POST …/issues`, `GET /issues`, `POST …/hold/resume`, both document routes
-and `GET …/state` — do not exist yet. Their decisions are already fixed by element 11's matrix and land with the nodes that
-add them; until then `denyAll()` answers every one of them, so a route cannot appear unauthenticated by accident.
+The routes of phase 4 — `POST …/issues`, `GET /issues`, `POST …/hold/resume` — do not exist yet, and neither does
+`GET …/documents/goods-issue-note`, which is out of the implementation plan entirely (register D15). Their decisions are already
+fixed by element 11's matrix and land with the nodes that add them; until then `denyAll()` answers every one of them, so a route
+cannot appear unauthenticated by accident.
 
 ## Refusals on the wire
 

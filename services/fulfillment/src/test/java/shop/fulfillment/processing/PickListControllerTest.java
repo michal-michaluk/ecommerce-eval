@@ -14,7 +14,9 @@ import java.util.List;
 
 import shop.fulfillment.HttpFixture;
 import shop.fulfillment.IntegrationTest;
+import shop.fulfillment.kernel.CarrierPort;
 import shop.fulfillment.kernel.WarehouseStock;
+import shop.fulfillment.parcel.FakeCarrierPort;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
@@ -116,6 +118,15 @@ class PickListControllerTest {
         String processingId = orders.accept(OrderHandoverFixture.aHandover()).processing().processingId().value();
         assignments.claim(processingId, HttpFixture.EMPLOYEE);
         return processingId;
+    }
+
+    @TestConfiguration
+    static class CarrierStub {
+
+        @Bean
+        CarrierPort carrierPort() {
+            return new FakeCarrierPort();
+        }
     }
 
     @TestConfiguration

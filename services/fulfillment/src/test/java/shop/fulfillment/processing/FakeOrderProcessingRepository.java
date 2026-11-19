@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import shop.fulfillment.kernel.OrderProcessingId;
+import shop.fulfillment.kernel.ParcelId;
 
 /**
  * The {@link OrderProcessingRepository} port backed by a map: the same find-or-create lifecycle the adapter has, without a
@@ -30,6 +31,13 @@ class FakeOrderProcessingRepository implements OrderProcessingRepository {
     public Optional<OrderFulfillmentProcess> findByOrderHash(String orderHash) {
         return processings.values().stream()
                 .filter(processing -> orderHash.equals(processing.toSnapshot().orderHash()))
+                .findFirst();
+    }
+
+    @Override
+    public Optional<OrderFulfillmentProcess> findByParcelId(ParcelId parcelId) {
+        return processings.values().stream()
+                .filter(processing -> parcelId.equals(processing.toSnapshot().parcelId()))
                 .findFirst();
     }
 

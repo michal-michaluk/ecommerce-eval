@@ -13,10 +13,11 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 /**
  * The kernel/slice boundary of the fulfillment context, executable.
  *
- * <p>The context is one root package split into four: {@code kernel} is the jointly owned, immutable and public model
+ * <p>The context is one root package split into five: {@code kernel} is the jointly owned, immutable and public model
  * every slice reads, {@code processing} and {@code parcel} are the slices that own a mutable aggregate each and never see one
- * another, and {@code orders} is the read slice that sees neither of them — it is fed by the domain events and answers the
- * orders list of element 15. The six shared rule factories are instantiated once per package.
+ * another, and {@code orders} and {@code customer} are the read slices that see neither of them — they are fed by the domain
+ * events and answer the orders list of element 15 and the customer's state view of element 18. The six shared rule factories
+ * are instantiated once per package.
  *
  * <p>A slice's {@code sharedKernelUsed} is the kernel package — that is the one foreign package it may depend on. A
  * slice's {@code sharedKernelExposed} is the kernel package as well, which subtracts nothing: every type the slice
@@ -34,6 +35,7 @@ class ArchitectureTest {
     public static final String PROCESSING = "shop.fulfillment.processing";
     public static final String PARCEL = "shop.fulfillment.parcel";
     public static final String ORDERS = "shop.fulfillment.orders";
+    public static final String CUSTOMER = "shop.fulfillment.customer";
 
     public static final DescribedPredicate<JavaClass> sharedKernelExposed = resideInAPackage(KERNEL + "..");
     public static final DescribedPredicate<JavaClass> sharedKernelUsed = resideInAPackage(KERNEL + "..");
@@ -120,9 +122,38 @@ class ArchitectureTest {
                     .should().dependOnClassesThat().resideInAnyPackage(PROCESSING + "..", PARCEL + "..");
 
     @ArchTest
+    public static final ArchRule customerAdaptersDependencies =
+            ArchitectureDescription.adaptersDependencies(CUSTOMER, sharedKernelUsed).allowEmptyShould(true);
+
+    @ArchTest
+    public static final ArchRule customerServicesDependencies =
+            ArchitectureDescription.servicesDependencies(CUSTOMER, sharedKernelUsed).allowEmptyShould(true);
+
+    @ArchTest
+    public static final ArchRule customerModelDependencies =
+            ArchitectureDescription.modelDependencies(CUSTOMER, sharedKernelUsed);
+
+    @ArchTest
+    public static final ArchRule customerAdaptersIsolation =
+            ArchitectureDescription.adaptersIsolation(CUSTOMER).allowEmptyShould(true);
+
+    @ArchTest
+    public static final ArchRule customerServicesIsolation =
+            ArchitectureDescription.servicesIsolation(CUSTOMER, ArchitectureDescription.mediators).allowEmptyShould(true);
+
+    @ArchTest
+    public static final ArchRule customerModelIsolation =
+            ArchitectureDescription.modelIsolation(CUSTOMER, sharedKernelExposed);
+
+    @ArchTest
+    public static final ArchRule customerDependsOnNoWriteSlice =
+            noClasses().that().resideInAPackage(CUSTOMER + "..")
+                    .should().dependOnClassesThat().resideInAnyPackage(PROCESSING + "..", PARCEL + "..");
+
+    @ArchTest
     public static final ArchRule writeSlicesDependOnNoReadSlice =
             noClasses().that().resideInAnyPackage(PROCESSING + "..", PARCEL + "..")
-                    .should().dependOnClassesThat().resideInAPackage(ORDERS + "..");
+                    .should().dependOnClassesThat().resideInAnyPackage(ORDERS + "..", CUSTOMER + "..");
 
     @ArchTest
     public static final ArchRule processingDependsOnNoSlice =
@@ -137,5 +168,6 @@ class ArchitectureTest {
     @ArchTest
     public static final ArchRule kernelDependsOnNoSlice =
             noClasses().that().resideInAPackage(KERNEL + "..")
-                    .should().dependOnClassesThat().resideInAnyPackage(PROCESSING + "..", PARCEL + "..");
+                    .should().dependOnClassesThat()
+                    .resideInAnyPackage(PROCESSING + "..", PARCEL + "..", ORDERS + "..", CUSTOMER + "..");
 }

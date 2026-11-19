@@ -29,6 +29,16 @@ public class CarrierFixture {
         return aRegistrationOf(REFERENCE, IDENTITY, new ParcelSequence(1, 1));
     }
 
+    /** The parcel as another slice reads it: our identity, our reference, the carrier's identity and the leg it reached. */
+    public static ParcelState aParcelState(ParcelId parcelId, ParcelReference reference) {
+        return aParcelStateOf(parcelId, reference, LegState.PARCEL_REGISTERED);
+    }
+
+    /** The same parcel once it reached a given leg. */
+    public static ParcelState aParcelStateOf(ParcelId parcelId, ParcelReference reference, LegState legState) {
+        return new ParcelState(parcelId, reference, IDENTITY, legState);
+    }
+
     public static Registration aRegistrationOf(ParcelReference reference, CarrierIdentity identity,
                                                ParcelSequence sequence) {
         return new Registration(reference, identity, sequence);

@@ -143,7 +143,7 @@ class OrderFulfillmentProcessTest {
         assertThatThrownBy(() -> processing.markReady(null))
                 .isInstanceOfSatisfying(FulfillmentException.class, refused -> {
                     assertThat(refused.error()).isEqualTo(FulfillmentException.Error.READINESS_REFUSED);
-                    assertThat(refused.details()).contains(List.of(ReadyForDeliveryDecision.Reason.NO_PARCEL));
+                    assertThat(refused.details()).contains(List.of(ReadyForDeliveryDecision.Reason.NO_PARCEL.wireName()));
                 });
     }
 

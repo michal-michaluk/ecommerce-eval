@@ -35,11 +35,27 @@ record ReadyForDeliveryDecision(ProcessingState orderState, boolean positionsAll
 
     /** Why readiness is refused, in the decision table's own words. */
     enum Reason {
-        POSITIONS_OPEN,
-        NOT_PACKED,
-        ON_HOLD,
-        PAST_HANDOVER,
-        NO_PARCEL
+        POSITIONS_OPEN("positionsOpen"),
+        NOT_PACKED("notPacked"),
+        ON_HOLD("onHold"),
+        PAST_HANDOVER("pastHandover"),
+        NO_PARCEL("noParcel");
+
+        private final String wireName;
+
+        Reason(String wireName) {
+            this.wireName = wireName;
+        }
+
+        /**
+         * The reason as the contract of element 11 spells it in {@code 409 NOT_READY.reasons[]} — the table's own value,
+         * never a code and never an object (element 08, element 11).
+         *
+         * @return the reason value the refusal names
+         */
+        String wireName() {
+            return wireName;
+        }
     }
 
     /** DT-08-7, DT-08-4, DT-08-3, DT-08-2, DT-08-1, DT-08-5, DT-08-6 — the element's evaluation order. */

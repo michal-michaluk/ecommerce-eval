@@ -19,8 +19,7 @@ public class ProcessingFixture {
     private ProcessingFixture() {
     }
 
-    public static OrderPosition aPosition() {
-        return aPositionAs(OrderFixture.PRODUCT_NUMBER, OrderFixture.PRODUCT_NAME, 1, PositionState.PENDING);
+    public static OrderPosition aPosition() {        return aPositionAs(OrderFixture.PRODUCT_NUMBER, OrderFixture.PRODUCT_NAME, 1, PositionState.PENDING);
     }
 
     public static OrderPosition aPosition(String productNumber, int quantity) {
@@ -45,6 +44,11 @@ public class ProcessingFixture {
 
     public static FulfillmentIssue issueOn(OrderProcessingId processingId, IssueId issueId) {
         return issue(issueId, processingId, EMPLOYEE);
+    }
+
+    /** The carrier's leg as the parcel slice raises it: the order's own input from a neighbour (element 02). */
+    public static DomainEvent.DeliveryStateNotified aLegNotified(ParcelId parcelId, Leg leg) {
+        return new DomainEvent.DeliveryStateNotified(parcelId, leg, leg.name());
     }
 
     public static FulfillmentIssue issue(IssueId issueId, OrderProcessingId processingId, String reportedBy) {

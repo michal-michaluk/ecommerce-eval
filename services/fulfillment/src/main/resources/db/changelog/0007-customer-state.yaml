@@ -1,0 +1,107 @@
+databaseChangeLog:
+
+  # The customer's read model (element 18): one row per processing holding the order summary he already knows, the state he may
+  # see and the facts it is derived from. The assignee is not a column and the issue is not a column — a hold reaches the
+  # customer as a paused state only (element 11 RULE-4, D-11-4).
+  - changeSet:
+      id: 0007-customer-processing-state
+      author: michal.michaluk
+      changes:
+        - createTable:
+            tableName: customer_processing_state
+            columns:
+              - column:
+                  name: processing_id
+                  type: varchar(32)
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: customer_processing_state_pkey
+                    nullable: false
+              - column:
+                  name: version
+                  type: bigint
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+              - column:
+                  name: state
+                  type: varchar(32)
+              - column:
+                  name: parcel_id
+                  type: varchar(32)
+              - column:
+                  name: order_document
+                  type: jsonb
+              - column:
+                  name: packed_products
+                  type: jsonb
+                  defaultValueComputed: "'[]'::jsonb"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: picked
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: assigned
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: held
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: ready_for_delivery
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: delivered
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+
+  # The delivery timeline: one row per (parcel, leg), keyed by the pair so a repeated carrier notification is the same step
+  # and keeps the moment we first heard of it (element 03 RULE-5, element 18).
+  - changeSet:
+      id: 0007-customer-delivery-leg
+      author: michal.michaluk
+      changes:
+        - createTable:
+            tableName: customer_delivery_leg
+            columns:
+              - column:
+                  name: leg_id
+                  type: varchar(48)
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: customer_delivery_leg_pkey
+                    nullable: false
+              - column:
+                  name: parcel_id
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: leg
+                  type: varchar(8)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: leg_order
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: reached_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false

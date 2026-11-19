@@ -21,6 +21,7 @@ import java.util.Optional;
 
 import shop.fulfillment.kernel.DomainEvent;
 import shop.fulfillment.kernel.OrderProcessingId;
+import shop.fulfillment.kernel.ParcelId;
 
 /**
  * The {@link OrderProcessingRepository} document-snapshot adapter: one JSONB row per processing holding the aggregate's own
@@ -64,6 +65,11 @@ class DocumentOrderProcessingRepository implements OrderProcessingRepository {
     }
 
     @Override
+    public Optional<OrderFulfillmentProcess> findByParcelId(ParcelId parcelId) {
+        return processings.findByParcelId(parcelId.value()).map(DocumentOrderProcessingRepository::rehydrate);
+    }
+
+    @Override
     public OrderProcessingId nextIdentity() {
         long number = Optional.ofNullable(processings.nextIdentity()).orElse(1L);
         return new OrderProcessingId(MINTED_ID.formatted(Year.now(clock).getValue(), number));
@@ -104,6 +110,8 @@ class DocumentOrderProcessingRepository implements OrderProcessingRepository {
 
         Optional<OrderProcessingEntity> findByOrderHash(String orderHash);
 
+        Optional<OrderProcessingEntity> findByParcelId(String parcelId);
+
         @Query(value = "select nextval('order_processing_id_seq')", nativeQuery = true)
         Long nextIdentity();
     }
@@ -119,6 +127,8 @@ class DocumentOrderProcessingRepository implements OrderProcessingRepository {
         private long version;
         @Column(name = "order_hash")
         private String orderHash;
+        @Column(name = "parcel_id")
+        private String parcelId;
         @JdbcTypeCode(SqlTypes.JSON)
         private OrderProcessing snapshot;
 
@@ -136,6 +146,7 @@ class DocumentOrderProcessingRepository implements OrderProcessingRepository {
         OrderProcessingEntity setSnapshot(OrderProcessing snapshot) {
             this.snapshot = snapshot;
             this.orderHash = snapshot.orderHash();
+            this.parcelId = snapshot.parcelId() == null ? null : snapshot.parcelId().value();
             return this;
         }
     }

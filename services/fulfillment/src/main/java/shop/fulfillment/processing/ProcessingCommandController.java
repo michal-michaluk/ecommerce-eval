@@ -19,6 +19,11 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
  * answers {@code 409 ON_HOLD}, a position that is not picked answers {@code 409 POSITION_NOT_PICKED}, and a caller who does
  * not hold the order answers {@code 409 ACTOR_NOT_ALLOWED} through the one advice. The caller is the token's subject, never
  * a body value (element 16: only the assigned employee confirms and packs).
+ *
+ * <p>The third route is the employee's declaration that the order is done (element 08): a granted readiness answers {@code 200}
+ * with the parcel it now carries, a refusal {@code 409 NOT_READY} with the decision's own reasons, and a replay the state it
+ * already had — no second collection is booked (RULE-5). The actor is not checked: no source ties {@code mark done} to the
+ * assignee (Q-08-4).
  */
 @RestController
 @RequiredArgsConstructor
@@ -30,13 +35,19 @@ class ProcessingCommandController {
             consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     ProcessingSnapshot scan(@PathVariable String processingId, @PathVariable String productNumber,
                             @RequestBody @Valid ScanPosition scan) {
-        return ProcessingSnapshot.of(processings.pick(processingId, productNumber, caller()));
+        return processings.pick(processingId, productNumber, caller());
     }
 
     @PostMapping(path = "/processing/{processingId}/packing",
             consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     ProcessingSnapshot pack(@PathVariable String processingId, @RequestBody @Valid PackPositions pack) {
-        return ProcessingSnapshot.of(processings.pack(processingId, pack.productNumbers(), caller()));
+        return processings.pack(processingId, pack.productNumbers(), caller());
+    }
+
+    @PostMapping(path = "/processing/{processingId}/readiness", produces = APPLICATION_JSON_VALUE)
+    ProcessingSnapshot markReady(@PathVariable String processingId,
+                                 @RequestBody(required = false) @Valid MarkOrderReady command) {
+        return processings.markReady(processingId);
     }
 
     /** The employee the token authenticates as; who may confirm is not the caller's choice (element 16). */

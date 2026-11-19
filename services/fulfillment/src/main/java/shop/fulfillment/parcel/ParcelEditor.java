@@ -20,6 +20,7 @@ import shop.fulfillment.kernel.OrderProcessingId;
 import shop.fulfillment.kernel.ParcelId;
 import shop.fulfillment.kernel.ParcelReference;
 import shop.fulfillment.kernel.ParcelSequence;
+import shop.fulfillment.kernel.ParcelState;
 import shop.fulfillment.kernel.Registration;
 import shop.fulfillment.kernel.RegistrationRequest;
 
@@ -48,9 +49,9 @@ class ParcelEditor {
     private final ParcelSequence sequence;
     private final CarrierIdentity carrierIdentity;
     private final List<LegReached> legs;
+    private final List<String> unmappedPayloads;
     private LegState legState;
     private CollectionHandle collectionHandle;
-    private String rawPayload;
 
     /**
      * Opens the parcel record from the carrier's answer: the waybill exists, so the parcel may exist, and the first leg
@@ -71,7 +72,7 @@ class ParcelEditor {
         legs.add(new LegReached(Leg.L1, registeredAt));
         ParcelEditor parcel = new ParcelEditor(parcelId, new ArrayList<>(), processingId, request.reference(),
                 request.weightGrams(), request.serviceCode(), registration.sequence(),
-                registration.carrierIdentity(), legs, LegState.PARCEL_REGISTERED, null, null);
+                registration.carrierIdentity(), legs, new ArrayList<>(), LegState.PARCEL_REGISTERED, null);
         parcel.events.add(new DomainEvent.DeliveryNumberGenerated(parcelId, registration.carrierIdentity()));
         return parcel;
     }
@@ -108,13 +109,24 @@ class ParcelEditor {
     }
 
     /**
+     * Reads the parcel as the processing lane sees it: our identity, our reference, the carrier's identity and the
+     * furthest leg together, and nothing of the parcel's own record (element 11's {@code parcel} field).
+     *
+     * @return the parcel as another slice may read it
+     */
+    ParcelState toParcelState() {
+        ParcelState state = new ParcelState(parcelId, reference, carrierIdentity, legState);
+        return state;
+    }
+
+    /**
      * Reads the parcel as an immutable snapshot.
      *
      * @return the state as the read side serves it, its legs in leg order
      */
     Parcel toSnapshot() {
         return new Parcel(parcelId, processingId, reference, carrierIdentity, sequence, serviceCode, weightGrams,
-                orderedLegs(), legState, collectionHandle, rawPayload);
+                orderedLegs(), legState, collectionHandle, List.copyOf(unmappedPayloads));
     }
 
     private List<LegReached> orderedLegs() {
@@ -138,8 +150,8 @@ class ParcelEditor {
     }
 
     private void rememberUnmappedStatus(LegObservation observation) {
-        if (!Objects.equals(rawPayload, observation.rawPayload())) {
-            rawPayload = observation.rawPayload();
+        if (!unmappedPayloads.contains(observation.rawPayload())) {
+            unmappedPayloads.add(observation.rawPayload());
             events.add(new DomainEvent.DeliveryStatusUnrecognised(
                     parcelId, observation.carrierStatus(), observation.rawPayload()));
         }

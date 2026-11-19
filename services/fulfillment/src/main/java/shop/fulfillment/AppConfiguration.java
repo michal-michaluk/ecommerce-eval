@@ -31,6 +31,7 @@ class AppConfiguration {
     /** The four scopes of element 11 as Spring Security spells a token's {@code scope} claim. */
     private static final String EMPLOYEE = "SCOPE_fulfillment-employee";
     private static final String RESOLVER = "SCOPE_fulfillment-resolver";
+    private static final String CUSTOMER = "SCOPE_fulfillment-customer";
     private static final String SHOPPING = "SCOPE_shopping-service";
 
     @Bean
@@ -84,13 +85,16 @@ class AppConfiguration {
                 .requestMatchers(pathPattern(POST, "/processing/{processingId}/positions/{productNumber}"))
                 .hasAuthority(EMPLOYEE)
                 .requestMatchers(pathPattern(POST, "/processing/{processingId}/packing"))
+                .hasAuthority(EMPLOYEE)
+                .requestMatchers(pathPattern(POST, "/processing/{processingId}/readiness"))
                 .hasAuthority(EMPLOYEE);
     }
 
     /**
      * The reads of the processing resource: the employee works from them and the resolver may open the state (element 11's
      * auth matrix). The workstation route is this service's own — element 11 names none — and belongs to the employee who
-     * scans.
+     * scans. The label is a document the warehouse prints, and the customer's state is a separate resource that scope alone
+     * reaches (element 18, D-11-4).
      */
     private static AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry processingReads(
             AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth) {
@@ -99,6 +103,10 @@ class AppConfiguration {
                 .hasAuthority(EMPLOYEE)
                 .requestMatchers(pathPattern(GET, "/processing/{processingId}/pick-workstation"))
                 .hasAuthority(EMPLOYEE)
+                .requestMatchers(pathPattern(GET, "/processing/{processingId}/documents/label"))
+                .hasAuthority(EMPLOYEE)
+                .requestMatchers(pathPattern(GET, "/processing/{processingId}/state"))
+                .hasAuthority(CUSTOMER)
                 .requestMatchers(pathPattern(GET, "/processing/{processingId}"))
                 .hasAnyAuthority(EMPLOYEE, RESOLVER);
     }

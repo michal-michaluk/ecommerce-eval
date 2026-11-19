@@ -8,7 +8,9 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
+import shop.fulfillment.kernel.CarrierPort;
 import shop.fulfillment.kernel.WarehouseStock;
+import shop.fulfillment.parcel.FakeCarrierPort;
 import shop.fulfillment.processing.FakeWarehouseStock;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -40,6 +42,19 @@ class FulfillmentHttpApiE2eTest {
         @Bean
         WarehouseStock warehouseStock() {
             return new FakeWarehouseStock();
+        }
+    }
+
+    /**
+     * The carrier the contract needs, and the only one that exists in this repository (spec D14): registration answers a
+     * waybill, the label answers the carrier's bytes and a collection answers a handle — the real adapter is its own spec.
+     */
+    @TestConfiguration
+    static class Carrier {
+
+        @Bean
+        CarrierPort carrierPort() {
+            return new FakeCarrierPort();
         }
     }
 

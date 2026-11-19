@@ -30,6 +30,15 @@ server:
 # that sets no token gets no warehouse adapter at all — the service boots and every claim answers WAREHOUSE_NOT_WIRED
 # rather than reserving nothing (element 13 RULE-7, spec D14).
 fulfillment:
+  # The carrier boundary (element 14). `url`, `token` and the sender block are deliberately absent from this file: they are
+  # the deployment's data and arrive as FULFILLMENT_CARRIER_URL / FULFILLMENT_CARRIER_TOKEN and the sender's own properties.
+  # A deployment that sets no token gets no carrier adapter at all — the service boots and the first command that needs the
+  # carrier is refused with CARRIER_NOT_WIRED rather than pretending it reached anybody (element 14, spec D14).
+  carrier:
+    # The weight of one parcel in grams, used until a measurement source exists (element 03 RULE-6, UND-06).
+    weight-grams: ${FULFILLMENT_CARRIER_WEIGHT_GRAMS:1000}
+    # How often the delivery legs are polled; the first carrier publishes no push (element 14).
+    poll-interval: ${FULFILLMENT_CARRIER_POLL_INTERVAL:60s}
   # Element 10's two variants: the walk order and the quantity split. Both are defaults until a deployment selects
   # otherwise, and an unknown value falls back to the default rather than failing a read.
   picklist:

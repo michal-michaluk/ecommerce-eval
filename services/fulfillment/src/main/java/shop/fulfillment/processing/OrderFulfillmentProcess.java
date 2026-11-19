@@ -117,11 +117,13 @@ class OrderFulfillmentProcess {
 
     /**
      * Declares the order done: the local mark and the collection request are one decision with two effects
-     * (element 08). The aggregate owns the first effect, the caller asks the carrier for the second.
+     * (element 08). The aggregate owns the first effect and answers the verdict, so the caller asks the carrier for the
+     * second only when the decision granted — never by re-deriving the table's own condition.
      *
      * @param parcelId the registered parcel the carrier is asked to collect, or {@code null} when none exists
+     * @return the verdict the decision answered, which the caller applies
      */
-    void markReady(ParcelId parcelId) {
+    ReadyForDeliveryDecision.Verdict markReady(ParcelId parcelId) {
         boolean parcelRegistered = parcelId != null;
         ReadyForDeliveryDecision.Verdict verdict =
                 ReadyForDeliveryDecision.decide(state, positionsAllPacked(), parcelRegistered);
@@ -131,6 +133,7 @@ class OrderFulfillmentProcess {
             state = ProcessingState.READY_FOR_DELIVERY;
             events.add(new DomainEvent.ReadyForDeliveryConfirmed(processingId, parcelId));
         }
+        return verdict;
     }
 
     /**
@@ -168,7 +171,8 @@ class OrderFulfillmentProcess {
 
     /**
      * Applies the carrier's delivery state to the order: only the last leg — the customer picked the parcel — moves it
-     * to {@code delivered}; every earlier leg lives on the parcel alone.
+     * to {@code delivered}; every earlier leg lives on the parcel alone. The leg is the order's own input: the status poll
+     * of the parcel slice reports it as {@code delivery state notification} and this aggregate consumes it (element 02).
      *
      * @param leg the delivery leg the carrier reported
      */
@@ -219,7 +223,7 @@ class OrderFulfillmentProcess {
     private void ensureReadinessIsGranted(ReadyForDeliveryDecision.Verdict verdict) {
         if (verdict instanceof ReadyForDeliveryDecision.Verdict.Refuse refuse) {
             throw new FulfillmentException(FulfillmentException.Error.READINESS_REFUSED,
-                    processingId, List.of(refuse.reason()));
+                    processingId, List.of(refuse.reason().wireName()));
         }
     }
 

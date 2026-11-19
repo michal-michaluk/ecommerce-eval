@@ -16,11 +16,14 @@ import shop.fulfillment.IntegrationTest;
 import shop.fulfillment.kernel.OrderFixture;
 import shop.fulfillment.kernel.OrderProcessingId;
 import shop.fulfillment.kernel.ProcessingFixture;
+import shop.fulfillment.kernel.CarrierPort;
 import shop.fulfillment.kernel.WarehouseStock;
+import shop.fulfillment.parcel.FakeCarrierPort;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 /**
@@ -55,6 +58,22 @@ class ProcessingCommandControllerTest {
         assertThat(response.getStatus()).isEqualTo(200);
         assertThat(HttpFixture.json(response, "$.positions[0].state")).isEqualTo("picked");
         assertThat(HttpFixture.json(response, "$.state")).isEqualTo("picking");
+    }
+
+    @Test
+    void registersTheParcelOnTheFirstScanAndServesItOnEverySnapshot() throws Exception {
+        String processingId = assignedProcessing();
+
+        assertThat(HttpFixture.json(HttpFixture.as(HttpFixture.EMPLOYEE_SCOPE, HttpFixture.EMPLOYEE, mvc,
+                get("/processing/" + processingId)), "$.parcel")).isNull();
+
+        MockHttpServletResponse scanned = scan(processingId, "75423");
+
+        assertThat(HttpFixture.json(scanned, "$.parcel.reference")).isEqualTo(processingId + "-1");
+        assertThat(HttpFixture.json(scanned, "$.parcel.waybill")).asString().isNotEmpty();
+        assertThat(HttpFixture.json(scanned, "$.parcel.legState")).isEqualTo("parcelRegistered");
+        assertThat(HttpFixture.json(HttpFixture.as(HttpFixture.EMPLOYEE_SCOPE, HttpFixture.EMPLOYEE, mvc,
+                get("/processing/" + processingId)), "$.parcel.waybill")).asString().isNotEmpty();
     }
 
     @Test
@@ -241,6 +260,15 @@ class ProcessingCommandControllerTest {
         String processingId = orders.accept(OrderHandoverFixture.aHandover()).processing().processingId().value();
         assignments.claim(processingId, HttpFixture.EMPLOYEE);
         return processingId;
+    }
+
+    @TestConfiguration
+    static class CarrierStub {
+
+        @Bean
+        CarrierPort carrierPort() {
+            return new FakeCarrierPort();
+        }
     }
 
     @TestConfiguration

@@ -15,8 +15,8 @@ import shop.fulfillment.kernel.ParcelSequence;
 
 /**
  * One consignment of one order as the read side serves it: our reference, the carrier's identity, the sequence and
- * service printed on the label, the chain of legs in leg order, and the last carrier payload we could not map. The two
- * identities are never merged (element 03 RULE-2).
+ * service printed on the label, the chain of legs in leg order, and every carrier payload we could not map — kept so the
+ * mapping can be corrected later (element 14 RULE-6). The two identities are never merged (element 03 RULE-2).
  *
  * <p>No carrier name appears here: a carrier is identified by the identity it assigns, never by its own name
  * (element 14, spec D3).
@@ -33,5 +33,5 @@ record Parcel(
         List<LegReached> legs,
         LegState legState,
         CollectionHandle collectionHandle,
-        String rawPayload) {
+        List<String> unmappedPayloads) {
 }

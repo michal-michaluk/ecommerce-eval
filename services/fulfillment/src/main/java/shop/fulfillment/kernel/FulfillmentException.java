@@ -16,6 +16,7 @@ public class FulfillmentException extends RuntimeException {
         ORDER_INCOMPLETE("the order is incomplete, missing %s"),
         PROCESSING_NOT_FOUND("no order processing %s"),
         WAREHOUSE_NOT_WIRED("the warehouse port has no implementation, %s is impossible"),
+        CARRIER_NOT_WIRED("the carrier port has no implementation, %s is impossible"),
         ISSUE_INCOMPLETE("the issue is incomplete, missing %s"),
         ORDER_LINE_DUPLICATE("product %s appears more than once in the order"),
         QUANTITY_NOT_POSITIVE("quantity must be at least 1, got %s"),

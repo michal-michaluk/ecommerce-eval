@@ -38,6 +38,9 @@ class FulfillmentErrorAdvice {
     /** Element 11's derived code for a command that needs an employee to hold the order first. */
     private static final String NOT_STARTED = "NOT_STARTED";
 
+    /** Element 11's code for a readiness refusal: the decision's verdict, not one of its reasons. */
+    private static final String NOT_READY = "NOT_READY";
+
     /**
      * One status per refusal this context raises.
      *
@@ -50,6 +53,7 @@ class FulfillmentErrorAdvice {
             case ORDER_INCOMPLETE, ORDER_LINE_DUPLICATE -> incomplete(failure);
             case PROCESSING_NOT_FOUND, POSITION_UNKNOWN -> notFound(failure);
             case ASSIGNMENT_REFUSED -> conflict(decision(failure));
+            case READINESS_REFUSED -> notReady(failure);
             case POSITION_NOT_PICKED, ACTOR_NOT_ALLOWED -> conflict(failure.error().name());
             case WORK_IS_ON_HOLD -> conflict(ON_HOLD);
             case WORK_NOT_STARTED -> conflict(NOT_STARTED);
@@ -62,7 +66,7 @@ class FulfillmentErrorAdvice {
             return ResponseEntity.status(422)
                     .body(new Incomplete(FulfillmentException.Error.ORDER_INCOMPLETE.name(), List.of(DUPLICATED_LINE)));
         }
-        return ResponseEntity.status(422).body(new Incomplete(failure.error().name(), missing(failure)));
+        return ResponseEntity.status(422).body(new Incomplete(failure.error().name(), strings(failure)));
     }
 
     private static ResponseEntity<Object> notFound(FulfillmentException failure) {
@@ -72,13 +76,18 @@ class FulfillmentErrorAdvice {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Reason(code, null));
     }
 
+    /** {@code 409 NOT_READY}: the decision refused, and it names its own reason in the table's own words. */
+    private static ResponseEntity<Object> notReady(FulfillmentException failure) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new Reason(NOT_READY, strings(failure)));
+    }
+
     private static ResponseEntity<Object> conflict(String code) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(new Reason(code, null));
     }
 
-    /** The components the order is missing, as {@code Order} named them when it refused the handover. */
+    /** The blocking values a refusal carries, as the domain spelled them — the order's missing parts or a decision's reasons. */
     @SuppressWarnings("unchecked")
-    private static List<String> missing(FulfillmentException failure) {
+    private static List<String> strings(FulfillmentException failure) {
         return failure.details().stream()
                 .filter(List.class::isInstance)
                 .map(detail -> (List<String>) detail)

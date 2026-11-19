@@ -5,9 +5,11 @@ import lombok.Builder;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 import shop.fulfillment.kernel.FulfillmentIssue;
 import shop.fulfillment.kernel.OrderPosition;
+import shop.fulfillment.kernel.ParcelState;
 
 /**
  * The processing resource of element 11: the state read, and the answer every command of the resource returns.
@@ -57,14 +59,20 @@ record ProcessingSnapshot(
     }
 
     /**
-     * The parcel of element 03 as the wire flattens it. It is the field's shape, not a claim that a parcel exists: element
-     * 03's registration is its own node and until it lands the field stays an explicit {@code null}.
+     * The parcel of element 03 as the wire flattens it: our reference, the carrier's waybill and the leg it reached. It is
+     * an explicit {@code null} until the first scan registers the parcel — an absent key means "not part of this payload",
+     * never "no parcel" (element 11:41).
      *
      * @param reference our own parcel reference
      * @param waybill   the carrier's waybill, the only carrier identity
      * @param legState  the furthest delivery leg the carrier reported
      */
     record Parcel(String reference, String waybill, String legState) {
+
+        static Parcel of(ParcelState parcel) {
+            return new Parcel(parcel.reference().value(), parcel.carrierIdentity().value(),
+                    parcel.legState().wireName());
+        }
     }
 
     /**
@@ -91,12 +99,13 @@ record ProcessingSnapshot(
      * The snapshot of one processing.
      *
      * @param processing the processing as its commands left it
+     * @param parcel     the parcel carrying it, or empty while the first scan has not registered one
      * @return the payload of element 11
      */
-    static ProcessingSnapshot of(OrderProcessing processing) {
+    static ProcessingSnapshot of(OrderProcessing processing, Optional<ParcelState> parcel) {
         return new ProcessingSnapshot(processing.processingId().value(), processing.state().wireName(),
-                processing.assignee(), processing.positions().stream().map(Position::of).toList(), null,
-                openIssueOf(processing), openIssuesOf(processing));
+                processing.assignee(), processing.positions().stream().map(Position::of).toList(),
+                parcel.map(Parcel::of).orElse(null), openIssueOf(processing), openIssuesOf(processing));
     }
 
     private static Issue openIssueOf(OrderProcessing processing) {

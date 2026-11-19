@@ -122,4 +122,17 @@ class ProcessingValuesTest {
         assertThat(Leg.L6.legState()).isEqualTo(LegState.DELIVERED_TO_CUSTOMER);
         assertThat(List.of(Leg.values())).hasSize(LegState.values().length);
     }
+
+    @ParameterizedTest
+    @EnumSource(LegState.class)
+    void everyLegStateNamesItselfOnTheWire(LegState state) {
+        assertThat(state.wireName()).matches("[a-z][A-Za-z]*");
+    }
+
+    @Test
+    void theLegStateNamesAreTheOnesTheElementExamplesUse() {
+        assertThat(LegState.PARCEL_REGISTERED.wireName()).isEqualTo("parcelRegistered");
+        assertThat(LegState.PARCEL_READY.wireName()).isEqualTo("parcelReady");
+        assertThat(LegState.DELIVERED_TO_CUSTOMER.wireName()).isEqualTo("deliveredToCustomer");
+    }
 }

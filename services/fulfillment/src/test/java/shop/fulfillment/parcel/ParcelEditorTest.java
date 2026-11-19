@@ -116,14 +116,14 @@ class ParcelEditorTest {
                 CarrierFixture.REACHED_AT, "ODD", "{\"status\":\"ODD\"}"));
 
         assertThat(parcel.toSnapshot().legState()).isEqualTo(LegState.PARCEL_REGISTERED);
-        assertThat(parcel.toSnapshot().rawPayload()).contains("ODD");
+        assertThat(parcel.toSnapshot().unmappedPayloads())
+                .anySatisfy(payload -> assertThat(payload).contains("ODD"));
         assertThat(parcel.events).last()
                 .isInstanceOf(DomainEvent.DeliveryStatusUnrecognised.class);
     }
 
     @Test
-    void storesTheSameUnmappedPayloadOnce() {
-        ParcelEditor parcel = registered();
+    void storesTheSameUnmappedPayloadOnce() {        ParcelEditor parcel = registered();
         LegObservation odd = LegObservation.unmapped(CarrierFixture.REACHED_AT, "ODD", "{\"status\":\"ODD\"}");
         parcel.applyNotification(odd);
         int eventsAfterFirst = parcel.events.size();
@@ -151,6 +151,18 @@ class ParcelEditorTest {
     private static ParcelEditor registered() {
         return ParcelEditor.registerFor(PARCEL_ID, ProcessingFixture.PROCESSING_ID,
                 CarrierFixture.aRegistrationRequest(), CarrierFixture.aRegistration(), CarrierFixture.REACHED_AT);
+    }
+
+    @Test
+    void keepsEveryStatusItCouldNotMap() {
+        ParcelEditor parcel = registered();
+
+        parcel.applyNotification(LegObservation.unmapped(CarrierFixture.REACHED_AT, "ODD", "{\"status\":\"ODD\"}"));
+        parcel.applyNotification(LegObservation.unmapped(CarrierFixture.REACHED_AT, "ODDER", "{\"status\":\"ODDER\"}"));
+
+        assertThat(parcel.toSnapshot().unmappedPayloads())
+                .contains("{\"status\":\"ODD\"}", "{\"status\":\"ODDER\"}");
+        assertThat(parcel.events).filteredOn(DomainEvent.DeliveryStatusUnrecognised.class::isInstance).hasSize(2);
     }
 
     @Test
