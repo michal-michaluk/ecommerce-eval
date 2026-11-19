@@ -39,7 +39,8 @@ HTTP 201
 [Captures]
 processingId: jsonpath "$.processingId"
 [Asserts]
-jsonpath "$.processingId" exists
+jsonpath "$.processingId" isString
+jsonpath "$.processingId" != ""
 jsonpath "$.state" == "pending"
 
 # same order again — idempotent, no second processing
@@ -68,7 +69,7 @@ Content-Type: application/json
 HTTP 422
 [Asserts]
 jsonpath "$.error" == "ORDER_INCOMPLETE"
-jsonpath "$.missing" exists
+jsonpath "$.missing" count > 0
 
 # a pickup point without its point id — rejected, and the payload names the part (element 12 RULE-3)
 POST {{BASE_URL}}/orders
@@ -92,7 +93,7 @@ GET {{BASE_URL}}/orders
 Authorization: Bearer {{employeeToken}}
 HTTP 200
 [Asserts]
-jsonpath "$.items" exists
+jsonpath "$.items" count > 0
 jsonpath "$.items[0].processingId" == "{{processingId}}"
 jsonpath "$.items[0].state" == "pending"
 jsonpath "$.items[0].assignee" exists
@@ -157,7 +158,7 @@ HTTP 200
 [Asserts]
 jsonpath "$.lines[0].productNumber" == "75423"
 jsonpath "$.lines[0].quantity" == 1
-jsonpath "$.lines[0].locations" exists
+jsonpath "$.lines[0].locations" count > 0
 
 # ── Scan a position — one scan = `picked` (elements 02, 16; Q-16-1 default R-A) ─────────────────────────────────────
 POST {{BASE_URL}}/processing/{{processingId}}/positions/75423
@@ -203,7 +204,8 @@ Authorization: Bearer {{employeeToken}}
 HTTP 200
 [Asserts]
 jsonpath "$.state" == "readyForDelivery"
-jsonpath "$.parcel.waybill" exists
+jsonpath "$.parcel.waybill" isString
+jsonpath "$.parcel.waybill" != ""
 
 # a second order, worked to `picking` — readiness is refused while its positions are open (element 08 DT-08-3)
 POST {{BASE_URL}}/orders
@@ -251,7 +253,7 @@ Authorization: Bearer {{employeeToken}}
 HTTP 409
 [Asserts]
 jsonpath "$.error" == "NOT_READY"
-jsonpath "$.reasons" exists
+jsonpath "$.reasons" count > 0
 jsonpath "$.reasons[0]" == "notPacked"
 
 # ── Issues and hold (elements 04, 09, 17) ─────────────────────────────────
@@ -264,7 +266,8 @@ HTTP 201
 [Captures]
 issueId: jsonpath "$.issueId"
 [Asserts]
-jsonpath "$.issueId" exists
+jsonpath "$.issueId" isString
+jsonpath "$.issueId" != ""
 jsonpath "$.orderState" == "onHold"
 jsonpath "$.state" == "onHold"
 jsonpath "$.openIssues" == 1
@@ -303,7 +306,8 @@ GET {{BASE_URL}}/issues
 Authorization: Bearer {{resolverToken}}
 HTTP 200
 [Asserts]
-jsonpath "$.items[0].issueId" exists
+jsonpath "$.items[0].issueId" isString
+jsonpath "$.items[0].issueId" != ""
 jsonpath "$.items[0].kind" exists
 jsonpath "$.items[0].issueId" == "{{issueId}}"
 jsonpath "$.items[0].orderState" == "onHold"
@@ -423,7 +427,7 @@ Authorization: Bearer {{customerToken}}
 HTTP 200
 [Asserts]
 jsonpath "$.state" == "readyForDelivery"
-jsonpath "$.legs" exists
+jsonpath "$.legs" count > 0
 jsonpath "$.assignee" not exists
 jsonpath "$.issue" not exists
 
