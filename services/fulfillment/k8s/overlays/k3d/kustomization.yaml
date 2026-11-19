@@ -1,0 +1,27 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: fulfillment
+
+resources:
+  - namespace.yaml
+  - ingress.yaml
+  - ../../base
+
+patches:
+  - path: deployment-patch.yaml
+
+configMapGenerator:
+  - name: fulfillment
+    behavior: merge
+    literals:
+      - kafka-bootstrap-servers=fulfillment-kafka:9092
+      - spring-profile-active=dev
+      - JWT_ISSUER_URI=http://fulfillment-keycloak:8080/realms/iot
+
+secretGenerator:
+  - name: fulfillment-db
+    literals:
+      - jdbc-url=jdbc:postgresql://fulfillment-db-postgresql:5432/fulfillment
+      - username=fulfillment
+      - password=fulfillment
