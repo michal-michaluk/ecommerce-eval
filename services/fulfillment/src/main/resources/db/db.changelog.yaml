@@ -64,3 +64,6 @@ databaseChangeLog:
   - include:
       file: db/changelog/0014-orders-list-restored-state.yaml
       relativeToChangelogFile: false
+  - include:
+      file: db/changelog/0015-orders-list-progress.yaml
+      relativeToChangelogFile: false

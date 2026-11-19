@@ -50,6 +50,42 @@ class OrderTest {
     }
 
     @Test
+    void digestsTheContentRatherThanTheClaimedHash() {
+        assertThat(OrderFixture.anOrder("sha256:other").canonicalDigest())
+                .isEqualTo(OrderFixture.anOrder().canonicalDigest())
+                .startsWith("sha256:")
+                .isNotEqualTo(OrderFixture.ORDER_HASH);
+    }
+
+    @Test
+    void digestsTheSameValueWhateverOrderTheLinesArrivedIn() {
+        assertThat(OrderFixture.orderInListingOrder().canonicalDigest())
+                .isEqualTo(OrderFixture.twoLineOrder().canonicalDigest());
+    }
+
+    @Test
+    void digestsADifferentValueWhenAQuantityChanges() {
+        assertThat(OrderFixture.orderWithQuantity(2).canonicalDigest())
+                .isNotEqualTo(OrderFixture.anOrder().canonicalDigest());
+    }
+
+    @Test
+    void digestsANameCarryingSeparatorsAwayFromTheLongerOrderItWouldImitate() {
+        Order forgedSingleLine = Order.builder()
+                .orderHash(OrderFixture.ORDER_HASH)
+                .placedAt(OrderFixture.PLACED_AT)
+                .lines(List.of(OrderFixture.aLine(OrderFixture.PRODUCT_NUMBER,
+                        OrderFixture.PRODUCT_NAME + "\u001f1\u001eline\u001f99881\u001fLEGO Orchidea 99881", 3)))
+                .delivery(OrderFixture.aDelivery())
+                .payment(OrderFixture.aPayment())
+                .invoicing(OrderFixture.anInvoicing())
+                .build();
+
+        assertThat(forgedSingleLine.canonicalDigest())
+                .isNotEqualTo(OrderFixture.twoLineOrder().canonicalDigest());
+    }
+
+    @Test
     void refusesAnOrderWithoutItsCanonicalHash() {
         assertThatThrownBy(() -> OrderFixture.anOrder(" "))
                 .isInstanceOfSatisfying(FulfillmentException.class, refused -> {

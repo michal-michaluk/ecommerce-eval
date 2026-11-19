@@ -290,3 +290,46 @@ Numbered `P4-n`.
   remains a real risk and nothing in phase 4 shortens it.
 - A resume closes every open issue of an order by construction (P4-20); if element 09 later allows a partial lift, the dashboard
   needs the closed ids on the event and this decision has to be revisited.
+
+---
+
+# Phase 5 decisions and deviations — the orders list's progression and the handover's content check
+
+The same file, the same rules: what this fix had to choose, and where it departs from a rule it was built to follow. Numbered
+`P5-n`.
+
+## 24. The orders list row (element 15)
+
+| # | Question | Decision |
+| --- | --- | --- |
+| P5-1 | Element 15 requires the chip to be `OrderProcessing.state` and the progress `n/m packed` from `positions[]`, refreshed on seven events; the row was fed by four of them | the row also handles `PositionPicked`, `PositionPacked`, `ReadyForDeliveryConfirmed` and `OrderDelivered`, each in the same find-or-create + record-fact + recompute shape as before. The packed positions are a **set of product numbers**, never a counter — P3-16's reasoning verbatim: a repeated `PositionPacked` is the same fact and must not advance the order to packed on its own — and `n` is the set's size when the list is served |
+| P5-2 | `positions_packed` (migration 0004) was never written once the set exists | dropped in `0015-orders-list-progress.yaml`, the same changeset that adds `packed_products` (jsonb), `picked`, `ready_for_delivery` and `delivered`. `restored_state` (0014) stays: it is still the state a lift falls back on |
+| P5-3 | `restored_state` won over every fact, so a delivered order read `assigned` (or whatever it was resumed to) for the rest of its life | the state is derived in one place — held, then delivered, then ready for delivery, then the furthest of the row's own facts and the restored state. The restored state is a **floor**, not an answer: the row lands on it only while its own facts have not reached that far (register D12, element 09 H5), so a pack or a readiness after a lift moves the chip. The ladder is `CustomerStateProjection`'s (P3-16), so the employee's chip and the customer's state read the same word for every state element 02 can reach — the two do order `held` and `delivered` differently, and a delivery can only follow `readyForDelivery`, so that difference cannot surface; recorded rather than unified |
+
+## 25. The handover's idempotency key (element 12)
+
+| # | Question | Decision |
+| --- | --- | --- |
+| P5-4 | Element 12 RULE-2 answers `200 duplicate` to a second delivery of the same `orderHash`, and element 01 RULE-1 says that hash *is* the canonical content hash; the intake compared the client's string alone, so any order sent under a used hash was answered `200` and never entered fulfillment | intake computes its **own** digest of the order content (`Order.canonicalDigest()`) and compares it with the digest of the order the processing was opened with. Same hash + same content is the documented `200 duplicate:true`; same hash + different content is `409 ORDER_HASH_CONFLICT`, a contract error rather than a duplicate — two handovers whose content differs cannot be the same order (RULE-1) |
+| P5-5 | The canonical form — nothing defines it, and the client's hash cannot be re-derived from content | documented on `Order.canonicalDigest()`: the concatenation of name-tagged records, in this order — the form's version, `placedAt` (ISO-8601), one `line` record per line in **ascending product number** (the order the constructor already guarantees), `delivery` (method code, location kind, point id, four address components), `payment` (method code), `invoicing` (buyer name, tax id, four address components). Every component is written `-` when absent or `<length>:<text>` (length in UTF-16 units), so the form is **injective**: a component can never be read as another component or as another record, whatever characters it carries, and absent is never the empty text (`0:`). The earlier draft of this form was separator-delimited and relied on no component carrying the separators — a guarantee no value object enforces, which let a one-line order with a crafted `name` digest exactly like a two-line order (`OrderTest.digestsANameCarryingSeparatorsAwayFromTheLongerOrderItWouldImitate`, which fails on that draft). The digest is `sha256:` + lowercase hex; the claimed `orderHash` is **not** part of the form, and neither its format, its length nor a `sha256:` prefix is assumed |
+| P5-6 | Where the digest is stored | nowhere: the processing's JSONB snapshot already carries the order it was opened with (`OrderProcessing.order`), so a repeat delivery re-digests that content. No column, no second source of truth for the same order, and a changed hash cannot make two different orders equal |
+| P5-7 | The new refusal's code and body | `409 ORDER_HASH_CONFLICT` with `{"error":"ORDER_HASH_CONFLICT"}` — element 11's `Reason` shape, which the one advice already answers for every other `409`. The endpoint's authZ decision does not change (the `shopping` scope owns the handover), so `docs/security-decisions.md` is untouched |
+
+## 26. Gates
+
+| # | Question | Decision |
+| --- | --- | --- |
+| P5-8 | Coverage | **96.36 % instruction / 85.76 % branch**, up from P4-24's 96.20 % / 84.79 %: the four new handlers, the digest — including the order whose `name` carries the separators of the form the first draft used — and the conflict path each have their own cases, and the threshold (`0.8` instruction) is untouched |
+| P5-9 | `sqt` after the fix | `0 error`, and no new hint or warning: the row's derivation is decomposed (`derivedState` → `reachedState` → `packedState` → `unpackedState` / `allPositionsPacked`) so `function_statements` stays inside the band, the way `CustomerStateProjection` does |
+| P5-10 | The executable contract | **48 requests**, up from 46: `e2e/fulfillment-api.hurl` asks `409 ORDER_HASH_CONFLICT` straight after the duplicate handover (the same hash over a different line quantity), and one `GET /orders` after the readiness asserts the chip `readyForDelivery` beside `1/1 packed` — the two things element 15 requires and the four-handler list could never serve |
+
+## 27. Known gaps owned by this node
+
+- The progress counts a set of product numbers, not the aggregate's `positions[]`. An event naming a product the order does not
+  carry is not expressible in element 02's machine, so no guard was written for it; a `PositionPacked` that arrives before its
+  handover is counted the moment the handover lands (`n/total`), never before the row is served.
+- The restored state and the facts are compared by `ProcessingState` ordinal. Both values on that path are pre-hold states and
+  element 02 has no nested hold, so the comparison is total; a state inserted between `PACKED` and `READY_FOR_DELIVERY` would
+  have to revisit it.
+- `orderHash` is still what `findByOrderHash` looks up with a unique index behind it (phase-1 2.2): the content digest narrows
+  *what* a repeat means, not how two concurrent first deliveries of the same hash are serialised.

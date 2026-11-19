@@ -23,8 +23,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 
 /**
  * Element 12's route over the real chain: {@code 201} for the delivery that opened the processing, {@code 200} with
- * {@code duplicate} for a repeated order, {@code 422 ORDER_INCOMPLETE} naming the payload part that has to be fixed — for a
- * missing component and for a part that is there but unreadable — and the scope matrix around all of them.
+ * {@code duplicate} for a repeated order, {@code 409 ORDER_HASH_CONFLICT} for another order sent under a used hash,
+ * {@code 422 ORDER_INCOMPLETE} naming the payload part that has to be fixed — for a missing component and for a part that is
+ * there but unreadable — and the scope matrix around all of them.
  */
 @IntegrationTest
 class OrderIntakeControllerTest {
@@ -68,6 +69,16 @@ class OrderIntakeControllerTest {
         accept(HandoverJson.complete());
 
         assertThat(emitted.of(DomainEvent.OrderProcessingStarted.class)).hasSize(1);
+    }
+
+    @Test
+    void refusesADifferentOrderSentUnderAUsedOrderHash() throws Exception {
+        accept(HandoverJson.complete());
+
+        MockHttpServletResponse conflict = accept(HandoverJson.sameHashOtherQuantity());
+
+        assertThat(conflict.getStatus()).isEqualTo(409);
+        assertThat(HttpFixture.json(conflict, "$.error")).isEqualTo("ORDER_HASH_CONFLICT");
     }
 
     @Test

@@ -14,6 +14,7 @@ public class FulfillmentException extends RuntimeException {
     /** The context's whole error vocabulary, each constant owning its message template. */
     public enum Error {
         ORDER_INCOMPLETE("the order is incomplete, missing %s"),
+        ORDER_HASH_CONFLICT("order hash %s already names a different order"),
         PROCESSING_NOT_FOUND("no order processing %s"),
         WAREHOUSE_NOT_WIRED("the warehouse port has no implementation, %s is impossible"),
         CARRIER_NOT_WIRED("the carrier port has no implementation, %s is impossible"),

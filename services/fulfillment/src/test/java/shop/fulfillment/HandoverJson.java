@@ -62,4 +62,9 @@ public final class HandoverJson {
                 [{"productNumber":"75423","name":"LEGO X-Wing 75423","quantity":1},
                   {"productNumber":"75423","name":"LEGO X-Wing 75423","quantity":2}]""" + TAIL;
     }
+
+    public static String sameHashOtherQuantity() {
+        return HEAD + """
+                [{"productNumber":"75423","name":"LEGO X-Wing 75423","quantity":2}]""" + TAIL;
+    }
 }

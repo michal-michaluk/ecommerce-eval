@@ -61,6 +61,23 @@ HTTP 200
 jsonpath "$.processingId" == "{{processingId}}"
 jsonpath "$.duplicate" == true
 
+# the same hash over a different order — a contract error, never a silent duplicate
+POST {{BASE_URL}}/orders
+Authorization: Bearer {{shoppingToken}}
+Content-Type: application/json
+{
+  "orderHash": "sha256:1f3c9d0a",
+  "placedAt": "2026-11-19T09:31:12Z",
+  "lines": [{ "productNumber": "75423", "name": "LEGO X-Wing 75423", "quantity": 2 }],
+  "delivery": { "methodCode": "PARCEL_LOCKER", "location": { "kind": "PICKUP_POINT", "pointId": "KRA01M" } },
+  "payment": { "methodCode": "PAY_DEFERRED" },
+  "invoicing": { "buyerName": "Jan Kowalski", "nip": null,
+                 "address": { "street": "ul. Mineralna 5A", "city": "Kraków", "postalCode": "30-001", "country": "PL" } }
+}
+HTTP 409
+[Asserts]
+jsonpath "$.error" == "ORDER_HASH_CONFLICT"
+
 # incomplete order — rejected, no processing record (element 01 RULE-3)
 POST {{BASE_URL}}/orders
 Authorization: Bearer {{shoppingToken}}
@@ -206,6 +223,15 @@ HTTP 200
 jsonpath "$.state" == "readyForDelivery"
 jsonpath "$.parcel.waybill" isString
 jsonpath "$.parcel.waybill" != ""
+
+# the list followed the whole progression: the chip is the processing's own state and the progress the packed positions
+GET {{BASE_URL}}/orders
+Authorization: Bearer {{employeeToken}}
+HTTP 200
+[Asserts]
+jsonpath "$.items[0].processingId" == "{{processingId}}"
+jsonpath "$.items[0].state" == "readyForDelivery"
+jsonpath "$.items[0].positionProgress" == "1/1 packed"
 
 # a second order, worked to `picking` — readiness is refused while its positions are open (element 08 DT-08-3)
 POST {{BASE_URL}}/orders

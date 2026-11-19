@@ -20,6 +20,9 @@ import shop.fulfillment.kernel.FulfillmentException;
  * without a message or a stack trace, which is also what a warehouse failure does: it is surfaced, never smoothed
  * (element 13 RULE-7).
  *
+ * <p>A handover that reuses an {@code orderHash} for a different order is refused {@code 409 ORDER_HASH_CONFLICT}: that is a
+ * contract error, never the {@code 200 duplicate} element 12 RULE-2 answers for the same order delivered twice.
+ *
  * <p>The {@code 401} of a missing token and the {@code 403} of a missing scope are the framework's and stay empty; the empty
  * bodies come from the entry point and the access-denied handler in {@link AppConfiguration}.
  */
@@ -60,7 +63,7 @@ class FulfillmentErrorAdvice {
             case PROCESSING_NOT_FOUND, POSITION_UNKNOWN, ISSUE_UNKNOWN, ISSUE_ID_MALFORMED -> notFound(failure);
             case ASSIGNMENT_REFUSED, HOLD_REFUSED -> conflict(decision(failure));
             case READINESS_REFUSED -> notReady(failure);
-            case POSITION_NOT_PICKED -> conflict(failure.error().name());
+            case ORDER_HASH_CONFLICT, POSITION_NOT_PICKED -> conflict(failure.error().name());
             case ACTOR_NOT_ALLOWED, ISSUE_NOT_REPORTED_BY_ASSIGNEE -> conflict(ACTOR_NOT_ALLOWED);
             case WORK_IS_ON_HOLD -> conflict(ON_HOLD);
             case WORK_NOT_STARTED -> conflict(NOT_STARTED);
