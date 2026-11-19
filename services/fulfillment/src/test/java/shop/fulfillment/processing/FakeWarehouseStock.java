@@ -32,6 +32,7 @@ public class FakeWarehouseStock implements WarehouseStock {
     private int available = 10;
     private int failingFromReserve = Integer.MAX_VALUE;
     private RuntimeException failure;
+    private StockChangePage changes = WarehouseFixture.anEmptyPage();
 
     FakeWarehouseStock withAvailable(int quantity) {
         this.available = quantity;
@@ -41,6 +42,11 @@ public class FakeWarehouseStock implements WarehouseStock {
     FakeWarehouseStock failingOnReserve(RuntimeException cause) {
         this.failure = cause;
         this.failingFromReserve = 1;
+        return this;
+    }
+
+    FakeWarehouseStock withStockChanges(StockChangePage page) {
+        this.changes = page;
         return this;
     }
 
@@ -80,7 +86,7 @@ public class FakeWarehouseStock implements WarehouseStock {
     @Override
     public StockChangePage stockChanges(StockCursor cursor) {
         calls.add("stockChanges " + cursor.value());
-        return WarehouseFixture.anEmptyPage();
+        return changes;
     }
 
     private int reservationsTaken() {

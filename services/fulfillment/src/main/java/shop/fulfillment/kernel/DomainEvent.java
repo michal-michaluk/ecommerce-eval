@@ -1,6 +1,7 @@
 package shop.fulfillment.kernel;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
+import lombok.Builder;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import java.time.Instant;
@@ -24,6 +25,7 @@ import java.time.Instant;
         @JsonSubTypes.Type(value = DomainEvent.IssueReported.class, name = "IssueReported_v1"),
         @JsonSubTypes.Type(value = DomainEvent.HoldPlaced.class, name = "HoldPlaced_v1"),
         @JsonSubTypes.Type(value = DomainEvent.OrderResumed.class, name = "OrderResumed_v1"),
+        @JsonSubTypes.Type(value = DomainEvent.StockChanged.class, name = "StockChanged_v1"),
         @JsonSubTypes.Type(value = DomainEvent.DeliveryNumberGenerated.class,
                 name = "DeliveryNumberGenerated_v1"),
         @JsonSubTypes.Type(value = DomainEvent.CollectionRequested.class, name = "CollectionRequested_v1"),
@@ -57,6 +59,16 @@ public sealed interface DomainEvent {
     record OrderDelivered(OrderProcessingId processingId) implements DomainEvent {
     }
 
+    /**
+     * What one location holds for one product changed, as we read it at the warehouse — the warehouse cannot notify us,
+     * so {@code stock changed} is a fact we raise (element 13, RULE-6). The same observation read twice is a duplicate to
+     * collapse, not a second change.
+     */
+    @Builder
+    record StockChanged(ProductId productId, LocationCode location, int available, int reserved, Instant observedAt)
+            implements DomainEvent {
+    }
+
     /** An employee reported a warehouse reality gap. */
     record IssueReported(IssueId issueId, OrderProcessingId processingId, String kind) implements DomainEvent {
     }
@@ -80,7 +92,6 @@ public sealed interface DomainEvent {
     /** A carrier reported one of our legs. */
     record DeliveryStateNotified(ParcelId parcelId, Leg leg, String carrierStatus) implements DomainEvent {
     }
-
     /** A carrier status we cannot map to one of our legs; the payload is kept so the mapping can be corrected. */
     record DeliveryStatusUnrecognised(ParcelId parcelId, String carrierStatus, String rawPayload)
             implements DomainEvent {

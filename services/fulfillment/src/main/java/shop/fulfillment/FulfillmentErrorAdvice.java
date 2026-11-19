@@ -12,12 +12,13 @@ import shop.fulfillment.kernel.FulfillmentException;
 
 /**
  * The one advice that turns this context's refusals into the wire (element 11's status table): an incomplete order is
- * {@code 422} and names the components it is missing, an unknown processing is {@code 404}, and a refused command is
- * {@code 409} with the reason the decision table used.
+ * {@code 422} and names the components it is missing, an unknown resource is {@code 404}, and a refused command is
+ * {@code 409} with the code the contract gives that refusal.
  *
  * <p>It reads the error type and the domain values the exception carries, never its message — the message is a log line
  * ({@code http.rejection-status}). Anything the table does not name is rethrown so the framework answers {@code 500}
- * without a message or a stack trace.
+ * without a message or a stack trace, which is also what a warehouse failure does: it is surfaced, never smoothed
+ * (element 13 RULE-7).
  *
  * <p>The {@code 401} of a missing token and the {@code 403} of a missing scope are the framework's and stay empty; the empty
  * bodies come from the entry point and the access-denied handler in {@link AppConfiguration}.
@@ -28,6 +29,15 @@ class FulfillmentErrorAdvice {
     /** The payload path a duplicated product line points the client at, in the same shape as a missing part. */
     private static final String DUPLICATED_LINE = "lines.productNumber";
 
+    /** Element 11's code for a position a path segment addresses that this order does not have. */
+    private static final String POSITION_NOT_FOUND = "POSITION_NOT_FOUND";
+
+    /** Element 11's code for both commands a hold blocks — the code is not the aggregate's error name. */
+    private static final String ON_HOLD = "ON_HOLD";
+
+    /** Element 11's derived code for a command that needs an employee to hold the order first. */
+    private static final String NOT_STARTED = "NOT_STARTED";
+
     /**
      * One status per refusal this context raises.
      *
@@ -37,16 +47,33 @@ class FulfillmentErrorAdvice {
     @ExceptionHandler(FulfillmentException.class)
     ResponseEntity<Object> refused(FulfillmentException failure) {
         return switch (failure.error()) {
-            case ORDER_INCOMPLETE -> ResponseEntity.status(422)
-                    .body(new Incomplete(failure.error().name(), missing(failure)));
-            case ORDER_LINE_DUPLICATE -> ResponseEntity.status(422)
-                    .body(new Incomplete(FulfillmentException.Error.ORDER_INCOMPLETE.name(), List.of(DUPLICATED_LINE)));
-            case PROCESSING_NOT_FOUND -> ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new Reason(failure.error().name(), null));
-            case ASSIGNMENT_REFUSED -> ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(new Reason(decision(failure), null));
+            case ORDER_INCOMPLETE, ORDER_LINE_DUPLICATE -> incomplete(failure);
+            case PROCESSING_NOT_FOUND, POSITION_UNKNOWN -> notFound(failure);
+            case ASSIGNMENT_REFUSED -> conflict(decision(failure));
+            case POSITION_NOT_PICKED, ACTOR_NOT_ALLOWED -> conflict(failure.error().name());
+            case WORK_IS_ON_HOLD -> conflict(ON_HOLD);
+            case WORK_NOT_STARTED -> conflict(NOT_STARTED);
             default -> throw failure;
         };
+    }
+
+    private static ResponseEntity<Object> incomplete(FulfillmentException failure) {
+        if (failure.error() == FulfillmentException.Error.ORDER_LINE_DUPLICATE) {
+            return ResponseEntity.status(422)
+                    .body(new Incomplete(FulfillmentException.Error.ORDER_INCOMPLETE.name(), List.of(DUPLICATED_LINE)));
+        }
+        return ResponseEntity.status(422).body(new Incomplete(failure.error().name(), missing(failure)));
+    }
+
+    private static ResponseEntity<Object> notFound(FulfillmentException failure) {
+        String code = failure.error() == FulfillmentException.Error.POSITION_UNKNOWN
+                ? POSITION_NOT_FOUND
+                : failure.error().name();
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Reason(code, null));
+    }
+
+    private static ResponseEntity<Object> conflict(String code) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new Reason(code, null));
     }
 
     /** The components the order is missing, as {@code Order} named them when it refused the handover. */

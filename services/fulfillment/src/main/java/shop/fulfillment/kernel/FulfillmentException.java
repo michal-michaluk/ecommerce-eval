@@ -42,7 +42,12 @@ public class FulfillmentException extends RuntimeException {
         STOCK_OBSERVATION_MISSING("no stockAt observation for product %s"),
         WORK_NOT_STARTED("order %s is not assigned to anybody, %s is refused until an employee claims it"),
         POSITION_NOT_PICKED("position %s is %s, only a picked position can be packed"),
-        WORK_IS_ON_HOLD("order %s is on hold, %s is refused until the hold is lifted");
+        ACTOR_NOT_ALLOWED("%s does not hold %s, %s is refused: only the assigned employee works the order"),
+        WORK_IS_ON_HOLD("order %s is on hold, %s is refused until the hold is lifted"),
+        WAREHOUSE_QUANTITY_FRACTIONAL("the warehouse reported %s, which is not a whole number of units"),
+        WAREHOUSE_RESERVATION_UNKNOWN("%s is not a reservation this boundary took at the warehouse"),
+        WAREHOUSE_ALLOCATION_CONSUMED("%s is already issued, no allocation is left to release"),
+        WAREHOUSE_STOCK_SHORT("the warehouse cannot %s %s units from the stock at that location");
 
         private final String template;
 

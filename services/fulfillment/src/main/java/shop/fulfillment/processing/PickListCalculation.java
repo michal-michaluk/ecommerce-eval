@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import shop.fulfillment.kernel.FulfillmentException;
 import shop.fulfillment.kernel.OrderPosition;
@@ -18,7 +19,8 @@ import shop.fulfillment.kernel.StockAtLocation;
  *
  * <p>Pure and stateless: the stock arrives as a parameter (never a call made from here), the generation instant arrives
  * as a parameter (never a clock read), and running it twice on the same inputs produces the same list. A port failure
- * yields no list at all, never a partial one.
+ * yields no list at all, never a partial one — and an observation the caller did not supply is that same failure, never
+ * "no stock".
  *
  * <p>The two variant settings — walk order and quantity split — are values of this record, and the computation takes
  * them as parameters, so no rule reads configuration from inside. {@link #defaultRules()} selects the documented
@@ -55,26 +57,33 @@ record PickListCalculation(PickListOrder order, PickListSplit split) {
      * @param processing the processing whose pending positions are walked
      * @param stock      the warehouse's answer per product, taken as given
      * @param at         the generation instant the list is stamped with
-     * @return one list per processing, one stop per (position, location) pair
+     * @return one list per processing, one line per pending position, one stop per (position, location) pair
      */
     PickList calculate(OrderProcessing processing, Map<ProductId, List<StockAtLocation>> stock, Instant at) {
-        return calculate(processing, stock, at, order, split);
+        List<PickList.PickListLine> planned = linesOf(processing.positions(), stock, split);
+        List<PickList.PickListLine> placed = placedOnWalk(planned, order);
+        return new PickList(processing.processingId().value(), at, placed, shortfallsOf(planned));
     }
 
-    private static PickList calculate(OrderProcessing processing, Map<ProductId, List<StockAtLocation>> stock,
-                                      Instant at, PickListOrder order, PickListSplit split) {
-        List<PickList.Stop> planned = plannedStops(processing.positions(), stock, split);
-        return new PickList(processing.processingId(), at, ordered(planned, order),
-                shortfalls(processing.positions(), planned));
-    }
-
-    private static List<PickList.Stop> plannedStops(List<OrderPosition> positions,
-                                                    Map<ProductId, List<StockAtLocation>> stock,
-                                                    PickListSplit split) {
+    private static List<PickList.PickListLine> linesOf(List<OrderPosition> positions,
+                                                       Map<ProductId, List<StockAtLocation>> stock,
+                                                       PickListSplit split) {
         return positions.stream()
                 .filter(position -> position.state() == PositionState.PENDING)
-                .flatMap(position -> stopsOf(position, stock, split).stream())
+                .map(position -> lineOf(position, stock, split))
                 .toList();
+    }
+
+    private static PickList.PickListLine lineOf(OrderPosition position,
+                                                Map<ProductId, List<StockAtLocation>> stock,
+                                                PickListSplit split) {
+        return PickList.PickListLine.builder()
+                .productNumber(position.productNumber())
+                .name(position.name())
+                .quantity(position.quantity())
+                .state(position.state().wireName())
+                .locations(stopsOf(position, stock, split))
+                .build();
     }
 
     private static List<PickList.Stop> stopsOf(OrderPosition position,
@@ -107,10 +116,9 @@ record PickListCalculation(PickListOrder order, PickListSplit split) {
 
     private static List<StockAtLocation> placesOf(String productNumber,
                                                   Map<ProductId, List<StockAtLocation>> stock) {
-        List<StockAtLocation> observations = stock.get(new ProductId(productNumber));
-        if (observations == null) {
-            throw new FulfillmentException(FulfillmentException.Error.STOCK_OBSERVATION_MISSING, productNumber);
-        }
+        List<StockAtLocation> observations = Optional.ofNullable(stock.get(new ProductId(productNumber)))
+                .orElseThrow(() -> new FulfillmentException(
+                        FulfillmentException.Error.STOCK_OBSERVATION_MISSING, productNumber));
         return observations.stream()
                 .filter(place -> place.available() > 0)
                 .sorted(Comparator.comparing(StockAtLocation::code))
@@ -121,23 +129,39 @@ record PickListCalculation(PickListOrder order, PickListSplit split) {
         return PickList.Stop.builder()
                 .walkOrder(0)
                 .productNumber(position.productNumber())
-                .name(position.name())
-                .location(place.code())
+                .location(place.code().value())
                 .quantityToTake(take)
                 .available(place.available())
                 .reserved(place.reserved())
-                .positionState(position.state())
                 .build();
     }
 
-    private static List<PickList.Stop> ordered(List<PickList.Stop> stops, PickListOrder order) {
-        List<PickList.Stop> sorted = new ArrayList<>(stops);
-        sorted.sort(comparatorFor(order));
+    /**
+     * Numbers the whole walk once — ordered by location code and then product, so two positions at one shelf keep the
+     * order the picker walks — and puts every stop back on its own line.
+     */
+    private static List<PickList.PickListLine> placedOnWalk(List<PickList.PickListLine> lines, PickListOrder order) {
+        List<PickList.Stop> walk = numberedWalk(lines, order);
+        return lines.stream()
+                .map(line -> line.withLocations(stopsOf(walk, line.productNumber())))
+                .toList();
+    }
+
+    private static List<PickList.Stop> numberedWalk(List<PickList.PickListLine> lines, PickListOrder order) {
+        List<PickList.Stop> planned = new ArrayList<>();
+        lines.forEach(line -> planned.addAll(line.locations()));
+        planned.sort(comparatorFor(order));
         List<PickList.Stop> walk = new ArrayList<>();
-        for (int index = 0; index < sorted.size(); index++) {
-            walk.add(sorted.get(index).atWalkOrder(index + 1));
+        for (int index = 0; index < planned.size(); index++) {
+            walk.add(planned.get(index).atWalkOrder(index + 1));
         }
         return List.copyOf(walk);
+    }
+
+    private static List<PickList.Stop> stopsOf(List<PickList.Stop> walk, String productNumber) {
+        return walk.stream()
+                .filter(stop -> stop.productNumber().equals(productNumber))
+                .toList();
     }
 
     private static Comparator<PickList.Stop> comparatorFor(PickListOrder order) {
@@ -149,23 +173,10 @@ record PickListCalculation(PickListOrder order, PickListSplit split) {
         return byCode;
     }
 
-    private static List<PickList.Shortfall> shortfalls(List<OrderPosition> positions,
-                                                      List<PickList.Stop> stops) {
-        List<PickList.Shortfall> shortfalls = new ArrayList<>();
-        for (OrderPosition position : positions) {
-            int planned = plannedQuantity(position, stops);
-            if (position.state() == PositionState.PENDING && planned < position.quantity()) {
-                shortfalls.add(new PickList.Shortfall(
-                        position.productNumber(), position.quantity() - planned));
-            }
-        }
-        return shortfalls;
-    }
-
-    private static int plannedQuantity(OrderPosition position, List<PickList.Stop> stops) {
-        return stops.stream()
-                .filter(stop -> stop.productNumber().equals(position.productNumber()))
-                .mapToInt(PickList.Stop::quantityToTake)
-                .sum();
+    private static List<PickList.Shortfall> shortfallsOf(List<PickList.PickListLine> lines) {
+        return lines.stream()
+                .filter(line -> line.quantityPlanned() < line.quantity())
+                .map(line -> new PickList.Shortfall(line.productNumber(), line.quantity() - line.quantityPlanned()))
+                .toList();
     }
 }

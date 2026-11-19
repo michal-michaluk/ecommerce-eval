@@ -17,6 +17,7 @@ import org.springframework.security.web.access.AccessDeniedHandler;
 
 import java.time.Clock;
 
+import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.HttpMethod.POST;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 import static org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher.pathPattern;
@@ -29,6 +30,7 @@ class AppConfiguration {
 
     /** The four scopes of element 11 as Spring Security spells a token's {@code scope} claim. */
     private static final String EMPLOYEE = "SCOPE_fulfillment-employee";
+    private static final String RESOLVER = "SCOPE_fulfillment-resolver";
     private static final String SHOPPING = "SCOPE_shopping-service";
 
     @Bean
@@ -58,15 +60,47 @@ class AppConfiguration {
 
     private static AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry scopesOfElement11(
             AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth) {
+        return processingReads(processingCommands(ordersAndActuator(auth)));
+    }
+
+    /** Everything the matrix decides before the processing resource: the actuator, the handover and the orders list. */
+    private static AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry ordersAndActuator(
+            AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth) {
         return auth
                 .requestMatchers(pathPattern("/actuator/health/**")).permitAll()
                 .requestMatchers(pathPattern("/actuator/info")).permitAll()
                 .requestMatchers(pathPattern("/error")).permitAll()
                 .requestMatchers(pathPattern("/actuator/**")).authenticated()
                 .requestMatchers(pathPattern(POST, "/orders")).hasAuthority(SHOPPING)
-                .requestMatchers(pathPattern("/orders")).hasAuthority(EMPLOYEE)
+                .requestMatchers(pathPattern("/orders")).hasAuthority(EMPLOYEE);
+    }
+
+    /** The commands of the processing resource: only the employee who works an order issues them (element 11). */
+    private static AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry processingCommands(
+            AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth) {
+        return auth
                 .requestMatchers(pathPattern(POST, "/processing/{processingId}/assignment"))
+                .hasAuthority(EMPLOYEE)
+                .requestMatchers(pathPattern(POST, "/processing/{processingId}/positions/{productNumber}"))
+                .hasAuthority(EMPLOYEE)
+                .requestMatchers(pathPattern(POST, "/processing/{processingId}/packing"))
                 .hasAuthority(EMPLOYEE);
+    }
+
+    /**
+     * The reads of the processing resource: the employee works from them and the resolver may open the state (element 11's
+     * auth matrix). The workstation route is this service's own — element 11 names none — and belongs to the employee who
+     * scans.
+     */
+    private static AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry processingReads(
+            AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth) {
+        return auth
+                .requestMatchers(pathPattern(GET, "/processing/{processingId}/pick-list"))
+                .hasAuthority(EMPLOYEE)
+                .requestMatchers(pathPattern(GET, "/processing/{processingId}/pick-workstation"))
+                .hasAuthority(EMPLOYEE)
+                .requestMatchers(pathPattern(GET, "/processing/{processingId}"))
+                .hasAnyAuthority(EMPLOYEE, RESOLVER);
     }
 
     /** A missing token is {@code 401} with the status alone: element 11's {@code 401} body is empty. */

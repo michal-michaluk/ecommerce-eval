@@ -34,13 +34,13 @@ public class AggregateFixture {
 
     public static OrderFulfillmentProcess aPickingProcessing() {
         OrderFulfillmentProcess processing = anAssignedProcessing();
-        processing.pick(OrderFixture.PRODUCT_NUMBER);
+        processing.pick(OrderFixture.PRODUCT_NUMBER, ProcessingFixture.EMPLOYEE);
         return processing;
     }
 
     public static OrderFulfillmentProcess aPackedProcessing() {
         OrderFulfillmentProcess processing = aPickingProcessing();
-        processing.pack(OrderFixture.PRODUCT_NUMBER);
+        processing.pack(OrderFixture.PRODUCT_NUMBER, ProcessingFixture.EMPLOYEE);
         return processing;
     }
 

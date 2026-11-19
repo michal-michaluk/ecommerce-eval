@@ -79,9 +79,9 @@ class OrderFulfillmentProcessTest {
     void theFirstScanStartsPickingAndTheSecondChangesNothing() {
         OrderFulfillmentProcess processing = AggregateFixture.anAssignedProcessing();
 
-        processing.pick(OrderFixture.PRODUCT_NUMBER);
+        processing.pick(OrderFixture.PRODUCT_NUMBER, ProcessingFixture.EMPLOYEE);
         int events = processing.events.size();
-        processing.pick(OrderFixture.PRODUCT_NUMBER);
+        processing.pick(OrderFixture.PRODUCT_NUMBER, ProcessingFixture.EMPLOYEE);
 
         assertThat(processing.toSnapshot().state()).isEqualTo(ProcessingState.PICKING);
         assertThat(processing.toSnapshot().positions()).singleElement()
@@ -93,7 +93,7 @@ class OrderFulfillmentProcessTest {
     void refusesToPickAnOrderNobodyClaims() {
         OrderFulfillmentProcess processing = AggregateFixture.aPendingProcessing();
 
-        assertThatThrownBy(() -> processing.pick(OrderFixture.PRODUCT_NUMBER))
+        assertThatThrownBy(() -> processing.pick(OrderFixture.PRODUCT_NUMBER, ProcessingFixture.EMPLOYEE))
                 .isInstanceOfSatisfying(FulfillmentException.class, refused -> assertThat(refused.error())
                         .isEqualTo(FulfillmentException.Error.WORK_NOT_STARTED));
     }
@@ -102,7 +102,7 @@ class OrderFulfillmentProcessTest {
     void refusesAPositionTheOrderDoesNotCarry() {
         OrderFulfillmentProcess processing = AggregateFixture.aPickingProcessing();
 
-        assertThatThrownBy(() -> processing.pick("00000"))
+        assertThatThrownBy(() -> processing.pick("00000", ProcessingFixture.EMPLOYEE))
                 .isInstanceOfSatisfying(FulfillmentException.class, refused -> assertThat(refused.error())
                         .isEqualTo(FulfillmentException.Error.POSITION_UNKNOWN));
     }
@@ -111,7 +111,7 @@ class OrderFulfillmentProcessTest {
     void packsAPickedPositionAndPacksTheOrderOnceEveryPositionIs() {
         OrderFulfillmentProcess processing = AggregateFixture.aPickingProcessing();
 
-        processing.pack(OrderFixture.PRODUCT_NUMBER);
+        processing.pack(OrderFixture.PRODUCT_NUMBER, ProcessingFixture.EMPLOYEE);
 
         assertThat(processing.toSnapshot().state()).isEqualTo(ProcessingState.PACKED);
         assertThat(processing.events).last().isInstanceOf(DomainEvent.PositionPacked.class);
@@ -121,7 +121,7 @@ class OrderFulfillmentProcessTest {
     void refusesToPackAPositionThatIsNotPicked() {
         OrderFulfillmentProcess processing = AggregateFixture.anAssignedProcessing();
 
-        assertThatThrownBy(() -> processing.pack(OrderFixture.PRODUCT_NUMBER))
+        assertThatThrownBy(() -> processing.pack(OrderFixture.PRODUCT_NUMBER, ProcessingFixture.EMPLOYEE))
                 .isInstanceOfSatisfying(FulfillmentException.class, refused -> assertThat(refused.error())
                         .isEqualTo(FulfillmentException.Error.POSITION_NOT_PICKED));
     }
@@ -225,7 +225,7 @@ class OrderFulfillmentProcessTest {
     void refusesWorkWhileTheOrderIsHeld() {
         OrderFulfillmentProcess processing = AggregateFixture.aHeldProcessing();
 
-        assertThatThrownBy(() -> processing.pick(OrderFixture.PRODUCT_NUMBER))
+        assertThatThrownBy(() -> processing.pick(OrderFixture.PRODUCT_NUMBER, ProcessingFixture.EMPLOYEE))
                 .isInstanceOfSatisfying(FulfillmentException.class, refused -> assertThat(refused.error())
                         .isEqualTo(FulfillmentException.Error.WORK_IS_ON_HOLD));
     }

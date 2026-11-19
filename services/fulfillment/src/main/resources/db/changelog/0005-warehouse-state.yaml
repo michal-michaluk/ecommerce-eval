@@ -1,0 +1,55 @@
+databaseChangeLog:
+
+  # The state the warehouse boundary must own (element 13 S1/S3, R-13-1). The warehouse cannot hold either of these: an
+  # allocation is addressed by an id we minted, and nothing on the warehouse side expires, so a reservation we cannot
+  # address would eat the stock it allocated for ever.
+  - changeSet:
+      id: 0005-warehouse-reservation
+      author: michal.michaluk
+      changes:
+        - createTable:
+            tableName: warehouse_reservation
+            columns:
+              - column:
+                  name: reservation_id
+                  type: varchar(64)
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: warehouse_reservation_pkey
+                    nullable: false
+              - column:
+                  name: order_pk
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: allocation_pks
+                  type: varchar(512)
+              - column:
+                  name: issue_document
+                  type: varchar(64)
+              - column:
+                  name: issue_date
+                  type: date
+
+  # The watermark of the stock-change read: one row, one opaque value. The warehouse has no outbound subscription, so
+  # where we read up to is ours to keep (element 13 RULE-6).
+  - changeSet:
+      id: 0005-warehouse-stock-cursor
+      author: michal.michaluk
+      changes:
+        - createTable:
+            tableName: warehouse_stock_cursor
+            columns:
+              - column:
+                  name: name
+                  type: varchar(32)
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: warehouse_stock_cursor_pkey
+                    nullable: false
+              - column:
+                  name: cursor
+                  type: varchar(64)
+                  constraints:
+                    nullable: false

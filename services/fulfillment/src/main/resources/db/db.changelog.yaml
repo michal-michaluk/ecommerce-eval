@@ -34,3 +34,6 @@ databaseChangeLog:
   - include:
       file: db/changelog/0004-orders-list.yaml
       relativeToChangelogFile: false
+  - include:
+      file: db/changelog/0005-warehouse-state.yaml
+      relativeToChangelogFile: false

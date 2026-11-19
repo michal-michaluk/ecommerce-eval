@@ -85,9 +85,10 @@ class OrderFulfillmentProcess {
      * already picked or packed position again changes nothing.
      *
      * @param productNumber the product the scan named
+     * @param employeeId    the caller, who must be the assignee (element 16: only he confirms)
      */
-    void pick(String productNumber) {
-        ensureWorkIsInHand("picking");
+    void pick(String productNumber, String employeeId) {
+        ensureWorkIsInHand("picking", employeeId);
         OrderPosition position = positionOf(productNumber);
         if (position.state() == PositionState.PENDING) {
             positions.set(positions.indexOf(position), position.picked());
@@ -97,17 +98,21 @@ class OrderFulfillmentProcess {
     }
 
     /**
-     * Puts one picked position into the box; the last one moves the order to {@code packed}.
+     * Puts one picked position into the box; the last one moves the order to {@code packed}. Packing a position that is
+     * already in the box changes nothing — the repeated command of element 11's {@code 200} row, never a second event.
      *
      * @param productNumber the product being packed
+     * @param employeeId    the caller, who must be the assignee (element 16: only he packs)
      */
-    void pack(String productNumber) {
-        ensureWorkIsInHand("packing");
+    void pack(String productNumber, String employeeId) {
+        ensureWorkIsInHand("packing", employeeId);
         OrderPosition position = positionOf(productNumber);
-        ensurePicked(position);
-        positions.set(positions.indexOf(position), position.packed());
-        state = state.afterPacking(positionsAllPacked());
-        events.add(new DomainEvent.PositionPacked(processingId, productNumber));
+        ensurePackable(position);
+        if (position.state() == PositionState.PICKED) {
+            positions.set(positions.indexOf(position), position.packed());
+            state = state.afterPacking(positionsAllPacked());
+            events.add(new DomainEvent.PositionPacked(processingId, productNumber));
+        }
     }
 
     /**
@@ -191,12 +196,16 @@ class OrderFulfillmentProcess {
                 .collect(Collectors.toCollection(ArrayList::new));
     }
 
-    private void ensureWorkIsInHand(String action) {
+    private void ensureWorkIsInHand(String action, String employeeId) {
         if (state == ProcessingState.PENDING) {
             throw new FulfillmentException(FulfillmentException.Error.WORK_NOT_STARTED, processingId, action);
         }
         if (state == ProcessingState.ON_HOLD) {
             throw new FulfillmentException(FulfillmentException.Error.WORK_IS_ON_HOLD, processingId, action);
+        }
+        if (!Objects.equals(assignee, employeeId)) {
+            throw new FulfillmentException(
+                    FulfillmentException.Error.ACTOR_NOT_ALLOWED, employeeId, processingId, action);
         }
     }
 
@@ -226,8 +235,8 @@ class OrderFulfillmentProcess {
         }
     }
 
-    private void ensurePicked(OrderPosition position) {
-        if (position.state() != PositionState.PICKED) {
+    private void ensurePackable(OrderPosition position) {
+        if (position.state() == PositionState.PENDING) {
             throw new FulfillmentException(FulfillmentException.Error.POSITION_NOT_PICKED,
                     position.productNumber(), position.state());
         }

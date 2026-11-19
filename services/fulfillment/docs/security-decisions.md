@@ -18,17 +18,21 @@ token's own `scope` claim and no protocol mapper can produce a second one.
 | 1 | `POST /orders` | bearer JWT required | `shopping-service` only | the handover of element 12 is checkout's call and nobody else's; an employee token answers `403` |
 | 2 | `GET /orders` | bearer JWT required | `fulfillment-employee` only | the orders list of element 15 is the warehouse's screen; `fulfillment-customer` may not read the queue |
 | 3 | `POST /processing/{processingId}/assignment` | bearer JWT required | `fulfillment-employee` only | claiming is the warehouse employee's own action (element 07 RULE-5), and the assignee is the token's subject, never a body value |
-| 4 | `GET /actuator/health/**` | none | public | Kubernetes probes |
-| 5 | `GET /actuator/info` | none | public | build information |
-| 6 | `GET /actuator/**` (any other actuator endpoint) | bearer JWT required | any authenticated caller | metrics and environment are not public, and no scope is invented for them |
-| 7 | `/error` | none | public | Spring's error dispatch, not a business route: without it a container-level failure is answered by the security chain instead of by the status it carries. No handler of this service is reachable through it |
+| 4 | `GET /processing/{processingId}` | bearer JWT required | `fulfillment-employee` **or** `fulfillment-resolver` | element 11 grants the snapshot to both: the resolver's read-only "open an order's processing state" is this read (element 17), and a resolver deciding a resume has to see what is held. The customer scope has its own resource (element 18), so `assignee` and `issue` never reach it |
+| 5 | `GET /processing/{processingId}/pick-list` | bearer JWT required | `fulfillment-employee` only | the walk of element 10 is the assigned employee's working document; a resolver has no use for it, and warehouse locations never reach the customer |
+| 6 | `GET /processing/{processingId}/pick-workstation` | bearer JWT required | `fulfillment-employee` only | the one screen an assigned employee works from (element 16). The route is this service's own — element 11 names no path for that screen — and it is read-only, so nothing here can act for another view's actor |
+| 7 | `POST /processing/{processingId}/positions/{productNumber}` | bearer JWT required | `fulfillment-employee` only | one scan closes one position (element 02, element 16). The scope is the endpoint's; the caller must additionally be the assignee, and the aggregate refuses anybody else with `409 ACTOR_NOT_ALLOWED` (element 16, "never let a non-assignee confirm") |
+| 8 | `POST /processing/{processingId}/packing` | bearer JWT required | `fulfillment-employee` only | the bulk packing step (element 02, element 16), with the same assignee rule as the scan |
+| 9 | `GET /actuator/health/**` | none | public | Kubernetes probes |
+| 10 | `GET /actuator/info` | none | public | build information |
+| 11 | `GET /actuator/**` (any other actuator endpoint) | bearer JWT required | any authenticated caller | metrics and environment are not public, and no scope is invented for them |
+| 12 | `/error` | none | public | Spring's error dispatch, not a business route: without it a container-level failure is answered by the security chain instead of by the status it carries. No handler of this service is reachable through it |
 
 ## Not yet exposed
 
-The remaining routes of element 11 — `GET /processing/{processingId}`, `GET …/pick-list`, `POST …/positions/{productNumber}`,
-`POST …/packing`, `POST …/readiness`, `POST …/issues`, `GET /issues`, `POST …/hold/resume`, both document routes and
-`GET …/state` — do not exist yet. Their decisions are already fixed by element 11's matrix and land with the nodes that add
-them; until then `denyAll()` answers every one of them, so a route cannot appear unauthenticated by accident.
+The routes of phases 3 and 4 — `POST …/readiness`, `POST …/issues`, `GET /issues`, `POST …/hold/resume`, both document routes
+and `GET …/state` — do not exist yet. Their decisions are already fixed by element 11's matrix and land with the nodes that
+add them; until then `denyAll()` answers every one of them, so a route cannot appear unauthenticated by accident.
 
 ## Refusals on the wire
 

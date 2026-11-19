@@ -6,47 +6,77 @@ import java.time.Instant;
 import java.util.List;
 
 import shop.fulfillment.kernel.FulfillmentException;
-import shop.fulfillment.kernel.LocationCode;
-import shop.fulfillment.kernel.OrderProcessingId;
-import shop.fulfillment.kernel.PositionState;
 
 /**
- * The ordered walk an assigned employee performs, generated at one instant: one stop per (position, location) pair
- * actually walked, and one shortfall per position the shelf cannot cover.
+ * The ordered walk an assigned employee performs, generated at one instant: one line per pending position, one stop per
+ * (position, location) pair actually walked, and one shortfall per position the shelf cannot cover.
  *
- * <p>It is a read model, replaced per request; no price, amount, currency or total appears here.
+ * <p>It is the read model of {@code GET /processing/{processingId}/pick-list}, replaced per request, and it is shaped the
+ * way the contract writes it: a line carries the position (product, name, quantity, state) and its own stops, so a stop is
+ * self-describing and the payload groups by position while {@code walkOrder} still interleaves products.
  *
- * @param processingId the processing the list belongs to
+ * <p>{@code lines} and every line's {@code locations} are present-and-empty, never absent and never null. No price, amount,
+ * currency or total appears anywhere here.
+ *
+ * @param processingId the processing the list belongs to, as the wire names it
  * @param generatedAt  the moment the snapshot was taken
- * @param stops        the walk, ordered and numbered from 1
+ * @param lines        one line per position still to be walked
  * @param shortfalls   what the warehouse cannot deliver for the pinned order
  */
-record PickList(OrderProcessingId processingId, Instant generatedAt, List<Stop> stops, List<Shortfall> shortfalls) {
+record PickList(String processingId, Instant generatedAt, List<PickListLine> lines, List<Shortfall> shortfalls) {
+
+    PickList {
+        lines = List.copyOf(lines);
+        shortfalls = List.copyOf(shortfalls);
+    }
+
+    /**
+     * One position to walk and the places it is taken from.
+     *
+     * @param productNumber the product to take
+     * @param name          the product name, for the screen only
+     * @param quantity      the quantity the order pinned (never what the shelf happens to hold)
+     * @param state         the position state when the list was generated, as the wire names it
+     * @param locations     the stops of this line, empty when the shelf cannot cover the position
+     */
+    @Builder
+    record PickListLine(String productNumber, String name, int quantity, String state, List<Stop> locations) {
+
+        PickListLine {
+            locations = List.copyOf(locations);
+        }
+
+        /** The same line, carrying its stops at their final position in the walk. */
+        PickListLine withLocations(List<Stop> locations) {
+            return new PickListLine(productNumber, name, quantity, state, locations);
+        }
+
+        /** How many units this line takes from the shelves. */
+        int quantityPlanned() {
+            return locations.stream().mapToInt(Stop::quantityToTake).sum();
+        }
+    }
 
     /**
      * One place to walk to for one position. Stops are never merged: the workstation confirms positions, not shelves.
      *
      * <p>A stop under construction carries {@code walkOrder = 0}; the calculation numbers the published walk from 1.
      *
-     * @param walkOrder     position of the stop in the list, from 1
-     * @param productNumber the product to take
-     * @param name          the product name, for the screen only
-     * @param location      the warehouse location, opaque and used verbatim
+     * @param walkOrder      position of the stop in the whole walk, from 1
+     * @param productNumber  the product to take
+     * @param location       the warehouse location, opaque and used verbatim
      * @param quantityToTake how many units to take here
-     * @param available     the units free at this location, as the warehouse reported them
-     * @param reserved      the units allocated at this location, as the warehouse reported them
-     * @param positionState the position state when the list was generated
+     * @param available      the units free at this location, as the warehouse reported them
+     * @param reserved       the units allocated at this location, as the warehouse reported them
      */
     @Builder(toBuilder = true)
     record Stop(
             int walkOrder,
             String productNumber,
-            String name,
-            LocationCode location,
+            String location,
             int quantityToTake,
             int available,
-            int reserved,
-            PositionState positionState) {
+            int reserved) {
 
         Stop {
             if (quantityToTake < 1) {
@@ -68,8 +98,8 @@ record PickList(OrderProcessingId processingId, Instant generatedAt, List<Stop> 
     /**
      * What the warehouse cannot cover for one position.
      *
-     * @param productNumber    the product that is short
-     * @param missingQuantity  how many units are missing
+     * @param productNumber   the product that is short
+     * @param missingQuantity how many units are missing
      */
     record Shortfall(String productNumber, int missingQuantity) {
 
