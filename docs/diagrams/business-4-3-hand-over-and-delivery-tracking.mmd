@@ -1,5 +1,5 @@
-% Hand-over and delivery tracking.
-% Extracted from docs/business/04-process-maps.md section 4.3; rendered to SVG by docs/scripts/render-diagrams.py.
+%% Hand-over and delivery tracking.
+%% Extracted from docs/business/04-process-maps.md section 4.3; rendered to SVG by docs/scripts/render-diagrams.py.
 flowchart TD
   A["POST /processing/{processingId}/readiness"] --> B{"parcel registered and every position packed?"}
   B -->|"no"| C["409 NOT_READY<br/>reasons: noParcel, onHold, notPacked, positionsOpen, pastHandover"]

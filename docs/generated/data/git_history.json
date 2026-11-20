@@ -1,11 +1,11 @@
 {
-  "commits_read": 22,
+  "commits_read": 23,
   "quality": {
-    "conventional": 22,
+    "conventional": 23,
     "conventional_share": 1.0,
     "counts": {
       "chore": 6,
-      "docs": 7,
+      "docs": 8,
       "feat": 7,
       "fix": 1,
       "refactor": 1
@@ -16,10 +16,22 @@
     "other": 0,
     "other_share": 0.0,
     "path_classified": 0,
-    "rows": 22
+    "rows": 23
   },
   "repository": "ecommerce",
   "rows": [
+    {
+      "category": "docs",
+      "change": "fulfillment docset — system, integrator and business guide",
+      "date": "2026-11-20",
+      "evidence": [
+        "git:d482a5f7066be615cd936b897386f136378c0333"
+      ],
+      "ref": {
+        "sha": "d482a5f"
+      },
+      "scope": "."
+    },
     {
       "category": "docs",
       "change": "close the plan — steps 5-7, resolutions, review residue",

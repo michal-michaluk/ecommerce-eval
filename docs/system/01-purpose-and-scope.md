@@ -17,7 +17,7 @@ the order content, nor the stock, nor the customer master, nor anything the carr
 | --- | --- | --- |
 | Checkout, through `POST /orders` | the order's content and its immutability; the order arrives finished and is never edited here | one copy of the received order inside its own row, plus a digest of that content, used to tell a repeat delivery from a different order under a reused hash <!-- evidence: docs/specs/fulfillment/spec.md:54, services/fulfillment/src/main/java/shop/fulfillment/kernel/Order.java:91-94, services/fulfillment/src/main/java/shop/fulfillment/processing/OrderIntakeService.java:40-48 --> |
 | The warehouse (InvenTree) | stock truth, allocation mechanics and movements | the reservation identifiers of the units it allocated for one claim, the stock observations it reported, and the goods-issue document number it answered — never a quantity this service computed <!-- evidence: docs/specs/fulfillment/spec.md:54-55, docs/api/warehouse-api.md:20-22, docs/specs/fulfillment/13-warehouse-port.md:38-45 --> |
-| The carrier | the waybill, the printed label and every delivery leg | the waybill string as an opaque identity, the label bytes as delivered, and the furthest leg it reported — nothing authored here <!-- evidence: docs/specs/fulfillment/spec.md:55-57, docs/specs/fulfillment/03-parcel.md:64, services/fulfillment/src/main/java/shop/fulfillment/parcel/ParcelLabelProjection.java:49-60 --> |
+| The carrier | the carrier identity, the printed label and every delivery leg | that identity as an opaque string, the label bytes as delivered, and the furthest leg it reported — nothing authored here <!-- evidence: docs/specs/fulfillment/spec.md:55-57, docs/specs/fulfillment/03-parcel.md:64, services/fulfillment/src/main/java/shop/fulfillment/parcel/ParcelLabelProjection.java:49-60 --> |
 | Checkout and the invoicing boundary | money, VAT, delivery cost | no amount, price, currency or total: none is computed, compared or stored, and no such field exists <!-- evidence: docs/specs/fulfillment/spec.md:76, services/fulfillment/src/main/java/shop/fulfillment/kernel/Payment.java:8 --> |
 | The customer master (CRM) | who the customer is | no customer identity at all, which is why the customer route cannot check that a caller owns the order: the scope is the only gate <!-- evidence: docs/specs/fulfillment/spec.md:87, docs/decisions/operator-input.md:12 --> |
 
@@ -31,10 +31,11 @@ processings even if two deliveries race.
 - **14 operations** are registered: 2 on `/orders`, 1 on `/issues`, 7 on the processing resource, 1 on the
   pick list, 1 on the workstation screen, 1 on the customer state and 1 on the label.
   <!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/processing/OrderIntakeController.java:28, services/fulfillment/src/main/java/shop/fulfillment/orders/OrdersListController.java:25, services/fulfillment/src/main/java/shop/fulfillment/issues/IssueDashboardController.java:26, services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingSnapshotController.java:24, services/fulfillment/src/main/java/shop/fulfillment/processing/PickListController.java:23, services/fulfillment/src/main/java/shop/fulfillment/processing/PickWorkstationController.java:24, services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateController.java:26, services/fulfillment/src/main/java/shop/fulfillment/parcel/ParcelLabelController.java:24 -->
-- **7 processing states** and one hold state: pending, assigned, picking, packed, on hold, ready for
+- **7 processing states**, one of which is the hold: pending, assigned, picking, packed, on hold, ready for
   delivery, delivered. Every transition is a command; no state is written by a read.
   <!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/kernel/ProcessingState.java:11-17, docs/specs/fulfillment/02-order-processing.md:41-56 -->
-- **3 read models with their own tables** and **4 read handlers over the write model**, described in §7.
+- **4 read surfaces**: three own a table, one is derived on read; the label is served as a stored document
+  rather than read from a model. §7 lists them, the label beside them, and what each consumes.
   <!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/orders/OrdersListProjection.java:125, services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java:178, services/fulfillment/src/main/java/shop/fulfillment/issues/IssueDashboardProjection.java:149 -->
 - **2 scheduled pollers**, both at a 60-second default interval, described in §12.
   <!-- evidence: services/fulfillment/src/main/resources/application.yml:40-41, services/fulfillment/src/main/resources/application.yml:49-50 -->
@@ -48,18 +49,23 @@ gets no adapter at all rather than a stub that pretends.
 
 ### 1.3 Deliberately out of scope
 
-| Not built here | Because | Where it is decided |
-| --- | --- | --- |
-| The goods issue note (WZ) | no invoicing contract supplies the amounts or the receiver party, so the document could only be invented | operator answer 3, register `D15` <!-- evidence: docs/decisions/operator-input.md:10, docs/specs/fulfillment/spec.md:89 --> |
-| More than one parcel per processing | one processing owns exactly one parcel; a registration that asks for a split is refused, not approximated | operator answer 7, register `D10` <!-- evidence: docs/decisions/operator-input.md:14, docs/specs/fulfillment/spec.md:84, services/fulfillment/src/main/java/shop/fulfillment/parcel/ParcelEditor.java:138-142 --> |
-| Paging on the two collections | one envelope and no parameter; no volume figure exists to page against | operator answer 6, register `D16` <!-- evidence: docs/decisions/operator-input.md:13, docs/specs/fulfillment/spec.md:90 --> |
-| Returns and refunds, e-invoicing, the CMR note | outside the lane's material: the board's decision table excludes the CMR for a domestic parcel and no source funds the rest | <!-- evidence: docs/specs/fulfillment/spec.md:54-57, docs/specs/fulfillment/spec.md:189 --> |
-| A pickup-point read model and pick-route optimisation | both deferred with their elements, so the code carries the documented default instead | <!-- evidence: docs/specs/fulfillment/spec.md:189, docs/specs/fulfillment/spec.md:59-60 --> |
-| A broker, an outbox or any message published off-process | the handover is HTTP and everything inside the process is an in-process event | register `D9` <!-- evidence: docs/specs/fulfillment/spec.md:83, docs/arch/microservice-java-spring/integration-events.md:18 --> |
+| Not built here | Because |
+| --- | --- |
+| The goods issue note (WZ) | no invoicing contract supplies the amounts or the receiver party, so the document could only be invented <!-- evidence: docs/decisions/operator-input.md:10, docs/specs/fulfillment/spec.md:89 --> |
+| More than one parcel per processing | one processing owns exactly one parcel; a registration that asks for a split is refused, not approximated <!-- evidence: docs/decisions/operator-input.md:14, docs/specs/fulfillment/spec.md:84, services/fulfillment/src/main/java/shop/fulfillment/parcel/ParcelEditor.java:138-142 --> |
+| Paging on the two collections | one envelope and no parameter; no volume figure exists to page against <!-- evidence: docs/decisions/operator-input.md:13, docs/specs/fulfillment/spec.md:90 --> |
+| Returns and refunds, e-invoicing, the CMR note | outside the lane's material: the board's decision table excludes the CMR for a domestic parcel and no source funds the rest <!-- evidence: docs/specs/fulfillment/spec.md:54-57, docs/specs/fulfillment/spec.md:189 --> |
+| A pickup-point read model and pick-route optimisation | both deferred with their elements, so the code carries the documented default instead <!-- evidence: docs/specs/fulfillment/spec.md:189, docs/specs/fulfillment/spec.md:59-60 --> |
+| A broker, an outbox or any message published off-process | the handover is HTTP and everything inside the process is an in-process event <!-- evidence: docs/specs/fulfillment/spec.md:83, docs/arch/microservice-java-spring/integration-events.md:18 --> |
+
+Each exclusion above is a recorded decision rather than an omission; §13 states where the decisions this
+system did take are written.
+<!-- evidence: docs/specs/fulfillment/spec.md:70-90 -->
 
 One consequence is worth stating because a reader will ask for it: the contract's document route names two
-documents, and only the label is served. The goods-issue-note route answers `403` for every caller because no
-route is registered for it, which is the shape `denyAll()` gives an undeclared path. GAP-11 records it.
+documents, and only the label is served. The goods-issue-note route answers `401` without a token and `403`
+with any token, because no route is registered for it — the shape `denyAll()` gives an undeclared path. The
+register puts the document itself out of scope (`D15`).
 <!-- evidence: docs/specs/fulfillment/11-fulfillment-http-api.md:17, services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:54, services/fulfillment/docs/phase-1-decisions.md:286 -->
 
 ### 1.4 What this document covers, and what it hands over
@@ -77,7 +83,7 @@ route is registered for it, which is the shape `denyAll()` gives an undeclared p
 | what runs where, and with what probes | §10 |
 | what the telemetry surface is, and what it does not define | §11 |
 | what an operator sees at runtime | §12 |
-| which decisions are recorded, and which are only in the code's own notes | §13 |
+| the decision records this document indexes, and where the decisions that exist are written | §13 |
 | the numbered gaps of this document | §14 |
 
 The volume, latency and availability this service is expected to sustain are absent from every source, so

@@ -38,12 +38,6 @@ owner: "fulfillment context team"
 
 {{< include generated/chapters/payload-columns.md >}}
 
-# Appendix A — Payload catalogue
-
-{{< include generated/chapters/appendix-payloads.md >}}
-
-## 9 Domain events
-
 {{< include system/09-event-index.md >}}
 
 # Part IV — Runtime
@@ -62,6 +56,12 @@ owner: "fulfillment context team"
 
 ## 13 Decision records
 
+{{< include system/13-decisions.md >}}
+
 {{< include generated/chapters/appendix-decisions.md >}}
 
 {{< include system/14-gaps.md >}}
+
+# Appendix A — Payload catalogue
+
+{{< include generated/chapters/appendix-payloads.md >}}

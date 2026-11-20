@@ -11,11 +11,12 @@
 | `customer_processing_state` | `packed_products` |
 | `issue_dashboard_order` | `lines` |
 
-: Columns that hold a JSONB payload. {#tbl-payload-columns}
+: Columns that hold a JSONB payload.
+
 
 <!-- evidence:  -->
 
 | Example | Field paths |
 |---|---|
 
-: Field paths present in each example payload. {#tbl-payload-fields}
+: Field paths present in each example payload.

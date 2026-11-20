@@ -17,7 +17,8 @@ recommendation.
 | Image pull policy | `IfNotPresent` |
 | JVM flags | `-XX:+UseZGC`, `-XX:MaxRAMPercentage=75` |
 
-: Image, port and service of the deployment. {#tbl-deployment-image}
+: Image, port and service of the deployment.
+
 
 The image carries the OpenTelemetry agent and a Java runtime. The container filesystem is read-only,
 the process runs as a non-root user, privilege escalation is disabled, all capabilities are dropped,
@@ -31,7 +32,8 @@ both overlays repeat them.
 | `cpu` | `250m` | `1` |
 | `memory` | `768Mi` | `1.5Gi` |
 
-: Resource requests and limits of the base container. {#tbl-deployment-resources}
+: Resource requests and limits of the base container.
+
 
 The `dev` overlay asks for less than the base and caps the container lower as well; the `k3d` overlay
 declares no resources of its own and therefore leaves the base values in place.
@@ -52,7 +54,8 @@ from one Secret, two are read from the ConfigMap, and the profile is written as 
 | `SPRING_KAFKA_BOOTSTRAP_SERVERS` | ConfigMap | `fulfillment` | key `kafka-bootstrap-servers` |
 | `JWT_ISSUER_URI` | ConfigMap | `fulfillment` | key `JWT_ISSUER_URI` |
 
-: Environment variables of the container, with the object each one is read from. {#tbl-deployment-environment}
+: Environment variables of the container, with the object each one is read from.
+
 
 The base ConfigMap declares the keys `kafka-bootstrap-servers`, `spring-profile-active`; the container additionally
 reads `JWT_ISSUER_URI` from that ConfigMap. The base declares no such key, and the `dev` overlay does
@@ -70,7 +73,8 @@ records what follows from that.
 | `readinessProbe` | base | `/actuator/health/readiness` | 8080 | 20 | 5 | 3 | — |
 | `startupProbe` | `k3d` overlay | `/actuator/health/liveness` | 8080 | 10 | 10 | — | 60 |
 
-: Probes that keep the container alive and route traffic to it. {#tbl-deployment-probes}
+: Probes that keep the container alive and route traffic to it.
+
 
 Neither base probe declares a failure threshold, so the platform default applies: three consecutive
 failures before the container is restarted or taken out of the Service. The `k3d` overlay adds a
@@ -86,7 +90,8 @@ gives a cold start ten minutes before the liveness probe takes over.
 | `prod` | the base manifest, as a literal |
 | `dev` | the `k3d` overlay |
 
-: Spring profiles the manifests activate. {#tbl-deployment-profiles}
+: Spring profiles the manifests activate.
+
 
 <!-- evidence: services/fulfillment/k8s/overlays/dev/kustomization.yaml:2, services/fulfillment/k8s/overlays/k3d/kustomization.yaml:2 -->
 
@@ -95,7 +100,8 @@ gives a cold start ten minutes before the liveness probe takes over.
 | `dev` | `fulfillment-dev` | `dev-` | `Always` | cpu 100m, memory 256Mi | cpu 500m, memory 512Mi | `kafka-bootstrap-servers`, `spring-profile-active` | `jdbc-url`, `password`, `username` |
 | `k3d` | `fulfillment` | none | `IfNotPresent` | — | — | `kafka-bootstrap-servers`, `spring-profile-active`, `JWT_ISSUER_URI` | `jdbc-url`, `password`, `username` |
 
-: Overlays, the namespace they deploy into and what each one patches. {#tbl-deployment-overlays}
+: Overlays, the namespace they deploy into and what each one patches.
+
 
 The `dev` overlay deploys into its own namespace under a `dev-` name prefix and points the datasource
 at a database on the local machine. The `k3d` overlay keeps the shared namespace, adds an Ingress,
@@ -117,7 +123,8 @@ issuer address.
 | `OTEL_TRACES_SAMPLER` | literal | `parentbased_traceidratio` |
 | `OTEL_TRACES_SAMPLER_ARG` | literal | `1.0` |
 
-: Environment variables the `k3d` overlay adds. {#tbl-deployment-overlay-environment}
+: Environment variables the `k3d` overlay adds.
+
 
 ### 2.4 Manifests the facts come from
 
@@ -135,7 +142,9 @@ issuer address.
 | `kustomization.yaml`, `k3d` overlay | the kustomization that composes the overlay |
 | `namespace.yaml`, `k3d` overlay | the Namespace the overlay deploys into |
 
-: Manifests behind the deployment view. {#tbl-deployment-manifests}
+: Manifests behind the deployment view.
+
+
 ### 2.5 Infrastructure the service depends on
 
 <!-- evidence: services/fulfillment/k8s/infra/kafka.yaml:2, services/fulfillment/k8s/infra/keycloak.yaml:2, services/fulfillment/k8s/infra/otel-collector.yaml:2 -->
@@ -151,4 +160,4 @@ whose dependencies are assumed rather than deployed.
 | `keycloak.yaml` | `ConfigMap keycloak-realm`, `Service fulfillment-keycloak`, `Deployment keycloak` |
 | `otel-collector.yaml` | `ConfigMap otel-collector-config`, `Service otel-collector`, `Deployment otel-collector` |
 
-: Infrastructure manifests outside the application kustomization. {#tbl-deployment-infrastructure}
+: Infrastructure manifests outside the application kustomization.

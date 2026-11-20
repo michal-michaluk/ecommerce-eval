@@ -17,6 +17,9 @@ Two services are consumed and three roles act on it; the capability has no alter
 no manual fallback, no paper process and no second carrier integration behind it.
 <!-- evidence: docs/specs/fulfillment/spec.md:94, docs/specs/fulfillment/spec.md:143 -->
 
+Each entry below is a gap of this chapter's own numbering: the ids are local to this document, so another
+document's `GAP-2` is a different gap, and a reference that crosses documents names the document with the id.
+
 - **GAP-1 — criticality and business owner.** No source in the repository states how critical this capability is, which
   tier it belongs to, or who owns it when it degrades. The specification names the actors, the success measures and the
   service boundaries, and stops there.
@@ -56,7 +59,7 @@ no manual fallback, no paper process and no second carrier integration behind it
 | Warehouse system, wired but unreachable | the same three capabilities | the failure is surfaced, never smoothed: no fallback quantity and no cached stock served as fresh <!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/kernel/WarehouseStock.java:11-13 --> |
 | Carrier (registration) | the parcel and its carrier identity, and therefore hand-over; scanning starts the parcel, so the first scan is the step that fails | a scan is refused with `CARRIER_NOT_WIRED`, and readiness is later refused as `noParcel` <!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/parcel/ParcelService.java:95-98, services/fulfillment/src/main/java/shop/fulfillment/processing/ReadyForDeliveryDecision.java:83 --> |
 | Carrier (status) | the delivery legs and the message to the customer; the order keeps its state | legs are read by a poll every 60 seconds, so an outage delays states instead of failing a command <!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/parcel/CarrierPollingIntegration.java:20-26 --> |
-| Carrier (label) | printing the consignment note; picking and hand-over continue | the label is served from stored bytes and never re-registers the parcel <!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/parcel/ParcelService.java:83-89 --> |
+| Carrier (label) | printing the label; picking and hand-over continue | the label is served from stored bytes and never re-registers the parcel <!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/parcel/ParcelService.java:83-89 --> |
 | Identity provider | every capability of all three roles: no caller can authenticate | every endpoint answers `401` and only the health and info probes stay open <!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:122-128, services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:71-74 --> |
 | Database | every capability, read and write; nothing is durable | no read model and no processing state survives the outage <!-- evidence: services/fulfillment/src/main/resources/application.yml:3-8 --> |
 | Invoicing boundary | the Polish goods issue note only; picking, hand-over and tracking are unaffected | the goods issue note is outside the delivered system because no invoicing contract supplies its amounts <!-- evidence: docs/decisions/operator-input.md:10 --> |

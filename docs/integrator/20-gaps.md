@@ -1,6 +1,8 @@
 ## 20 Gaps
 
-Each entry names one thing this document asserts is absent, and what a client meets instead.
+Each entry names one thing this document asserts is absent, and what a client meets instead. The ids are
+local to this document: another document's `GAP-2` is a different gap, so a reference that crosses documents
+names the document with the id.
 
 1. **GAP-1 — the collections are unpaginated.** `GET /orders` and `GET /issues` take no parameter and answer one
    `{ "items": [ … ] }` envelope; there is no `page`, no `size`, no cursor, no `Link` header and no total. No volume or

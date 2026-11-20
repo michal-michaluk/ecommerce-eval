@@ -15,7 +15,7 @@ and back, which is a state of the processing, not an entity beside it.
 <!-- evidence: docs/specs/fulfillment/spec.md:85, services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingService.java:62-77, services/fulfillment/src/main/java/shop/fulfillment/processing/OrderFulfillmentProcess.java:145-155 -->
 
 The parcel is still an aggregate of its own, with its own repository, its own table and its own rules: a leg
-moves forward only, a waybill is only ever assigned, and a split registration is refused. Putting it in the
+moves forward only, a carrier identity is only ever assigned, and a split registration is refused. Putting it in the
 same process keeps one transaction across the scan and the registration; keeping it a separate aggregate
 keeps the carrier's record out of the order's snapshot.
 <!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/parcel/ParcelEditor.java:102-109, docs/specs/fulfillment/03-parcel.md:73, services/fulfillment/docs/phase-1-decisions.md:175 -->
@@ -103,10 +103,11 @@ so no integration exists. The edge that is missing from the figure by design is 
 
 Three recorded deviations matter to a reader of the code:
 
-- **Three read handlers rehydrate the aggregate instead of owning a table.** The pick list, the processing
-  snapshot and the workstation screen answer a question about the aggregate's current state, not about a
-  history, so a materialised table would duplicate the write model and be stale exactly where the contract
-  says it is read straight after a command. A fourth handler, the label, reads and writes one stored document.
+- **The read side is not uniform.** The pick list, the processing snapshot and the workstation screen answer
+  a question about the aggregate's current state rather than about a history, so a materialised table would
+  duplicate the write model and be stale exactly where the contract says the answer is read straight after a
+  command; the orders list, the issue dashboard and the customer state do own a table, and the label is a
+  stored document. §7 lists the four read surfaces and what each consumes, and does not repeat it here.
   <!-- evidence: services/fulfillment/docs/phase-1-decisions.md:143, services/fulfillment/src/main/java/shop/fulfillment/parcel/ParcelLabelProjection.java:49-60 -->
 - **The contract port lives in the kernel, not in the consumer's package.** Either write slice importing the
   other is forbidden in both directions, so the port sits in the one package both may read.

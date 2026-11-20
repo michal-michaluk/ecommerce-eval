@@ -57,7 +57,7 @@ The main stream carries an order from acceptance to a tracked delivery.
 | 6 | mark the order done, ready for delivery | `POST /processing/{processingId}/readiness` |
 | 7 | register the parcel and obtain the carrier's identifier | placed on the first scan, inside that scan command |
 | 8 | follow every delivery leg and notify the customer | the carrier status poll feeding `GET /processing/{processingId}/state` |
-| 11 | print the goods issue note and the consignment note | `GET /processing/{processingId}/documents/label` serves the carrier's label; the goods issue note is out of scope |
+| 11 | print the goods issue note and the label | `GET /processing/{processingId}/documents/label` serves the carrier's label; the goods issue note is out of scope |
 <!-- evidence: docs/specs/fulfillment/spec.md:99-106, docs/specs/fulfillment/spec.md:109, docs/specs/fulfillment/spec.md:85 -->
 
 The exception stream exists because warehouse reality can disagree with the record. It holds three capabilities, and
@@ -70,13 +70,13 @@ it is the only way back into the main stream once an order is held.
 | 12 | resume an order from hold once every issue is closed | `POST /processing/{processingId}/hold/resume` |
 <!-- evidence: docs/specs/fulfillment/spec.md:107-110, docs/specs/fulfillment/spec.md:82 -->
 
-Capability 11 is delivered in half: the carrier's consignment note and label are served, and the Polish goods issue
+Capability 11 is delivered in half: the carrier's label is served, and the Polish goods issue
 note is not part of the delivered system because no invoicing contract supplies its amounts or its receiver party.
 <!-- evidence: docs/decisions/operator-input.md:10, docs/specs/fulfillment/spec.md:89 -->
 
 ### Where fulfillment sits
 
-![Where fulfillment sits: the order arrives from checkout, is claimed and picked in the warehouse, is carried by the carrier, and the customer follows the delivery state.](generated/diagrams/business-1-where-fulfillment-sits.svg){#fig-business-1-where-fulfillment-sits}
+![Where fulfillment sits: the order arrives from checkout, is claimed and picked in the warehouse, is carried by the carrier, and the customer follows the delivery state.](generated/diagrams/business-1-where-fulfillment-sits.svg){#fig-business-1-where-fulfillment-sits width=100%}
 
 The figure is a Mermaid flow of the participants; it is not a BPMN-conformant model and carries no pools, gateways or
 message semantics. The four ports it draws are the only ways out of the service, and the two inbound reads are polls

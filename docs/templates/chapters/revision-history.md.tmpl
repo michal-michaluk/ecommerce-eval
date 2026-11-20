@@ -24,7 +24,7 @@ word order are untouched, and a subject that names a file names it as it was wri
 | {{ m.code(category) }} | {{ quality.counts[category] }} |
 {% endfor %}
 
-: Commits per category, after classification. {% raw %}{#tbl-history-categories}{% endraw %}
+: Commits per category, after classification.
 
 
 {{ (quality.non_conventional_share * 100) | round(1) }}% of the {{ quality.rows }} rows are not
@@ -44,4 +44,4 @@ table below is a reconstruction, not a record.
 | {{ row.date }} | {{ m.cell(row.scope) }} | {{ m.code(row.category) }} | {{ m.cell(row.change | subject) }} | {{ m.code(row.ref.sha) }}{% if row.ref.get("pull_request") %} #{{ row.ref.pull_request }}{% endif %} |
 {% endfor %}
 
-: The history of the repository, newest first, as the extractor classifies it. {% raw %}{#tbl-history}{% endraw %}
+: The history of the repository, newest first, as the extractor classifies it.

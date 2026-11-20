@@ -7,7 +7,7 @@ of steps and facts: they are not BPMN-conformant, carry no pools, gateways or me
 
 ### 4.1 Order acceptance and claiming
 
-![Order acceptance and claiming.](generated/diagrams/business-4-1-order-acceptance-and-claiming.svg){#fig-business-4-1-order-acceptance-and-claiming}
+![Order acceptance and claiming.](generated/diagrams/business-4-1-order-acceptance-and-claiming.svg){#fig-business-4-1-order-acceptance-and-claiming width=100%}
 
 | Step | Owner of the step | Named operation or fact |
 | --- | --- | --- |
@@ -20,7 +20,7 @@ of steps and facts: they are not BPMN-conformant, carry no pools, gateways or me
 
 ### 4.2 Picking and packing
 
-![Picking and packing.](generated/diagrams/business-4-2-picking-and-packing.svg){#fig-business-4-2-picking-and-packing}
+![Picking and packing.](generated/diagrams/business-4-2-picking-and-packing.svg){#fig-business-4-2-picking-and-packing width=100%}
 
 | Step | Owner of the step | Named operation or fact |
 | --- | --- | --- |
@@ -36,7 +36,7 @@ of steps and facts: they are not BPMN-conformant, carry no pools, gateways or me
 
 ### 4.3 Hand-over and delivery tracking
 
-![Hand-over and delivery tracking.](generated/diagrams/business-4-3-hand-over-and-delivery-tracking.svg){#fig-business-4-3-hand-over-and-delivery-tracking}
+![Hand-over and delivery tracking.](generated/diagrams/business-4-3-hand-over-and-delivery-tracking.svg){#fig-business-4-3-hand-over-and-delivery-tracking width=100%}
 
 | Step | Owner of the step | Named operation or fact |
 | --- | --- | --- |
@@ -56,7 +56,7 @@ parcel's leg state stays where it was.
 
 ### 4.4 Exception handling and resume
 
-![Exception handling and resume.](generated/diagrams/business-4-4-exception-handling-and-resume.svg){#fig-business-4-4-exception-handling-and-resume}
+![Exception handling and resume.](generated/diagrams/business-4-4-exception-handling-and-resume.svg){#fig-business-4-4-exception-handling-and-resume width=100%}
 
 | Step | Owner of the step | Named operation or fact |
 | --- | --- | --- |

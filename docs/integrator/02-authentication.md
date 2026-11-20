@@ -30,22 +30,16 @@ carry one of the four values therefore has no authority on any route of this ser
 
 ### 2.3 Which scope reaches which endpoint
 
-| Scope | Reaches | Matcher |
-| --- | --- | --- |
-| `shopping-service` | `POST /orders` | `AppConfiguration.java:75` |
-| `fulfillment-employee` | `GET /orders`, `POST …/assignment`, `POST …/positions/{productNumber}`, `POST …/packing`, `POST …/readiness`, `POST …/issues`, `GET …/pick-list`, `GET …/pick-workstation`, `GET …/documents/label`, `GET /processing/{processingId}`, `POST …/hold/resume` | `AppConfiguration.java:76` to `AppConfiguration.java:119` |
-| `fulfillment-resolver` | `GET /issues`, `GET /processing/{processingId}`, `POST …/hold/resume` | `AppConfiguration.java:109`, `AppConfiguration.java:95`, `AppConfiguration.java:119` |
-| `fulfillment-customer` | `GET /processing/{processingId}/state` | `AppConfiguration.java:117` |
-| any authenticated caller | `/actuator/**` other than health and info | `AppConfiguration.java:74` |
-| nobody | any route no rule names | `AppConfiguration.java:54` |
+§4 is the matrix: one row per request pattern, with the decision the chain makes for it and nothing else.
+Three facts about it matter to a client, and they are the only ones this chapter states.
 
-First match wins, and §4 lists the same decisions route by route. The employee scope does not reach the issue dashboard: an
-employee token on `GET /issues` answers `403`, which the contract asserts.
-<!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:54, services/fulfillment/e2e/fulfillment-api.hurl:345, services/fulfillment/docs/security-decisions.md:31 -->
-
-The resolver reaches the processing snapshot read but none of its commands except the resume, and the customer scope reaches
-neither: the state view is a separate resource precisely so that `assignee` and `issue` cannot arrive through it.
-<!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:119, services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateController.java:13, docs/specs/fulfillment/11-fulfillment-http-api.md:122 -->
+- First match wins, so the three public patterns are decided before any scope is consulted.
+- The employee scope does not reach the issue dashboard: an employee token on `GET /issues` answers `403`,
+  which the contract asserts.
+- The resolver reaches the processing snapshot read, the resume command and nothing else; the customer scope
+  reaches the state view alone, a separate resource precisely so that `assignee` and `issue` cannot arrive
+  through it.
+<!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:54, services/fulfillment/e2e/fulfillment-api.hurl:345, services/fulfillment/docs/security-decisions.md:31, services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:119, services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateController.java:13 -->
 
 ### 2.4 What `401` and `403` mean
 

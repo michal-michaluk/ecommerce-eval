@@ -13,7 +13,7 @@ service grants anything, three framework paths are public, and every route no ru
 | issue resolver | `fulfillment-resolver` | reads the open-issue dashboard, opens the processing state of a held order, lifts a hold |
 | customer surface | `fulfillment-customer` | reads one processing's customer state: the state, the parcel and its legs, never the assignee and never the issue |
 
-The endpoint each scope reaches is §2.3's table; the per-route matrix is §4.
+The per-route matrix is §4; §2.3 states what the chain checks and what it does not.
 <!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:75, services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:76, services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:109, services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:117, services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateController.java:11 -->
 
 The handover answers `201` with the processing it opened and `200` with `duplicate: true` when the same order is delivered
@@ -32,9 +32,9 @@ request and response bodies and the statuses it can answer; each chapter is rend
 dataset and carries its own evidence markers, so this guide states the rules and the chapters state the payloads.
 <!-- evidence: docs/integrator-guide.qmd:11, docs/integrator-guide.qmd:19, docs/integrator-guide.qmd:23, docs/integrator-guide.qmd:25, docs/integrator-guide.qmd:51 -->
 
-§19 covers the actuator endpoints, Appendix B holds the request and response transcripts, §20 lists the gaps and §21 the
-revision history.
-<!-- evidence: docs/integrator-guide.qmd:53, docs/integrator-guide.qmd:57, docs/integrator-guide.qmd:61, docs/integrator-guide.qmd:65 -->
+§19 covers the actuator endpoints, §20 lists the gaps, §21 the revision history, and Appendix B holds the
+request and response transcripts.
+<!-- evidence: docs/integrator-guide.qmd:53, docs/integrator/20-gaps.md:1, docs/integrator-guide.qmd:59, docs/integrator-guide.qmd:63 -->
 
 The proof of every status in this guide is one executable file: `services/fulfillment/e2e/fulfillment-api.hurl`, 48
 requests over the 14 route shapes of the service, run green against a booted service with a Keycloak realm and a

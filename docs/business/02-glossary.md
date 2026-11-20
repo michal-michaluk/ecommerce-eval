@@ -7,20 +7,22 @@ a rejected name is recorded where this documentation deliberately does not use t
 second employee is refused rather than queued.
 <!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/processing/AssignmentGuard.java:7-15, docs/specs/fulfillment/07-assignment-guard.md:11-13 -->
 
-**Carrier identity** — the identifier a carrier assigns to one parcel. Synonyms in the sources: *waybill*, *tracking
-number*, *numerNadania*, *shipment id*, and the board's *delivery number*; the identifier the specification calls
-*provider ID* is the same value. It is only ever taken from a carrier response, never invented and never derived from
-our own reference.
+**Carrier identity** — the identifier a carrier assigns to one parcel, and the term this documentation uses in prose.
+Synonyms in the sources: *waybill*, *tracking number*, *numerNadania*, *shipment id*, and the board's *delivery
+number*; the identifier the specification calls *provider ID* is the same value. It is only ever taken from a carrier
+response, never invented and never derived from our own reference.
 <!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/kernel/CarrierIdentity.java:3-9, docs/specs/fulfillment/spec.md:143 -->
 
 **Collection request** — the booking that asks a carrier to pick a parcel up, made as the second effect of marking an
-order ready for delivery. At most one is open per parcel; the operation is not idempotent, so a repeat books a second
-pickup.
-<!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/parcel/ParcelService.java:72-81, services/fulfillment/src/main/java/shop/fulfillment/kernel/CarrierPort.java:36-43 -->
+order ready for delivery. At most one is open per parcel: the service returns before booking unless the parcel is
+still registered with the carrier, so a repeated readiness books no second pickup.
+<!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/parcel/ParcelService.java:72-78, services/fulfillment/src/main/java/shop/fulfillment/parcel/ParcelEditor.java:86-94, services/fulfillment/src/main/java/shop/fulfillment/kernel/CarrierPort.java:36-43 -->
 
 **Consignment note** — the carrier's own printable document for one parcel, served as a PDF from data the carrier
-holds. Rejected name: *waybill* for the document — the waybill is the identifier, not the paper; rejected name:
-*goods issue note* — that is the Polish warehouse document, and it is a different document.
+holds. Synonym: *label*, the everyday name for the same document — this documentation writes *label* in prose and
+keeps the formal name here. Rejected name: *waybill* for the document — the carrier identity is the identifier, not
+the paper; rejected name: *goods issue note* — that is the Polish warehouse document, and it is a different
+document.
 <!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/kernel/CarrierPort.java:28-34, services/fulfillment/src/main/java/shop/fulfillment/parcel/ParcelLabelController.java:24 -->
 
 **Customer state** — the customer-facing view of one processing: the order lines, where the parcel goes, the state in
@@ -77,8 +79,9 @@ on hold, which parcel carries it, which issues it accounts for, and the state it
 It addresses claims, pick lists, parcels and the customer view; the order hash stays the idempotency key.
 <!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/kernel/OrderProcessingId.java:5-11 -->
 
-**Parcel** — one consignment of one order: our reference, the carrier's identity, the sequence and service printed on
-the label, the legs reached and every carrier payload we could not map. One parcel exists per processing.
+**Parcel** — the record of one order's goods travelling to the customer as one unit: our reference, the carrier's
+identity, the sequence and service printed on the label, the legs reached and every carrier payload we could not map.
+One parcel exists per processing.
 <!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/parcel/Parcel.java:16-36, docs/decisions/operator-input.md:14 -->
 
 **Parcel reference** — our own correlation key of one parcel, at most 50 characters, addressed by registration, label

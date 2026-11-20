@@ -8,7 +8,7 @@
 | {{ m.code(table.name) }} | {{ table.columns | length }} | {{ m.code(table.changeset) }} |
 {% endfor %}
 
-: Tables declared by the schema changelog. {% raw %}{#tbl-schema}{% endraw %}
+: Tables declared by the schema changelog.
 
 
 | Table | Column | Type | Constraints |
@@ -19,4 +19,4 @@
 {% endfor -%}
 {% endfor %}
 
-: Column definitions of every table, in declaration order. {% raw %}{#tbl-columns}{% endraw %}
+: Column definitions of every table, in declaration order.

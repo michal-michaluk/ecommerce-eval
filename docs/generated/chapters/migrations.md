@@ -26,4 +26,4 @@
 | `0014-orders-list-restored-state` | `michal.michaluk` | — |
 | `0015-orders-list-progress` | `michal.michaluk` | — |
 
-: Change sets declared in the Liquibase changelog, in declaration order. {#tbl-migrations}
+: Change sets declared in the Liquibase changelog, in declaration order.

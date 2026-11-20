@@ -23,4 +23,4 @@
 | `GET` | `/processing/{processingId}` | `hasAnyAuthority(SCOPE_fulfillment-employee, SCOPE_fulfillment-resolver)` |
 | any | (any other request) | `denyAll` |
 
-: Security decision per request pattern. `any` is a rule that names no method and therefore covers every method the pattern matches. {#tbl-security-policy}
+: Security decision per request pattern. `any` is a rule that names no method and therefore covers every method the pattern matches.

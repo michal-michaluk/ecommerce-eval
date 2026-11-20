@@ -123,6 +123,17 @@ def mermaid_bundle() -> Path:
     return bundle
 
 
+PLACEHOLDER = "Syntax error in text"
+
+
+def assert_rendered(name: str, svg: str) -> None:
+    """A Mermaid parser failure still produces an <svg>; refuse to write that placeholder."""
+    if PLACEHOLDER in svg:
+        raise SystemExit(f"{name}: Mermaid could not parse the source — {PLACEHOLDER}")
+    if 'class="node' not in svg:
+        raise SystemExit(f"{name}: rendered SVG carries no node, so the diagram is empty")
+
+
 def sources() -> list[Path]:
     return sorted(SOURCE_DIR.glob("*.mmd"))
 
@@ -232,7 +243,9 @@ def run_write() -> int:
         target = output_path(source.stem)
         if target.resolve().parent != OUTPUT_DIR.resolve():
             raise SystemExit(f"refusing to write outside {OUTPUT_DIR}: {target}")
-        target.write_text(render(source, bundle), encoding="utf-8")
+        svg = render(source, bundle)
+        assert_rendered(source.stem, svg)
+        target.write_text(svg, encoding="utf-8")
         print(f"wrote {target.relative_to(REPO).as_posix()}")
     return 0
 

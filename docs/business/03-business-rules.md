@@ -25,7 +25,48 @@ refused instead of silently swallowing an order nobody will ever fulfil.
   written once per accepted order; sequence `order_processing_id_seq` mints the identity.
   <!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/processing/OrderIntakeService.java:26-30, services/fulfillment/src/main/resources/db/changelog/0003-order-processing.yaml:37 -->
 
-### 3.2 One employee holds one order
+### 3.2 An accepted order is never edited here (element 01 RULE-2)
+
+Nothing in this context edits an order. The handover is the only operation that receives one, and it turns the
+document into one processing; every later command addresses the processing instead, so an amended commitment
+cannot be produced here — a changed commitment is a different order, delivered as a second handover.
+<!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/kernel/Order.java:18-36, services/fulfillment/src/main/java/shop/fulfillment/processing/OrderFulfillmentProcess.java:44, services/fulfillment/src/main/java/shop/fulfillment/processing/OrderIntakeService.java:38-43 -->
+
+- **Inputs** — the handed-over document: its hash, placing time, lines, delivery, payment and invoicing, and the
+  content digest computed from them.
+  <!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/kernel/Order.java:91-94 -->
+- **Output** — no edit at all. The processing holds the document once and never writes it back; a second delivery
+  with the same content is answered with the processing that already exists, and the same hash over different
+  content is refused.
+  <!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/kernel/Order.java:29-36, services/fulfillment/src/main/java/shop/fulfillment/processing/OrderIntakeService.java:45-51 -->
+- **Configuration** — no configuration. No key enables or forbids an amendment, because no path offers one.
+  <!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/processing/OrderFulfillmentProcess.java:44 -->
+- **Internal data fetched** — table `order_processing` through `OrderProcessingRepository`, whose row holds the
+  aggregate's own snapshot; the order travels inside that snapshot and a later command rewrites the row without
+  touching it.
+  <!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/processing/DocumentOrderProcessingRepository.java:27-41 -->
+
+### 3.3 The delivery and payment methods are opaque codes (element 01 RULE-5)
+
+The order says how the parcel must travel and how the customer paid, and both arrive as strings this context
+never enumerates. There is no list of methods to validate against, no mapping table and no default: the code
+travels to the carrier as the parcel's service code and to the customer as the delivery method he bought, and
+the only test applied here is that the code is present and not blank.
+<!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/kernel/Payment.java:5-16, services/fulfillment/src/main/java/shop/fulfillment/kernel/Delivery.java:8-13, services/fulfillment/src/main/java/shop/fulfillment/parcel/CarrierRegistration.java:59 -->
+
+- **Inputs** — `delivery.methodCode` and `payment.methodCode`, two non-blank strings.
+  <!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/kernel/Payment.java:12-16, services/fulfillment/src/main/java/shop/fulfillment/kernel/Delivery.java:10-13 -->
+- **Output** — the same two strings, unchanged: the delivery code becomes the carrier request's service code and
+  the delivery method in the customer's view, and the payment code stays part of the order content nothing here
+  interprets.
+  <!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/parcel/CarrierRegistration.java:59, services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerState.java:56-60 -->
+- **Configuration** — no configuration: no key lists the allowed methods and no key maps one code to another.
+  <!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/kernel/Order.java:26-28 -->
+- **Internal data fetched** — table `order_processing`: both codes are part of the stored order content and of its
+  content digest, so a different code is a different order.
+  <!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/kernel/Order.java:105-108 -->
+
+### 3.4 One employee holds one order
 
 A claim on an order is granted, answered as a no-op, or refused with a reason; the rows are evaluated in order and the
 first match wins. The decision owns no state — it computes the verdict and the order applies it.
@@ -55,7 +96,7 @@ The six rows, in evaluation order:
   `ProcessingReservationRepository`.
   <!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/processing/AssignmentService.java:53-68 -->
 
-### 3.3 A claim reserves the stock; readiness books it out
+### 3.5 A claim reserves the stock; readiness books it out
 
 The claim is the moment units are allocated at the warehouse: one allocation per position product, taken inside the
 claim's own transaction. If that transaction ends any way but committed, every allocation it took is released, so no
@@ -76,20 +117,34 @@ path of its own — its only use is this compensation.
   warehouse and are addressed only by the reservation id we mint.
   <!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/processing/WarehouseGoodsIssueIntegration.java:14-18, services/fulfillment/src/main/java/shop/fulfillment/kernel/ReservationId.java:3-8 -->
 
-### 3.4 The pick list is composed from positions and the shelves
+### 3.6 The pick list is composed from positions and the shelves
 
 The list is generated per order, on request, from the positions still to be walked and one stock reading per product.
-It holds one line per pending position and one stop per place actually walked; the quantities taken plus the shortfall
+It holds one entry per pending position and one stop per place actually walked; the quantities taken plus the shortfall
 always equal the quantity ordered. The walk order is a documented default, not a route: nothing blocks a scan out of
 sequence.
 <!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/processing/PickListCalculation.java:16-31, docs/specs/fulfillment/10-pick-list-calculation.md:150-172 -->
 
+One list belongs to one processing and is never shared: the calculation takes the positions of one order and
+answers one list, and no route walks two orders together, so two employees cannot be handed the same walk.
+<!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/processing/PickListProjection.java:60-71, services/fulfillment/src/main/java/shop/fulfillment/processing/PickListCalculation.java:16-31 -->
+
+A place is walked only when it has free units. The stop carries both numbers the warehouse reported — free and
+already allocated — and only the free one decides whether the employee is sent there, so allocated units never
+put a shelf on the walk.
+<!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/processing/PickListCalculation.java:117-126, services/fulfillment/src/main/java/shop/fulfillment/processing/PickListCalculation.java:128-136 -->
+
+A list does not change while it is being walked. It is computed when it is asked for and stored nowhere, and no
+listener reacts to a stock change, so the list an employee holds stays as printed and a later reading produces
+the next list, never a rewritten one (system `GAP-10`, where the absence is recorded).
+<!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/processing/PickListProjection.java:60-71, services/fulfillment/src/main/java/shop/fulfillment/kernel/DomainEvent.java:68 -->
+
 - **Inputs** — the order's positions with their state; one reading of free and allocated units per location for every
   product still pending; the moment the list is generated.
   <!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/processing/PickListProjection.java:73-83, services/fulfillment/src/main/java/shop/fulfillment/kernel/StockAtLocation.java:3-7 -->
-- **Output** — one list: lines in pending state, stops numbered from 1 across the whole walk (ordered by location code,
-  then product number), and one shortfall per position the shelves cannot cover. A failed stock reading yields no list
-  at all, never a partial one.
+- **Output** — one list: one entry per position in pending state, stops numbered from 1 across the whole walk (ordered
+  by location code, then product number), and one shortfall per position the shelves cannot cover. A failed stock
+  reading yields no list at all, never a partial one.
   <!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/processing/PickListCalculation.java:103-181, services/fulfillment/src/main/java/shop/fulfillment/processing/PickListProjection.java:105-110 -->
 - **Configuration** — `fulfillment.picklist.order` (default `location-code`, alternative `scarcity-first`) and
   `fulfillment.picklist.split` (default `multi-location`, alternative `single-location`); an unknown value falls back to
@@ -100,7 +155,7 @@ sequence.
   with lives in table `warehouse_stock_cursor` through `StockCursorRepository`.
   <!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/processing/PickListProjection.java:60-71, services/fulfillment/src/main/java/shop/fulfillment/kernel/WarehouseStock.java:20-26, services/fulfillment/src/main/resources/db/changelog/0005-warehouse-state.yaml:42 -->
 
-### 3.5 Only the holder works the order, and a position never goes backwards
+### 3.7 Only the holder works the order, and a position never goes backwards
 
 Scanning and packing are refused unless the caller holds the order and the order is not held; packing additionally
 requires the position to have been scanned. A repeated scan or a repeated pack changes nothing, so retried traffic is
@@ -119,7 +174,7 @@ not an error.
   (`orders_list`) is refreshed from the same facts, not read by the rule.
   <!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingService.java:57-63, services/fulfillment/src/main/resources/db/changelog/0004-orders-list.yaml:11 -->
 
-### 3.6 Ready for delivery: two effects, one command, seven rows
+### 3.8 Ready for delivery: three effects, one command, seven rows
 
 Marking an order ready is decided by one table, evaluated in a fixed order, and a grant produces three effects in one
 command: the local mark, the carrier's collection booking and the goods issue at the warehouse. The order of evaluation
@@ -154,7 +209,7 @@ The rows, in the order they are evaluated:
   `ProcessingReservationRepository` for the goods issue.
   <!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingService.java:92-99, services/fulfillment/src/main/java/shop/fulfillment/parcel/ParcelService.java:54-58 -->
 
-### 3.7 A parcel exists only after the carrier named it
+### 3.9 A parcel exists only after the carrier named it
 
 The parcel record is created on the first scan of its order, and only from a carrier's answer: our reference is minted
 by us, the carrier identity comes back from registration, and nothing physical is recorded before that answer arrives.
@@ -177,7 +232,7 @@ One order carries exactly one parcel, and a repeated registration answers the pa
   `OrderProcessingRepository`.
   <!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/parcel/ParcelService.java:83-89, services/fulfillment/src/main/resources/db/changelog/0006-parcel.yaml:52-58 -->
 
-### 3.8 Delivery legs move forward only, and the last one closes the order
+### 3.10 Delivery legs move forward only, and the last one closes the order
 
 A carrier observation is applied only forward: a leg already recorded changes nothing, a leg that would move the parcel
 backwards is not applied, and a status we cannot map moves nothing while keeping the carrier's raw payload for later
@@ -198,7 +253,7 @@ correction. Only the last leg moves the order itself.
   read models `customer_processing_state` and `customer_delivery_leg` hold the timeline the customer sees.
   <!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/parcel/CarrierPollingIntegration.java:51-61, services/fulfillment/src/main/resources/db/changelog/0007-customer-state.yaml:11 -->
 
-### 3.9 An issue is written once, and only one fact ever moves on it
+### 3.11 An issue is written once, and only one fact ever moves on it
 
 An issue records that the warehouse system and the shelf disagree: its kind, the product, who reported it and when. The
 record carries no state of its own, and the one fact that ever changes is the closing timestamp, written only by the
@@ -219,7 +274,28 @@ resume command. The read-only dashboard neither closes nor edits anything.
   `IssueDashboardProjection`.
   <!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/processing/OrderProcessing.java:23-33, services/fulfillment/src/main/resources/db/changelog/0011-issue-dashboard.yaml:10 -->
 
-### 3.10 One issue holds the whole order; one resume lifts it
+### 3.12 Only the employee holding the order reports an issue (element 04 RULE-2)
+
+An issue is written by the employee who holds the order and by nobody else: before the record is created the
+aggregate compares the reporter with the current holder, so a report from another employee is refused rather
+than attributed. No warehouse signal and no other actor creates an issue — the rule is about who may write the
+fact, which is why the record carries the reporter.
+<!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/processing/OrderFulfillmentProcess.java:251-258, services/fulfillment/src/main/java/shop/fulfillment/kernel/FulfillmentException.java:42, services/fulfillment/src/main/java/shop/fulfillment/FulfillmentErrorAdvice.java:67 -->
+
+- **Inputs** — the processing, its holder, and the caller's own subject, which the service passes on as the
+  reporter.
+  <!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingService.java:111-116 -->
+- **Output** — one issue whose reporter is the holder, plus the hold the issue causes; a caller who is not the
+  holder is answered `409 ACTOR_NOT_ALLOWED` and nothing is written.
+  <!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/FulfillmentErrorAdvice.java:67, services/fulfillment/src/main/java/shop/fulfillment/processing/OrderFulfillmentProcess.java:255-258 -->
+- **Configuration** — no configuration: the check reads the holder of the order, not a role, a group or a
+  property.
+  <!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/processing/OrderFulfillmentProcess.java:251-254 -->
+- **Internal data fetched** — table `order_processing` through `OrderProcessingRepository`: the holder is part of
+  that row, and the new issue joins the issues the row already carries.
+  <!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/processing/OrderProcessing.java:23-33 -->
+
+### 3.13 One issue holds the whole order; one resume lifts it
 
 Reporting an issue on an order that is being picked or packed puts the whole order on hold, not the position. While an
 order is held, scanning and packing are refused and readiness is refused. The only exit is an explicit resume that
@@ -251,7 +327,7 @@ The seven rows:
   the issues; the held marker and the state held from are also written to table `orders_list` for the employee's list.
   <!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingService.java:127-133, services/fulfillment/src/main/resources/db/changelog/0014-orders-list-restored-state.yaml:12 -->
 
-### 3.11 No money is computed, compared or stored
+### 3.14 No money is computed, compared or stored
 
 Money is outside this context. The order carries no prices, no goods issue note amounts are produced here, and the
 carrier request passes a cash-on-delivery or declared-value figure through as an opaque value it never reads. The

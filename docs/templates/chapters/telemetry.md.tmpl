@@ -23,7 +23,7 @@ env and prometheus fall through to the authenticated-request rule, so reading th
 | {{ m.code(endpoint) }} | yes | {{ ("enabled = " ~ m.code(option.enabled | string | lower)) if option else "—" }} |
 {% endfor %}
 
-: Actuator endpoints on the web exposure list. {% raw %}{#tbl-telemetry-actuator}{% endraw %}
+: Actuator endpoints on the web exposure list.
 
 
 
@@ -51,7 +51,7 @@ protocol, the exporters and the sampler come from environment variables, and onl
 | {{ m.code(entry.name) }} | {{ m.code(entry.value) }} | {{ m.code(entry.overlay) }} overlay |
 {% endfor %}
 
-: Telemetry settings the deployment declares. {% raw %}{#tbl-telemetry-agent}{% endraw %}
+: Telemetry settings the deployment declares.
 {{ m.evidence(agent.environment | map(attribute="evidence") | sum(start=[]) | unique | list) }}
 
 Traces and logs are exported over gRPC to the collector endpoint and sampled at a ratio of one; the
@@ -71,7 +71,7 @@ its pipeline from a ConfigMap and receiving OTLP over gRPC and HTTP on the ports
 | {{ m.code(exporter.name) }} | {{ m.code(exporter.path) }} | {{ exporter.max_megabytes }} MB, {{ exporter.max_days }} days |
 {% endfor %}
 
-: Exporters of the collector pipeline. {% raw %}{#tbl-telemetry-collector}{% endraw %}
+: Exporters of the collector pipeline.
 
 
 Each pipeline is a straight line from the OTLP receiver to one file: traces to the traces file, logs to
@@ -94,7 +94,7 @@ service itself is listed, so the root level of the framework applies to it.
 | {{ m.code(entry.logger) }} | {{ m.code(entry.level) }} |
 {% endfor %}
 
-: Log levels declared by the application configuration. {% raw %}{#tbl-telemetry-log-levels}{% endraw %}
+: Log levels declared by the application configuration.
 
 
 

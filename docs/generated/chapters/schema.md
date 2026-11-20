@@ -16,7 +16,8 @@
 | `issue_dashboard` | 8 | `0011-issue-dashboard` |
 | `issue_dashboard_order` | 5 | `0011-issue-dashboard-order` |
 
-: Tables declared by the schema changelog. {#tbl-schema}
+: Tables declared by the schema changelog.
+
 
 | Table | Column | Type | Constraints |
 |---|---|---|---|
@@ -92,4 +93,4 @@
 | `issue_dashboard_order` | `assignee` | `varchar(64)` | — |
 | `issue_dashboard_order` | `lines` | `jsonb` | — |
 
-: Column definitions of every table, in declaration order. {#tbl-columns}
+: Column definitions of every table, in declaration order.

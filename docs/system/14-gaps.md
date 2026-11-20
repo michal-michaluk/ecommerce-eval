@@ -2,7 +2,9 @@
 
 <!-- evidence: operator-input#8 -->
 
-Numbered gaps for this document. Each names what is absent and what a reader would need; none is advice.
+Numbered gaps for this document. The ids are local to this document — another document's `GAP-2` is a
+different gap, so a reference that crosses documents names the document with the id. Each entry names what is
+absent and what a reader would need; none is advice.
 
 | Gap | Absent | Consequence for a reader |
 | --- | --- | --- |

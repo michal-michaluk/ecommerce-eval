@@ -18,7 +18,8 @@ env and prometheus fall through to the authenticated-request rule, so reading th
 | `env` | yes | enabled = `true` |
 | `prometheus` | yes | — |
 
-: Actuator endpoints on the web exposure list. {#tbl-telemetry-actuator}
+: Actuator endpoints on the web exposure list.
+
 
 
 <!-- evidence: services/fulfillment/src/main/resources/application.yml:54 -->
@@ -51,7 +52,8 @@ protocol, the exporters and the sampler come from environment variables, and onl
 | `OTEL_TRACES_SAMPLER` | `parentbased_traceidratio` | `k3d` overlay |
 | `OTEL_TRACES_SAMPLER_ARG` | `1.0` | `k3d` overlay |
 
-: Telemetry settings the deployment declares. {#tbl-telemetry-agent}<!-- evidence: services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:32, services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:34, services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:36, services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:38, services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:40, services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:42, services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:44, services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:46, services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:48 -->
+: Telemetry settings the deployment declares.
+<!-- evidence: services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:32, services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:34, services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:36, services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:38, services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:40, services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:42, services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:44, services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:46, services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:48 -->
 
 Traces and logs are exported over gRPC to the collector endpoint and sampled at a ratio of one; the
 metrics exporter is set to `none`, which is why the prometheus endpoint above, and not the agent, is
@@ -69,7 +71,8 @@ its pipeline from a ConfigMap and receiving OTLP over gRPC and HTTP on the ports
 | `file/traces` | `/var/lib/otel/traces.jsonl` | 50 MB, 7 days |
 | `file/logs` | `/var/lib/otel/logs.jsonl` | 50 MB, 7 days |
 
-: Exporters of the collector pipeline. {#tbl-telemetry-collector}
+: Exporters of the collector pipeline.
+
 
 Each pipeline is a straight line from the OTLP receiver to one file: traces to the traces file, logs to
 the logs file. Nothing samples on the collector side and nothing forwards the files anywhere — they are
@@ -103,7 +106,8 @@ service itself is listed, so the root level of the framework applies to it.
 | `org.apache.kafka.common.utils.AppInfoParser` | `INFO` |
 | `org.apache.kafka.streams.StreamsConfig` | `INFO` |
 
-: Log levels declared by the application configuration. {#tbl-telemetry-log-levels}
+: Log levels declared by the application configuration.
+
 
 
 The image sets `SPRING_OUTPUT_ANSI_ENABLED` to `never`, so the container log is plain text, and the

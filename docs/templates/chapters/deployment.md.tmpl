@@ -21,7 +21,7 @@ recommendation.
 | Image pull policy | {{ m.code(container.image_pull_policy) }} |
 | JVM flags | {{ m.codes(image.jvm_flags) }} |
 
-: Image, port and service of the deployment. {% raw %}{#tbl-deployment-image}{% endraw %}
+: Image, port and service of the deployment.
 
 
 The image carries the OpenTelemetry agent and a Java runtime. The container filesystem is read-only,
@@ -37,7 +37,7 @@ both overlays repeat them.
 | {{ m.code(resource) }} | {{ m.code(container.resources.requests[resource]) }} | {{ m.code(m.cell(container.resources.limits.get(resource))) }} |
 {% endfor %}
 
-: Resource requests and limits of the base container. {% raw %}{#tbl-deployment-resources}{% endraw %}
+: Resource requests and limits of the base container.
 
 
 The `dev` overlay asks for less than the base and caps the container lower as well; the `k3d` overlay
@@ -62,7 +62,7 @@ from one Secret, two are read from the ConfigMap, and the profile is written as 
 {% endif -%}
 {% endfor %}
 
-: Environment variables of the container, with the object each one is read from. {% raw %}{#tbl-deployment-environment}{% endraw %}
+: Environment variables of the container, with the object each one is read from.
 
 
 The base ConfigMap declares the keys {{ m.codes(base.configmap["keys"]) }}; the container additionally
@@ -88,7 +88,7 @@ records what follows from that.
 {% endif -%}
 {% endfor %}
 
-: Probes that keep the container alive and route traffic to it. {% raw %}{#tbl-deployment-probes}{% endraw %}
+: Probes that keep the container alive and route traffic to it.
 
 
 Neither base probe declares a failure threshold, so the platform default applies: three consecutive
@@ -106,7 +106,7 @@ gives a cold start ten minutes before the liveness probe takes over.
 | {{ m.code(profile.name) }} | {{ ("the " ~ m.code(profile.overlay) ~ " overlay") if profile.overlay else "the base manifest, as a literal" }} |
 {% endfor %}
 
-: Spring profiles the manifests activate. {% raw %}{#tbl-deployment-profiles}{% endraw %}
+: Spring profiles the manifests activate.
 
 
 {{ m.evidence(deployment.overlays | map(attribute="evidence") | sum(start=[]) | unique | list) }}
@@ -118,7 +118,7 @@ gives a cold start ten minutes before the liveness probe takes over.
 | {{ m.code(overlay.name) }} | {{ m.code(overlay.namespace) }} | {{ m.code(overlay.name_prefix) if overlay.name_prefix else "none" }} | {{ m.code(patch.image_pull_policy) if patch.image_pull_policy else "—" }} | {{ m.resources(patch.resources, "requests") }} | {{ m.resources(patch.resources, "limits") }} | {{ m.codes(overlay.configmap_literals) }} | {{ m.codes(overlay.secret_keys) }} |
 {% endfor %}
 
-: Overlays, the namespace they deploy into and what each one patches. {% raw %}{#tbl-deployment-overlays}{% endraw %}
+: Overlays, the namespace they deploy into and what each one patches.
 
 
 The `dev` overlay deploys into its own namespace under a `dev-` name prefix and points the datasource
@@ -136,7 +136,7 @@ issuer address.
 | {{ m.code(entry.name) }} | {{ entry.source.kind }} | {{ m.code(entry.source.value) if entry.source.value else "—" }} |
 {% endfor %}
 
-: Environment variables the {{ m.code(overlay.name) }} overlay adds. {% raw %}{#tbl-deployment-overlay-environment}{% endraw %}
+: Environment variables the {{ m.code(overlay.name) }} overlay adds.
 
 
 {% endif -%}
@@ -162,7 +162,8 @@ issuer address.
 {% endfor -%}
 {% endfor %}
 
-: Manifests behind the deployment view. {% raw %}{#tbl-deployment-manifests}{% endraw %}
+: Manifests behind the deployment view.
+
 
 ### {{ number }}.5 Infrastructure the service depends on
 
@@ -179,4 +180,4 @@ whose dependencies are assumed rather than deployed.
 | {{ m.code(entry.file) }} | {% for object in entry.objects %}{{ m.code(object.kind ~ " " ~ object.name) }}{% if not loop.last %}, {% endif %}{% endfor %} |
 {% endfor %}
 
-: Infrastructure manifests outside the application kustomization. {% raw %}{#tbl-deployment-infrastructure}{% endraw %}
+: Infrastructure manifests outside the application kustomization.

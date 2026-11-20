@@ -4,7 +4,7 @@
 <!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/kernel/DomainEvent.java:98 -->
 
 Every event is a nested record of one sealed interface (`kernel/DomainEvent.java`), named in the past
-tense and carrying the identity of the thing that changed. There are thirteen.
+tense and carrying the identity of the thing that changed. There are fourteen.
 
 | Event | Raised by | Consumed by | Crosses a boundary |
 | --- | --- | --- | --- |
@@ -12,7 +12,7 @@ tense and carrying the identity of the thing that changed. There are thirteen.
 | `EmployeeAssigned` (`:43`) | granted claim | orders list, dashboard, customer state | no |
 | `PositionPicked` (`:47`) | scan confirmation | orders list, customer state | no |
 | `PositionPacked` (`:51`) | packing | orders list, customer state | no |
-| `ReadyForDeliveryConfirmed` (`:55`) | readiness, after both effects | orders list, customer state | no |
+| `ReadyForDeliveryConfirmed` (`:55`) | readiness, after all three effects | orders list, customer state | no |
 | `OrderDelivered` (`:59`) | last delivery leg | orders list, customer state | no |
 | `StockChanged` (`:68`) | stock poller | nothing yet — no projection subscribes | no |
 | `IssueReported` (`:77`) | issue report | issue dashboard | no |

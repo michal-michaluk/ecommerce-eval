@@ -25,16 +25,28 @@ path that relies on this, and the phase register records it as a deliberate, nar
 (`services/fulfillment/docs/phase-1-decisions.md`, P4/F6). Nothing in the service uses an outbox, and no
 event leaves the process.
 
-Read models are separate rows written by separate handlers, and they never read the write model:
+### 7.1 The four read surfaces
 
-| Read model | Endpoint | Consumes |
+Every read of this service lands on one of four surfaces, and this list is the only place they are
+enumerated:
+
+| Surface | Endpoint | What it is |
 | --- | --- | --- |
-| orders list (`orders/OrdersListProjection.java:49-97`) | `GET /orders` | started, assigned, picked, packed, ready, delivered, hold, resume |
-| issue dashboard (`issues/IssueDashboardProjection.java:63-83`) | `GET /issues` | started, assigned, issue reported, hold, resume |
-| customer state (`customer/CustomerStateProjection.java:61-122`) | `GET /processing/{id}/state` | the same family plus delivery-number, collection and delivery-leg facts |
-| pick workstation (`processing/PickWorkstation.java`) | `GET /processing/{id}/pick-workstation` | derived on read from the process snapshot |
+| orders list | `GET /orders` | a read model with its own table, written by a projection (`orders/OrdersListProjection.java:49-97`) |
+| issue dashboard | `GET /issues` | a read model with its own table, written by a projection (`issues/IssueDashboardProjection.java:63-83`) |
+| customer state | `GET /processing/{processingId}/state` | two read-model tables, written by a projection (`customer/CustomerStateProjection.java:61-122`) |
+| pick workstation | `GET /processing/{processingId}/pick-workstation` | derived on read from the process snapshot, with no table of its own (`processing/PickWorkstation.java`) |
+
+Two answers sit beside that list. The label is a document route, not a read model: the carrier prints
+the document once, the service stores the bytes, and every reprint serves them back
+(`parcel/ParcelLabelProjection.java:49-60`). The pick list is a calculation over the aggregate and one
+stock reading, made per request and never stored (`processing/PickListProjection.java:60-71`).
+
+Which events each read model consumes, and which listener of §9 feeds it, is §9's table — the read side
+does not repeat that wiring.
 
 Each projection handler follows the same four steps — find-or-create the row, record the fact the event
 carries, recompute the row's state from its own facts, save — so replaying an event cannot double-count a
 fact and the order of arrival cannot change the outcome. A projection can be rebuilt by replaying the
 events it consumes; nothing in the repository schedules such a rebuild, which is `GAP-9`.
+<!-- evidence: services/fulfillment/src/main/java/shop/fulfillment/orders/OrdersListProjection.java:41-44, services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java:109-124 -->
