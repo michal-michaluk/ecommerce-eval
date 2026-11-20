@@ -92,7 +92,7 @@ fulfillment service's outbound edges are the token issuer it validates against, 
 holds its schema, the warehouse it reads stock from and the carrier it registers parcels with. The catalog
 service, the broker and the shopping consumer belong to the other bounded context: fulfillment has no edge to
 any of them.
-<!-- evidence: docs/diagrams/context-services.mmd:21-47, services/fulfillment/src/main/resources/application.yml:17-21, docs/specs/fulfillment/spec.md:83 -->
+<!-- evidence: docs/diagrams/context-services.mmd:20-46, services/fulfillment/src/main/resources/application.yml:17-21, docs/specs/fulfillment/spec.md:83 -->
 
 The CRM node is drawn dashed on purpose: it is the customer master, and the service holds no customer identity,
 so no integration exists. The edge that is missing from the figure by design is the one from the broker:

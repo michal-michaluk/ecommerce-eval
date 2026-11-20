@@ -1,11 +1,11 @@
 {
-  "commits_read": 23,
+  "commits_read": 24,
   "quality": {
-    "conventional": 23,
+    "conventional": 24,
     "conventional_share": 1.0,
     "counts": {
       "chore": 6,
-      "docs": 8,
+      "docs": 9,
       "feat": 7,
       "fix": 1,
       "refactor": 1
@@ -16,10 +16,22 @@
     "other": 0,
     "other_share": 0.0,
     "path_classified": 0,
-    "rows": 23
+    "rows": 24
   },
   "repository": "ecommerce",
   "rows": [
+    {
+      "category": "docs",
+      "change": "fix review findings and make broken figures impossible to ship",
+      "date": "2026-11-20",
+      "evidence": [
+        "git:674d8379e90225c94bd2ccbc9ed10c93caeeb091"
+      ],
+      "ref": {
+        "sha": "674d837"
+      },
+      "scope": "."
+    },
     {
       "category": "docs",
       "change": "fulfillment docset — system, integrator and business guide",
