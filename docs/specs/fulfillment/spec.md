@@ -197,9 +197,9 @@ One-liners, per type, are kept with the associated `Q`/`R` they depend on:
 | 2 Goals, actors, capabilities, properties | accepted |
 | 3 Current code exploration | accepted — F3-1…F3-6, R3, Q5 |
 | 4 Key elements | accepted — 18 in scope, 6 deferred (element 11 `DocumentAmounts` removed by D5) |
-| 5 Element specification | in progress — 01–18 written; 05 and 06 re-checked against the KB (per-element `Q`/`R` ids per D6, anchors re-verified); consistency review pending |
-| 6 Consistency review | pending |
-| 7 Close-out & booking | pending |
+| 5 Element specification | accepted — 01–18 written; 05 and 06 re-checked against the KB (per-element `Q`/`R` ids per D6, anchors re-verified) |
+| 6 Consistency review | done — the `spec-consistency` pass (`2669c8a`) reconciled 02/07/09/10/11/12/16/17/18 with the executable contract, registered `D16`, and left `check-ids.py` green (18 files, 87 ids, 0 violations) |
+| 7 Close-out & booking | implementation complete (`services/fulfillment`, `docs/prove-of-done.md` 17/17); booking of the result on the tickets is the remaining operator step |
 
 ---
 
@@ -547,7 +547,12 @@ Executed row by row by the `prove-dod` node; a row that is not executed is a fai
 
 | Node | Issue | Fix |
 | --- | --- | --- |
-| — | none yet — the plan has not been executed | — |
+| scaffold-service | blueprint `ArchitectureDescription` cannot forbid a cross-slice edge: `modelDependencies` allow-lists every model class globally and `modelIsolation` is access-based, so a record component slips through both | three `dependOnClassesThat` rules added to `ArchitectureTest`; proven by injection (16/16 green, red with a `processing` record consumed by `parcel`) |
+| phase 1 | repeated pack answered `409` where the contract says `200`; `release` after `issue` would delete a consumed allocation; no `RestClient.Builder` bean means a configured warehouse would not boot | aggregate treats `PACKED` as a replay; `WAREHOUSE_ALLOCATION_CONSUMED` refuses before any DELETE; `ObjectProvider<RestClient.Builder>` |
+| phase 3 | `readyForDelivery → delivered` was not wired at all; readiness rendered the snapshot before the collection request; two unmapped carrier statuses collapsed into one slot | `DeliveryStateListener` + `findByParcelId` + migration `0008`; snapshot rendered last; payloads kept as a list |
+| phase 4 | the orders list took its `state` from the same field it wrote, so `PENDING` shadowed a new assignee, and the resume stored a wire label that was parsed as an enum name | restored pre-hold state moved to its own column (migration `0014`); handler passes the enum |
+| review-branch | **B1** the list never handled `PositionPicked`/`PositionPacked`/`ReadyForDeliveryConfirmed`/`OrderDelivered`; `positionsPacked` had no writer; a resumed row froze for ever | four handlers, packed counted by product, restored state demoted to a fallback; tests that fail on the old code |
+| review-branch | **B2** order identity taken on trust — a different order under a used `orderHash` was answered `200 duplicate` and silently dropped | `Order` digests its own canonical (length-prefixed, injective) form; mismatch answers `409 ORDER_HASH_CONFLICT` |
 
 ### Open Topics
 
@@ -560,6 +565,15 @@ Executed row by row by the `prove-dod` node; a row that is not executed is a fai
 - **No Pact** — `plan/references/distributed-system.md` mandates consumer-driven contracts, but no consumer service exists in this repo and the repo precedent is a hurl e2e suite; recorded as a deliberate deviation.
 - **No simulator/CLI** — `plan/references/external-system-integration.md` wants them per external system; out of scope per `D14`.
 - **`docs/arch/` is generated and gitignored** — every node must run `scaffold docs microservice-java-spring` if it is stale; the source of truth is `blueprints/microservice-java-spring/docs/arch/`.
+- **Review residue, deliberately not fixed (operator decision, 2026-11-19)** — recorded so the next session starts from a known list, not from rediscovery:
+  - **R-1 out-of-order legs** — `ParcelEditor` records a leg only when `reached.ordinal() >= legState.ordinal()`, so an L3 polled after L5 is dropped instead of merged (`14-carrier-port.md` RULE-5 wants every leg merged). Correctness, small fix.
+  - **R-2 customer scope reaches actuators** — `/actuator/**` is open to any authenticated caller, so a `fulfillment-customer` token can read `env` and `prometheus` (`security-decisions.md` row 17 records it; the contract says "only their own processing").
+  - **R-3 a test that cannot fail** — `keepsTheOrderUnreadyAndRecordsNothingWhenTheWarehouseCannotIssue` asserts a ledger that is untouched before any rollback; RF1 rollback has no test that can fail.
+  - **R-4 pollers hold a connection across remote I/O** — `@Scheduled` carriers poll, stock poll and readiness issue inside a transaction on a 15-connection pool; correctness rests on `replicas: 1` and no advisory lock on the cursor.
+  - **R-5 `@EnableRetry` with no `@Retryable`** — one annotation away from the blind retry `13-warehouse-port.md` RULE-4 forbids (`release` is idempotent, `reserve` is not).
+  - **R-6 element 09 S9 has no test** — a leg arriving while the order is `onHold` is never re-applied on resume, so the order would sit in `picking` beside a delivered parcel.
+  - **R-7 workstation route and reprint rule are Java-only** — `GET …/pick-workstation` and "a reprint reuses the waybill and never re-registers" are not asserted by the hurl suite.
+  - **R-8 `missing[]` names the wrong part** — a handover with a null `location.kind` reports `delivery.location.address` (`DeliveryLocation.absentPart`).
 
 ### Verification Skill Gaps
 
