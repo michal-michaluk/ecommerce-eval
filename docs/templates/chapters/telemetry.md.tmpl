@@ -1,0 +1,116 @@
+{% import "partials/macros.md.tmpl" as m -%}
+{% include "partials/banner.md.tmpl" %}
+{% set actuator = observability.actuator -%}
+{% set agent = observability.agent -%}
+{% set collector = observability.collector -%}
+{{ m.evidence(observability.evidence) }}
+
+The service is instrumented for collection, not for judgement: it publishes metrics, exports traces and
+logs, and defines no dashboard, no objective and no alert threshold.
+
+### {{ number }}.1 Actuator endpoints
+
+{{ m.evidence(actuator.evidence) }}
+
+The web exposure list contains {{ actuator.exposure | length }} endpoints. Health and info are public;
+env and prometheus fall through to the authenticated-request rule, so reading them needs a token.
+
+| Endpoint | Exposed | Endpoint-level option |
+|---|---|---|
+{% for endpoint in actuator.exposure -%}
+{% set matches = actuator.endpoint_options | selectattr("endpoint", "equalto", endpoint) | list -%}
+{% set option = matches[0] if matches else none -%}
+| {{ m.code(endpoint) }} | yes | {{ ("enabled = " ~ m.code(option.enabled | string | lower)) if option else "—" }} |
+{% endfor %}
+
+: Actuator endpoints on the web exposure list. {% raw %}{#tbl-telemetry-actuator}{% endraw %}
+
+
+
+{{ m.evidence(actuator.endpoint_options | map(attribute="evidence") | sum(start=[]) | unique | list) }}
+
+The configuration also declares `management.metrics.export.prometheus.enabled`. What answers
+`/actuator/prometheus` in the scrape format is the Prometheus registry the build puts on the
+classpath, together with that endpoint sitting on the exposure list; the declared key is the
+meter-export switch under the name Spring Boot dropped before version 3, and this project runs
+Spring Boot 4.1.0, so the line is inert. GAP-14 records it.
+{{ m.evidence(observability.metrics.evidence + [actuator.evidence[0]]) }}
+
+### {{ number }}.2 The OpenTelemetry agent
+
+{{ m.evidence(agent.evidence | unique | list) }}
+
+The image always carries `{{ agent.jar }}` version {{ m.code(agent.version) }} and starts the JVM with
+the agent attached, so no overlay can deploy the service without it. The collector address, the
+protocol, the exporters and the sampler come from environment variables, and only the
+{{ m.codes(agent.declared_by) }} overlay declares them.
+
+| Variable | Value | Declared by |
+|---|---|---|
+{% for entry in agent.environment -%}
+| {{ m.code(entry.name) }} | {{ m.code(entry.value) }} | {{ m.code(entry.overlay) }} overlay |
+{% endfor %}
+
+: Telemetry settings the deployment declares. {% raw %}{#tbl-telemetry-agent}{% endraw %}
+{{ m.evidence(agent.environment | map(attribute="evidence") | sum(start=[]) | unique | list) }}
+
+Traces and logs are exported over gRPC to the collector endpoint and sampled at a ratio of one; the
+metrics exporter is set to `none`, which is why the prometheus endpoint above, and not the agent, is
+where metrics leave the process.
+
+### {{ number }}.3 The collector the deployment ships
+
+{{ m.evidence(collector.evidence) }}
+
+The collector is not an external service: the deployment ships it as one replica of its own, reading
+its pipeline from a ConfigMap and receiving OTLP over gRPC and HTTP on the ports the agent points at.
+
+| Exporter | File | Rotation |
+|---|---|---|
+{% for exporter in collector.exporters -%}
+| {{ m.code(exporter.name) }} | {{ m.code(exporter.path) }} | {{ exporter.max_megabytes }} MB, {{ exporter.max_days }} days |
+{% endfor %}
+
+: Exporters of the collector pipeline. {% raw %}{#tbl-telemetry-collector}{% endraw %}
+
+
+Each pipeline is a straight line from the OTLP receiver to one file: traces to the traces file, logs to
+the logs file. Nothing samples on the collector side and nothing forwards the files anywhere — they are
+written into a volume that exists only as long as the collector pod does, so a restart of that pod
+discards the telemetry, and the rotation above bounds the file size rather than the retention anybody
+can read. GAP-15 records it.
+{{ m.evidence(collector.evidence[2:]) }}
+
+### {{ number }}.4 Log levels
+
+{{ m.evidence(observability.log_levels | map(attribute="evidence") | sum(start=[]) | unique | list) }}
+
+The application configuration sets a level per logger for framework loggers only; no logger of the
+service itself is listed, so the root level of the framework applies to it.
+
+| Logger | Level |
+|---|---|
+{% for entry in observability.log_levels -%}
+| {{ m.code(entry.logger) }} | {{ m.code(entry.level) }} |
+{% endfor %}
+
+: Log levels declared by the application configuration. {% raw %}{#tbl-telemetry-log-levels}{% endraw %}
+
+
+
+The image sets `SPRING_OUTPUT_ANSI_ENABLED` to `never`, so the container log is plain text, and the
+image environment is also where the agent is attached. Both settings arrive with the image, so no
+manifest has to repeat them.
+{{ m.evidence(agent.image_environment | map(attribute="evidence") | sum(start=[]) | unique | list) }}
+
+### {{ number }}.5 What the repository does not define
+
+- **No dashboard.** No dashboard definition of any kind is checked in, so nothing prepares a view of this
+  telemetry. GAP-5 records it.
+- **No alert threshold.** No alerting rule and no threshold is declared anywhere in the repository, so
+  nothing in the repository says when a human should be woken. GAP-4 records it.
+- **No service-level objective.** No objective and no error-budget target is stated, so there is no
+  agreed measure of whether the service is doing its job.
+- **No durable telemetry store.** The collector writes to a volume scoped to its own pod and forwards
+  nothing, so traces and logs survive a collector restart only if something outside this repository
+  reads the files first (GAP-15).

@@ -1,0 +1,922 @@
+{
+  "events": [
+    {
+      "declared_in": {
+        "line": 18,
+        "path": "services/fulfillment/src/main/java/shop/fulfillment/kernel/DomainEvent.java"
+      },
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/kernel/DomainEvent.java:18"
+      ],
+      "fields": [
+        {
+          "name": "processingId",
+          "type": "OrderProcessingId"
+        },
+        {
+          "name": "order",
+          "type": "Order"
+        }
+      ],
+      "handlers": [
+        {
+          "event": "OrderProcessingStarted",
+          "evidence": [
+            "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java:60"
+          ],
+          "handler": "CustomerStateProjection",
+          "line": 60,
+          "method": "handle",
+          "path": "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java"
+        },
+        {
+          "event": "OrderProcessingStarted",
+          "evidence": [
+            "services/fulfillment/src/main/java/shop/fulfillment/issues/IssueDashboardProjection.java:62"
+          ],
+          "handler": "IssueDashboardProjection",
+          "line": 62,
+          "method": "handle",
+          "path": "services/fulfillment/src/main/java/shop/fulfillment/issues/IssueDashboardProjection.java"
+        },
+        {
+          "event": "OrderProcessingStarted",
+          "evidence": [
+            "services/fulfillment/src/main/java/shop/fulfillment/orders/OrdersListProjection.java:48"
+          ],
+          "handler": "OrdersListProjection",
+          "line": 48,
+          "method": "handle",
+          "path": "services/fulfillment/src/main/java/shop/fulfillment/orders/OrdersListProjection.java"
+        }
+      ],
+      "java_type": "DomainEvent.OrderProcessingStarted",
+      "persisted_as": [],
+      "record_line": 39,
+      "version": "1",
+      "wire_name": "OrderProcessingStarted_v1",
+      "wired_type": "OrderProcessingStarted"
+    },
+    {
+      "declared_in": {
+        "line": 19,
+        "path": "services/fulfillment/src/main/java/shop/fulfillment/kernel/DomainEvent.java"
+      },
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/kernel/DomainEvent.java:19"
+      ],
+      "fields": [
+        {
+          "name": "processingId",
+          "type": "OrderProcessingId"
+        },
+        {
+          "name": "assignee",
+          "type": "String"
+        }
+      ],
+      "handlers": [
+        {
+          "event": "EmployeeAssigned",
+          "evidence": [
+            "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java:66"
+          ],
+          "handler": "CustomerStateProjection",
+          "line": 66,
+          "method": "handle",
+          "path": "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java"
+        },
+        {
+          "event": "EmployeeAssigned",
+          "evidence": [
+            "services/fulfillment/src/main/java/shop/fulfillment/issues/IssueDashboardProjection.java:67"
+          ],
+          "handler": "IssueDashboardProjection",
+          "line": 67,
+          "method": "handle",
+          "path": "services/fulfillment/src/main/java/shop/fulfillment/issues/IssueDashboardProjection.java"
+        },
+        {
+          "event": "EmployeeAssigned",
+          "evidence": [
+            "services/fulfillment/src/main/java/shop/fulfillment/orders/OrdersListProjection.java:54"
+          ],
+          "handler": "OrdersListProjection",
+          "line": 54,
+          "method": "handle",
+          "path": "services/fulfillment/src/main/java/shop/fulfillment/orders/OrdersListProjection.java"
+        }
+      ],
+      "java_type": "DomainEvent.EmployeeAssigned",
+      "persisted_as": [],
+      "record_line": 43,
+      "version": "1",
+      "wire_name": "EmployeeAssigned_v1",
+      "wired_type": "EmployeeAssigned"
+    },
+    {
+      "declared_in": {
+        "line": 20,
+        "path": "services/fulfillment/src/main/java/shop/fulfillment/kernel/DomainEvent.java"
+      },
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/kernel/DomainEvent.java:20"
+      ],
+      "fields": [
+        {
+          "name": "processingId",
+          "type": "OrderProcessingId"
+        },
+        {
+          "name": "productNumber",
+          "type": "String"
+        }
+      ],
+      "handlers": [
+        {
+          "event": "PositionPicked",
+          "evidence": [
+            "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java:72"
+          ],
+          "handler": "CustomerStateProjection",
+          "line": 72,
+          "method": "handle",
+          "path": "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java"
+        },
+        {
+          "event": "PositionPicked",
+          "evidence": [
+            "services/fulfillment/src/main/java/shop/fulfillment/orders/OrdersListProjection.java:61"
+          ],
+          "handler": "OrdersListProjection",
+          "line": 61,
+          "method": "handle",
+          "path": "services/fulfillment/src/main/java/shop/fulfillment/orders/OrdersListProjection.java"
+        }
+      ],
+      "java_type": "DomainEvent.PositionPicked",
+      "persisted_as": [],
+      "record_line": 47,
+      "version": "1",
+      "wire_name": "PositionPicked_v1",
+      "wired_type": "PositionPicked"
+    },
+    {
+      "declared_in": {
+        "line": 21,
+        "path": "services/fulfillment/src/main/java/shop/fulfillment/kernel/DomainEvent.java"
+      },
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/kernel/DomainEvent.java:21"
+      ],
+      "fields": [
+        {
+          "name": "processingId",
+          "type": "OrderProcessingId"
+        },
+        {
+          "name": "productNumber",
+          "type": "String"
+        }
+      ],
+      "handlers": [
+        {
+          "event": "PositionPacked",
+          "evidence": [
+            "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java:78"
+          ],
+          "handler": "CustomerStateProjection",
+          "line": 78,
+          "method": "handle",
+          "path": "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java"
+        },
+        {
+          "event": "PositionPacked",
+          "evidence": [
+            "services/fulfillment/src/main/java/shop/fulfillment/orders/OrdersListProjection.java:68"
+          ],
+          "handler": "OrdersListProjection",
+          "line": 68,
+          "method": "handle",
+          "path": "services/fulfillment/src/main/java/shop/fulfillment/orders/OrdersListProjection.java"
+        }
+      ],
+      "java_type": "DomainEvent.PositionPacked",
+      "persisted_as": [],
+      "record_line": 51,
+      "version": "1",
+      "wire_name": "PositionPacked_v1",
+      "wired_type": "PositionPacked"
+    },
+    {
+      "declared_in": {
+        "line": 22,
+        "path": "services/fulfillment/src/main/java/shop/fulfillment/kernel/DomainEvent.java"
+      },
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/kernel/DomainEvent.java:22"
+      ],
+      "fields": [
+        {
+          "name": "processingId",
+          "type": "OrderProcessingId"
+        },
+        {
+          "name": "parcelId",
+          "type": "ParcelId"
+        }
+      ],
+      "handlers": [
+        {
+          "event": "ReadyForDeliveryConfirmed",
+          "evidence": [
+            "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java:96"
+          ],
+          "handler": "CustomerStateProjection",
+          "line": 96,
+          "method": "handle",
+          "path": "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java"
+        },
+        {
+          "event": "ReadyForDeliveryConfirmed",
+          "evidence": [
+            "services/fulfillment/src/main/java/shop/fulfillment/orders/OrdersListProjection.java:75"
+          ],
+          "handler": "OrdersListProjection",
+          "line": 75,
+          "method": "handle",
+          "path": "services/fulfillment/src/main/java/shop/fulfillment/orders/OrdersListProjection.java"
+        }
+      ],
+      "java_type": "DomainEvent.ReadyForDeliveryConfirmed",
+      "persisted_as": [],
+      "record_line": 55,
+      "version": "1",
+      "wire_name": "ReadyForDeliveryConfirmed_v1",
+      "wired_type": "ReadyForDeliveryConfirmed"
+    },
+    {
+      "declared_in": {
+        "line": 24,
+        "path": "services/fulfillment/src/main/java/shop/fulfillment/kernel/DomainEvent.java"
+      },
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/kernel/DomainEvent.java:24"
+      ],
+      "fields": [
+        {
+          "name": "processingId",
+          "type": "OrderProcessingId"
+        }
+      ],
+      "handlers": [
+        {
+          "event": "OrderDelivered",
+          "evidence": [
+            "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java:102"
+          ],
+          "handler": "CustomerStateProjection",
+          "line": 102,
+          "method": "handle",
+          "path": "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java"
+        },
+        {
+          "event": "OrderDelivered",
+          "evidence": [
+            "services/fulfillment/src/main/java/shop/fulfillment/orders/OrdersListProjection.java:82"
+          ],
+          "handler": "OrdersListProjection",
+          "line": 82,
+          "method": "handle",
+          "path": "services/fulfillment/src/main/java/shop/fulfillment/orders/OrdersListProjection.java"
+        }
+      ],
+      "java_type": "DomainEvent.OrderDelivered",
+      "persisted_as": [],
+      "record_line": 59,
+      "version": "1",
+      "wire_name": "OrderDelivered_v1",
+      "wired_type": "OrderDelivered"
+    },
+    {
+      "declared_in": {
+        "line": 25,
+        "path": "services/fulfillment/src/main/java/shop/fulfillment/kernel/DomainEvent.java"
+      },
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/kernel/DomainEvent.java:25"
+      ],
+      "fields": [
+        {
+          "name": "issueId",
+          "type": "IssueId"
+        },
+        {
+          "name": "processingId",
+          "type": "OrderProcessingId"
+        },
+        {
+          "name": "kind",
+          "type": "String"
+        },
+        {
+          "name": "productNumber",
+          "type": "String"
+        },
+        {
+          "name": "reportedBy",
+          "type": "String"
+        },
+        {
+          "name": "reportedAt",
+          "type": "Instant"
+        }
+      ],
+      "handlers": [
+        {
+          "event": "IssueReported",
+          "evidence": [
+            "services/fulfillment/src/main/java/shop/fulfillment/issues/IssueDashboardProjection.java:72"
+          ],
+          "handler": "IssueDashboardProjection",
+          "line": 72,
+          "method": "handle",
+          "path": "services/fulfillment/src/main/java/shop/fulfillment/issues/IssueDashboardProjection.java"
+        }
+      ],
+      "java_type": "DomainEvent.IssueReported",
+      "persisted_as": [],
+      "record_line": 77,
+      "version": "1",
+      "wire_name": "IssueReported_v1",
+      "wired_type": "IssueReported"
+    },
+    {
+      "declared_in": {
+        "line": 26,
+        "path": "services/fulfillment/src/main/java/shop/fulfillment/kernel/DomainEvent.java"
+      },
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/kernel/DomainEvent.java:26"
+      ],
+      "fields": [
+        {
+          "name": "processingId",
+          "type": "OrderProcessingId"
+        },
+        {
+          "name": "since",
+          "type": "Instant"
+        }
+      ],
+      "handlers": [
+        {
+          "event": "HoldPlaced",
+          "evidence": [
+            "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java:84"
+          ],
+          "handler": "CustomerStateProjection",
+          "line": 84,
+          "method": "handle",
+          "path": "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java"
+        },
+        {
+          "event": "HoldPlaced",
+          "evidence": [
+            "services/fulfillment/src/main/java/shop/fulfillment/issues/IssueDashboardProjection.java:77"
+          ],
+          "handler": "IssueDashboardProjection",
+          "line": 77,
+          "method": "handle",
+          "path": "services/fulfillment/src/main/java/shop/fulfillment/issues/IssueDashboardProjection.java"
+        },
+        {
+          "event": "HoldPlaced",
+          "evidence": [
+            "services/fulfillment/src/main/java/shop/fulfillment/orders/OrdersListProjection.java:89"
+          ],
+          "handler": "OrdersListProjection",
+          "line": 89,
+          "method": "handle",
+          "path": "services/fulfillment/src/main/java/shop/fulfillment/orders/OrdersListProjection.java"
+        }
+      ],
+      "java_type": "DomainEvent.HoldPlaced",
+      "persisted_as": [],
+      "record_line": 82,
+      "version": "1",
+      "wire_name": "HoldPlaced_v1",
+      "wired_type": "HoldPlaced"
+    },
+    {
+      "declared_in": {
+        "line": 27,
+        "path": "services/fulfillment/src/main/java/shop/fulfillment/kernel/DomainEvent.java"
+      },
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/kernel/DomainEvent.java:27"
+      ],
+      "fields": [
+        {
+          "name": "processingId",
+          "type": "OrderProcessingId"
+        },
+        {
+          "name": "state",
+          "type": "ProcessingState"
+        }
+      ],
+      "handlers": [
+        {
+          "event": "OrderResumed",
+          "evidence": [
+            "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java:90"
+          ],
+          "handler": "CustomerStateProjection",
+          "line": 90,
+          "method": "handle",
+          "path": "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java"
+        },
+        {
+          "event": "OrderResumed",
+          "evidence": [
+            "services/fulfillment/src/main/java/shop/fulfillment/issues/IssueDashboardProjection.java:82"
+          ],
+          "handler": "IssueDashboardProjection",
+          "line": 82,
+          "method": "handle",
+          "path": "services/fulfillment/src/main/java/shop/fulfillment/issues/IssueDashboardProjection.java"
+        },
+        {
+          "event": "OrderResumed",
+          "evidence": [
+            "services/fulfillment/src/main/java/shop/fulfillment/orders/OrdersListProjection.java:96"
+          ],
+          "handler": "OrdersListProjection",
+          "line": 96,
+          "method": "handle",
+          "path": "services/fulfillment/src/main/java/shop/fulfillment/orders/OrdersListProjection.java"
+        }
+      ],
+      "java_type": "DomainEvent.OrderResumed",
+      "persisted_as": [],
+      "record_line": 86,
+      "version": "1",
+      "wire_name": "OrderResumed_v1",
+      "wired_type": "OrderResumed"
+    },
+    {
+      "declared_in": {
+        "line": 28,
+        "path": "services/fulfillment/src/main/java/shop/fulfillment/kernel/DomainEvent.java"
+      },
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/kernel/DomainEvent.java:28"
+      ],
+      "fields": [
+        {
+          "name": "productId",
+          "type": "ProductId"
+        },
+        {
+          "name": "location",
+          "type": "LocationCode"
+        },
+        {
+          "name": "available",
+          "type": "int"
+        },
+        {
+          "name": "reserved",
+          "type": "int"
+        },
+        {
+          "name": "observedAt",
+          "type": "Instant"
+        }
+      ],
+      "handlers": [],
+      "java_type": "DomainEvent.StockChanged",
+      "persisted_as": [],
+      "record_line": 68,
+      "version": "1",
+      "wire_name": "StockChanged_v1",
+      "wired_type": "StockChanged"
+    },
+    {
+      "declared_in": {
+        "line": 29,
+        "path": "services/fulfillment/src/main/java/shop/fulfillment/kernel/DomainEvent.java"
+      },
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/kernel/DomainEvent.java:29"
+      ],
+      "fields": [
+        {
+          "name": "parcelId",
+          "type": "ParcelId"
+        },
+        {
+          "name": "carrierIdentity",
+          "type": "CarrierIdentity"
+        }
+      ],
+      "handlers": [
+        {
+          "event": "DeliveryNumberGenerated",
+          "evidence": [
+            "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java:109"
+          ],
+          "handler": "CustomerStateProjection",
+          "line": 109,
+          "method": "handle",
+          "path": "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java"
+        }
+      ],
+      "java_type": "DomainEvent.DeliveryNumberGenerated",
+      "persisted_as": [],
+      "record_line": 90,
+      "version": "1",
+      "wire_name": "DeliveryNumberGenerated_v1",
+      "wired_type": "DeliveryNumberGenerated"
+    },
+    {
+      "declared_in": {
+        "line": 31,
+        "path": "services/fulfillment/src/main/java/shop/fulfillment/kernel/DomainEvent.java"
+      },
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/kernel/DomainEvent.java:31"
+      ],
+      "fields": [
+        {
+          "name": "parcelId",
+          "type": "ParcelId"
+        },
+        {
+          "name": "collectionHandle",
+          "type": "CollectionHandle"
+        }
+      ],
+      "handlers": [
+        {
+          "event": "CollectionRequested",
+          "evidence": [
+            "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java:115"
+          ],
+          "handler": "CustomerStateProjection",
+          "line": 115,
+          "method": "handle",
+          "path": "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java"
+        }
+      ],
+      "java_type": "DomainEvent.CollectionRequested",
+      "persisted_as": [],
+      "record_line": 94,
+      "version": "1",
+      "wire_name": "CollectionRequested_v1",
+      "wired_type": "CollectionRequested"
+    },
+    {
+      "declared_in": {
+        "line": 32,
+        "path": "services/fulfillment/src/main/java/shop/fulfillment/kernel/DomainEvent.java"
+      },
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/kernel/DomainEvent.java:32"
+      ],
+      "fields": [
+        {
+          "name": "parcelId",
+          "type": "ParcelId"
+        },
+        {
+          "name": "leg",
+          "type": "Leg"
+        },
+        {
+          "name": "carrierStatus",
+          "type": "String"
+        }
+      ],
+      "handlers": [
+        {
+          "event": "DeliveryStateNotified",
+          "evidence": [
+            "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java:121"
+          ],
+          "handler": "CustomerStateProjection",
+          "line": 121,
+          "method": "handle",
+          "path": "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java"
+        },
+        {
+          "event": "DeliveryStateNotified",
+          "evidence": [
+            "services/fulfillment/src/main/java/shop/fulfillment/processing/DeliveryStateListener.java:34"
+          ],
+          "handler": "DeliveryStateListener",
+          "line": 34,
+          "method": "handle",
+          "path": "services/fulfillment/src/main/java/shop/fulfillment/processing/DeliveryStateListener.java"
+        }
+      ],
+      "java_type": "DomainEvent.DeliveryStateNotified",
+      "persisted_as": [],
+      "record_line": 98,
+      "version": "1",
+      "wire_name": "DeliveryStateNotified_v1",
+      "wired_type": "DeliveryStateNotified"
+    },
+    {
+      "declared_in": {
+        "line": 33,
+        "path": "services/fulfillment/src/main/java/shop/fulfillment/kernel/DomainEvent.java"
+      },
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/kernel/DomainEvent.java:33"
+      ],
+      "fields": [
+        {
+          "name": "parcelId",
+          "type": "ParcelId"
+        },
+        {
+          "name": "carrierStatus",
+          "type": "String"
+        },
+        {
+          "name": "rawPayload",
+          "type": "String"
+        }
+      ],
+      "handlers": [],
+      "java_type": "DomainEvent.DeliveryStatusUnrecognised",
+      "persisted_as": [],
+      "record_line": 101,
+      "version": "1",
+      "wire_name": "DeliveryStatusUnrecognised_v1",
+      "wired_type": "DeliveryStatusUnrecognised"
+    }
+  ],
+  "handlers": [
+    {
+      "event": "OrderProcessingStarted",
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java:60"
+      ],
+      "handler": "CustomerStateProjection",
+      "line": 60,
+      "method": "handle",
+      "path": "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java"
+    },
+    {
+      "event": "EmployeeAssigned",
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java:66"
+      ],
+      "handler": "CustomerStateProjection",
+      "line": 66,
+      "method": "handle",
+      "path": "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java"
+    },
+    {
+      "event": "PositionPicked",
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java:72"
+      ],
+      "handler": "CustomerStateProjection",
+      "line": 72,
+      "method": "handle",
+      "path": "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java"
+    },
+    {
+      "event": "PositionPacked",
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java:78"
+      ],
+      "handler": "CustomerStateProjection",
+      "line": 78,
+      "method": "handle",
+      "path": "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java"
+    },
+    {
+      "event": "HoldPlaced",
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java:84"
+      ],
+      "handler": "CustomerStateProjection",
+      "line": 84,
+      "method": "handle",
+      "path": "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java"
+    },
+    {
+      "event": "OrderResumed",
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java:90"
+      ],
+      "handler": "CustomerStateProjection",
+      "line": 90,
+      "method": "handle",
+      "path": "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java"
+    },
+    {
+      "event": "ReadyForDeliveryConfirmed",
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java:96"
+      ],
+      "handler": "CustomerStateProjection",
+      "line": 96,
+      "method": "handle",
+      "path": "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java"
+    },
+    {
+      "event": "OrderDelivered",
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java:102"
+      ],
+      "handler": "CustomerStateProjection",
+      "line": 102,
+      "method": "handle",
+      "path": "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java"
+    },
+    {
+      "event": "DeliveryNumberGenerated",
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java:109"
+      ],
+      "handler": "CustomerStateProjection",
+      "line": 109,
+      "method": "handle",
+      "path": "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java"
+    },
+    {
+      "event": "CollectionRequested",
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java:115"
+      ],
+      "handler": "CustomerStateProjection",
+      "line": 115,
+      "method": "handle",
+      "path": "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java"
+    },
+    {
+      "event": "DeliveryStateNotified",
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java:121"
+      ],
+      "handler": "CustomerStateProjection",
+      "line": 121,
+      "method": "handle",
+      "path": "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java"
+    },
+    {
+      "event": "OrderProcessingStarted",
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/issues/IssueDashboardProjection.java:62"
+      ],
+      "handler": "IssueDashboardProjection",
+      "line": 62,
+      "method": "handle",
+      "path": "services/fulfillment/src/main/java/shop/fulfillment/issues/IssueDashboardProjection.java"
+    },
+    {
+      "event": "EmployeeAssigned",
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/issues/IssueDashboardProjection.java:67"
+      ],
+      "handler": "IssueDashboardProjection",
+      "line": 67,
+      "method": "handle",
+      "path": "services/fulfillment/src/main/java/shop/fulfillment/issues/IssueDashboardProjection.java"
+    },
+    {
+      "event": "IssueReported",
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/issues/IssueDashboardProjection.java:72"
+      ],
+      "handler": "IssueDashboardProjection",
+      "line": 72,
+      "method": "handle",
+      "path": "services/fulfillment/src/main/java/shop/fulfillment/issues/IssueDashboardProjection.java"
+    },
+    {
+      "event": "HoldPlaced",
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/issues/IssueDashboardProjection.java:77"
+      ],
+      "handler": "IssueDashboardProjection",
+      "line": 77,
+      "method": "handle",
+      "path": "services/fulfillment/src/main/java/shop/fulfillment/issues/IssueDashboardProjection.java"
+    },
+    {
+      "event": "OrderResumed",
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/issues/IssueDashboardProjection.java:82"
+      ],
+      "handler": "IssueDashboardProjection",
+      "line": 82,
+      "method": "handle",
+      "path": "services/fulfillment/src/main/java/shop/fulfillment/issues/IssueDashboardProjection.java"
+    },
+    {
+      "event": "OrderProcessingStarted",
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/orders/OrdersListProjection.java:48"
+      ],
+      "handler": "OrdersListProjection",
+      "line": 48,
+      "method": "handle",
+      "path": "services/fulfillment/src/main/java/shop/fulfillment/orders/OrdersListProjection.java"
+    },
+    {
+      "event": "EmployeeAssigned",
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/orders/OrdersListProjection.java:54"
+      ],
+      "handler": "OrdersListProjection",
+      "line": 54,
+      "method": "handle",
+      "path": "services/fulfillment/src/main/java/shop/fulfillment/orders/OrdersListProjection.java"
+    },
+    {
+      "event": "PositionPicked",
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/orders/OrdersListProjection.java:61"
+      ],
+      "handler": "OrdersListProjection",
+      "line": 61,
+      "method": "handle",
+      "path": "services/fulfillment/src/main/java/shop/fulfillment/orders/OrdersListProjection.java"
+    },
+    {
+      "event": "PositionPacked",
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/orders/OrdersListProjection.java:68"
+      ],
+      "handler": "OrdersListProjection",
+      "line": 68,
+      "method": "handle",
+      "path": "services/fulfillment/src/main/java/shop/fulfillment/orders/OrdersListProjection.java"
+    },
+    {
+      "event": "ReadyForDeliveryConfirmed",
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/orders/OrdersListProjection.java:75"
+      ],
+      "handler": "OrdersListProjection",
+      "line": 75,
+      "method": "handle",
+      "path": "services/fulfillment/src/main/java/shop/fulfillment/orders/OrdersListProjection.java"
+    },
+    {
+      "event": "OrderDelivered",
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/orders/OrdersListProjection.java:82"
+      ],
+      "handler": "OrdersListProjection",
+      "line": 82,
+      "method": "handle",
+      "path": "services/fulfillment/src/main/java/shop/fulfillment/orders/OrdersListProjection.java"
+    },
+    {
+      "event": "HoldPlaced",
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/orders/OrdersListProjection.java:89"
+      ],
+      "handler": "OrdersListProjection",
+      "line": 89,
+      "method": "handle",
+      "path": "services/fulfillment/src/main/java/shop/fulfillment/orders/OrdersListProjection.java"
+    },
+    {
+      "event": "OrderResumed",
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/orders/OrdersListProjection.java:96"
+      ],
+      "handler": "OrdersListProjection",
+      "line": 96,
+      "method": "handle",
+      "path": "services/fulfillment/src/main/java/shop/fulfillment/orders/OrdersListProjection.java"
+    },
+    {
+      "event": "DeliveryStateNotified",
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/processing/DeliveryStateListener.java:34"
+      ],
+      "handler": "DeliveryStateListener",
+      "line": 34,
+      "method": "handle",
+      "path": "services/fulfillment/src/main/java/shop/fulfillment/processing/DeliveryStateListener.java"
+    }
+  ],
+  "registration": {
+    "evidence": [
+      "services/fulfillment/src/main/java/shop/fulfillment/kernel/DomainEvent.java:16"
+    ],
+    "interface": "DomainEvent",
+    "line": 16,
+    "path": "services/fulfillment/src/main/java/shop/fulfillment/kernel/DomainEvent.java"
+  }
+}

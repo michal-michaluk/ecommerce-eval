@@ -1,0 +1,17 @@
+% Hand-over and delivery tracking.
+% Extracted from docs/business/04-process-maps.md section 4.3; rendered to SVG by docs/scripts/render-diagrams.py.
+flowchart TD
+  A["POST /processing/{processingId}/readiness"] --> B{"parcel registered and every position packed?"}
+  B -->|"no"| C["409 NOT_READY<br/>reasons: noParcel, onHold, notPacked, positionsOpen, pastHandover"]
+  B -->|"yes"| D["ReadyForDeliveryConfirmed<br/>state readyForDelivery"]
+  D --> E["carrier requestCollection"]
+  E --> F["CollectionRequested, parcel leg L2"]
+  D --> G["warehouse issue<br/>goods issue note stored"]
+  F --> H["carrier status poll"]
+  H --> I["DeliveryStateNotified per leg L3 to L6"]
+  I --> J{"leg is L6?"}
+  J -->|"no"| K["parcel leg moves forward only"]
+  J -->|"yes"| L["OrderDelivered<br/>state delivered"]
+  K --> M["GET /processing/{processingId}/state<br/>customer timeline"]
+  L --> M
+  D --> N["GET /processing/{processingId}/documents/label<br/>the carrier's label"]

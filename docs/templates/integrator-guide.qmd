@@ -1,0 +1,33 @@
+---
+title: "<Service name> — Integrator Guide"
+subtitle: "<one line: what a caller needs from this document>"
+version: "1.0"
+date: "<YYYY-MM-DD>"
+status: "Draft for review"
+audience: "Integrators building against the service"
+owner: "<owning team>"
+skip-lists: true
+table-density: true
+---
+
+<!-- Skeleton. The operation reference is generated: one include per operation chapter, in the
+     order the integrator reads them, which is not the order the extractor sorts them in. Add a
+     file per operation and keep the filenames in step with render-docs.py's chapter slugs. -->
+
+# Part I — Working with the service
+
+{{< include integrator/overview.md >}}
+
+{{< include integrator/authentication.md >}}
+
+{{< include integrator/reference.md >}}
+
+{{< include integrator/errors.md >}}
+
+# Part II — Operation reference
+
+{{< include generated/chapters/api-<operation>.md >}}
+
+# Part III — Operational endpoints
+
+{{< include integrator/operational.md >}}

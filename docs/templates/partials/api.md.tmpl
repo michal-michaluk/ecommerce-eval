@@ -1,0 +1,22 @@
+{#- Macros shared by the API reference chapters. They format data only; every word a reader sees
+    is written in the chapter templates that call them. -#}
+
+{%- macro cell(value) -%}
+{{ (value | string | replace('\\', '\\\\') | replace('|', '\\|') | replace('@', '\\@') | replace('\n', ' ') | trim) if value is not none and value != '' else '—' }}
+{%- endmacro -%}
+
+{%- macro type(row) -%}
+{%- if row.type -%}{{ row.type }}{% if row.item_type %} ({{ row.item_type }}){% endif %}{%- else -%}—{%- endif -%}
+{%- endmacro -%}
+
+{%- macro one_of(values) -%}
+{%- if values -%}one of {{ values | join(', ') }}{%- endif -%}
+{%- endmacro -%}
+
+{%- macro constraints(row) -%}
+{{ ([one_of(row.one_of)] + row.constraints) | select | join('; ') or '—' }}
+{%- endmacro -%}
+
+{%- macro required(value) -%}
+{{ 'yes' if value else 'no' }}
+{%- endmacro -%}

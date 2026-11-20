@@ -1,0 +1,93 @@
+{
+  "repository_root": "../..",
+  "docs_root": "docs",
+  "data_dir": "docs/generated/data",
+  "chapters_dir": "docs/generated/chapters",
+  "diagrams_dir": "docs/generated/diagrams",
+  "diagram_source_dir": "docs/diagrams",
+  "templates_dir": "docs/templates",
+  "authored_dirs": [
+    "system",
+    "integrator",
+    "runbook",
+    "business",
+    "generated"
+  ],
+  "openapi": {
+    "source": "",
+    "target": "docs/generated/data/openapi.json"
+  },
+  "sources": {
+    "application_root": "services/fulfillment",
+    "main_root": "services/fulfillment/src/main/java",
+    "test_root": "services/fulfillment/src/test/java",
+    "changeset": "services/fulfillment/src/main/resources/db/db.changelog.yaml",
+    "app_config": "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java",
+    "app_yaml": "services/fulfillment/src/main/resources/application.yml",
+    "build": "services/fulfillment/build.gradle",
+    "e2e_scenario": "services/fulfillment/e2e/fulfillment-api.hurl",
+    "k8s": "services/fulfillment/k8s",
+    "json_example_sources": []
+  },
+  "adr": {
+    "directory": "docs/adr",
+    "filename": "^ADR-(\\d+).*\\.md$"
+  },
+  "events": {
+    "domain_event": "services/fulfillment/src/main/java/shop/fulfillment/kernel/DomainEvent.java"
+  },
+  "observability": {
+    "collector_manifest": "services/fulfillment/k8s/infra/otel-collector.yaml"
+  },
+  "examples": {
+    "operation_chapters": {
+      "GET /orders": "get-orders",
+      "POST /orders": "post-orders",
+      "GET /processing/{processingId}": "get-processing",
+      "GET /processing/{processingId}/pick-list": "get-pick-list",
+      "GET /processing/{processingId}/pick-workstation": "get-pick-workstation",
+      "GET /processing/{processingId}/state": "get-customer-state",
+      "GET /processing/{processingId}/documents/label": "get-label",
+      "GET /issues": "get-issues",
+      "POST /processing/{processingId}/assignment": "post-assignment",
+      "POST /processing/{processingId}/positions/{productNumber}": "post-scan-position",
+      "POST /processing/{processingId}/packing": "post-packing",
+      "POST /processing/{processingId}/readiness": "post-readiness",
+      "POST /processing/{processingId}/issues": "post-issues",
+      "POST /processing/{processingId}/hold/resume": "post-hold-resume"
+    }
+  },
+  "expected_counts": {
+    "tables": 12,
+    "changesets": 22,
+    "jsonb_columns": 7,
+    "payload_examples": 0,
+    "request_response_blocks": 48,
+    "domain_events": 14,
+    "business_operations": 14
+  },
+  "documents": [
+    {
+      "slug": "system-documentation",
+      "title": "fulfillment — System Documentation",
+      "max_pages": 90,
+      "required": [],
+      "forbidden": []
+    },
+    {
+      "slug": "integrator-guide",
+      "title": "fulfillment — Integrator Guide",
+      "max_pages": 90,
+      "required": [],
+      "forbidden": []
+    },
+    {
+      "slug": "business-guide",
+      "title": "fulfillment — Business Guide",
+      "max_pages": 60,
+      "required": [],
+      "forbidden": []
+    }
+  ],
+  "chrome": ""
+}

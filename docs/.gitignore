@@ -1,0 +1,13 @@
+/.quarto/
+**/*.quarto_ipynb
+
+# Quarto's render output: one PDF and one HTML per document, rebuilt by `quarto render`. It is the
+# artifact the composition, links and artifacts stages inspect, not a source, so it is never
+# committed.
+_build/
+
+# `generated/` is deliberately not ignored. `generated/data/` is written only by
+# `extract-data.py`, `generated/chapters/` only by `render-docs.py` and `generated/diagrams/` only by
+# `render-diagrams.py`; each script's `--check` mode compares the committed file with a fresh run, and
+# Quarto resolves every include and every figure from this directory. Ignoring it would hide drift
+# from the gate and leave a clean checkout without a document to render.

@@ -1,0 +1,25 @@
+{% import "partials/macros.md.tmpl" as m -%}
+{% include "partials/banner.md.tmpl" %}
+{% if decisions.decisions -%}
+{{ m.evidence(decisions.decisions | map(attribute="evidence") | sum(start=[]) | unique | list) }}
+
+This appendix indexes the architecture decisions this repository records, one row per record.
+
+| Id | Decision | Status | Date | Deciders |
+|---|---|---|---|---|
+{% for decision in decisions.decisions -%}
+| {{ m.code(decision.id) }} | {{ m.cell(decision.title) }} | {{ m.cell(decision.status) }} | {{ m.cell(decision.date) }} | {{ m.cell(decision.deciders) }} |
+{% endfor %}
+
+: Architecture decisions of the blueprint. {% raw %}{#tbl-decisions}{% endraw %}
+{% else -%}
+This blueprint records no architecture decisions, so this appendix indexes none. The decision
+directory is absent from the repository and the index is empty: nothing here is a decision that was taken, and no decision has been reconstructed to fill the gap.
+
+A blueprint that does record decisions keeps one record per decision in that directory, and this
+appendix renders one row per record with the columns the record itself declares — an identifier, the
+decision's title as its heading, its status, its date and the people who decided. That is the shape a
+scaffolded project's decision table takes. The repository documents no convention for those records
+beyond this index, so the columns above are the contract: until a record exists, the table has no rows
+to show.
+{% endif -%}

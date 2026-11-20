@@ -1,0 +1,13 @@
+% Exception handling and resume.
+% Extracted from docs/business/04-process-maps.md section 4.4; rendered to SVG by docs/scripts/render-diagrams.py.
+flowchart TD
+  A["picking or packed"] --> B["POST /processing/{processingId}/issues"]
+  B --> C["IssueReported"]
+  C --> D["HoldPlaced<br/>state onHold"]
+  D --> E["scan and pack refused<br/>readiness refused"]
+  D --> F["GET /issues<br/>resolver dashboard, read-only"]
+  F --> G["POST /processing/{processingId}/hold/resume<br/>closedIssueIds"]
+  G --> H{"any issue still open?"}
+  H -->|"yes"| I["409 ISSUES_REMAIN<br/>with the number still open"]
+  H -->|"no"| J["OrderResumed<br/>state held from"]
+  J --> K["picking or packed resumes"]

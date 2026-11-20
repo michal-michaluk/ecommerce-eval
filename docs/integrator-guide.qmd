@@ -1,0 +1,67 @@
+---
+title: "fulfillment — Integrator Guide"
+subtitle: "How to call the fulfillment API, what comes back, and what the server refuses"
+version: "1.0"
+date: "2026-11-19"
+status: "Draft for review"
+audience: "Developers integrating with fulfillment: checkout, warehouse tooling, customer surfaces"
+owner: "fulfillment context team"
+---
+
+# Part I — Calling the API
+
+{{< include integrator/01-purpose.md >}}
+
+{{< include integrator/02-authentication.md >}}
+
+{{< include integrator/03-errors-and-idempotency.md >}}
+
+## 4 Security decisions
+
+{{< include generated/chapters/security-policy.md >}}
+
+# Part II — Operations
+
+{{< include generated/chapters/api-post-orders.md >}}
+
+{{< include generated/chapters/api-get-orders.md >}}
+
+{{< include generated/chapters/api-get-processing.md >}}
+
+{{< include generated/chapters/api-post-assignment.md >}}
+
+{{< include generated/chapters/api-get-pick-list.md >}}
+
+{{< include generated/chapters/api-get-pick-workstation.md >}}
+
+{{< include generated/chapters/api-post-scan-position.md >}}
+
+{{< include generated/chapters/api-post-packing.md >}}
+
+{{< include generated/chapters/api-post-readiness.md >}}
+
+{{< include generated/chapters/api-get-label.md >}}
+
+{{< include generated/chapters/api-get-customer-state.md >}}
+
+{{< include generated/chapters/api-post-issues.md >}}
+
+{{< include generated/chapters/api-post-hold-resume.md >}}
+
+{{< include generated/chapters/api-get-issues.md >}}
+
+## 19 Operational endpoints
+
+{{< include generated/chapters/api-operational.md >}}
+
+# Appendix B — Request and response transcripts
+
+{{< include generated/chapters/appendix-fixtures.md >}}
+
+## 20 Gaps
+
+{{< include integrator/20-gaps.md >}}
+
+## 21 Revision history
+
+{{< include generated/chapters/revision-history.md >}}

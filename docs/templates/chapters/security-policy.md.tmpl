@@ -1,0 +1,14 @@
+{% import "partials/macros.md.tmpl" as m -%}
+{% include "partials/banner.md.tmpl" %}
+{{ m.evidence(filter_chain.evidence) }}
+
+| Method | Ant pattern | Decision |
+|---|---|---|
+{% for rule in filter_chain.rules -%}
+| {{ m.code(rule.method) if rule.method else "any" }} | {{ m.code(rule.matcher) }} | {{ m.code(rule.decision) }} |
+{% endfor -%}
+{% if filter_chain.fallback -%}
+| any | (any other request) | {{ m.code(filter_chain.fallback.decision) }} |
+{% endif %}
+
+: Security decision per request pattern. `any` is a rule that names no method and therefore covers every method the pattern matches. {% raw %}{#tbl-security-policy}{% endraw %}

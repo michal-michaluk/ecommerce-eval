@@ -1,0 +1,17 @@
+% Picking and packing.
+% Extracted from docs/business/04-process-maps.md section 4.2; rendered to SVG by docs/scripts/render-diagrams.py.
+flowchart TD
+  A["POST /processing/{processingId}/assignment<br/>granted"] --> B["GET /processing/{processingId}/pick-list"]
+  B --> C["warehouse stockAt, one read per pending product"]
+  C --> D["lines, stops per location, shortfalls"]
+  D --> E["POST /processing/{processingId}/positions/{productNumber}"]
+  E --> F{"first scan of this order?"}
+  F -->|"yes"| G["carrier register"]
+  G --> H["DeliveryNumberGenerated<br/>parcel records leg L1"]
+  F -->|"no"| I["PositionPicked<br/>state picking"]
+  H --> I
+  I --> J["POST /processing/{processingId}/packing"]
+  J --> K["PositionPacked"]
+  K --> L{"every position packed?"}
+  L -->|"no"| E
+  L -->|"yes"| M["state packed"]

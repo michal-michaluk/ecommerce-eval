@@ -1,0 +1,538 @@
+{
+  "base": {
+    "configmap": {
+      "evidence": [
+        "services/fulfillment/k8s/base/configmap.yaml:8",
+        "services/fulfillment/k8s/base/configmap.yaml:9"
+      ],
+      "keys": [
+        "kafka-bootstrap-servers",
+        "spring-profile-active"
+      ],
+      "name": "fulfillment",
+      "path": "services/fulfillment/k8s/base/configmap.yaml"
+    },
+    "deployment": {
+      "container": {
+        "container_port": 8080,
+        "environment": [
+          {
+            "evidence": [
+              "services/fulfillment/k8s/base/deployment.yaml:46"
+            ],
+            "name": "SPRING_PROFILES_ACTIVE",
+            "source": {
+              "kind": "literal",
+              "value": "prod"
+            }
+          },
+          {
+            "evidence": [
+              "services/fulfillment/k8s/base/deployment.yaml:48"
+            ],
+            "name": "SPRING_DATASOURCE_URL",
+            "source": {
+              "key": "jdbc-url",
+              "kind": "secret",
+              "name": "fulfillment-db"
+            }
+          },
+          {
+            "evidence": [
+              "services/fulfillment/k8s/base/deployment.yaml:53"
+            ],
+            "name": "SPRING_DATASOURCE_USERNAME",
+            "source": {
+              "key": "username",
+              "kind": "secret",
+              "name": "fulfillment-db"
+            }
+          },
+          {
+            "evidence": [
+              "services/fulfillment/k8s/base/deployment.yaml:58"
+            ],
+            "name": "SPRING_DATASOURCE_PASSWORD",
+            "source": {
+              "key": "password",
+              "kind": "secret",
+              "name": "fulfillment-db"
+            }
+          },
+          {
+            "evidence": [
+              "services/fulfillment/k8s/base/deployment.yaml:63"
+            ],
+            "name": "SPRING_KAFKA_BOOTSTRAP_SERVERS",
+            "source": {
+              "key": "kafka-bootstrap-servers",
+              "kind": "configmap",
+              "name": "fulfillment"
+            }
+          },
+          {
+            "evidence": [
+              "services/fulfillment/k8s/base/deployment.yaml:68"
+            ],
+            "name": "JWT_ISSUER_URI",
+            "source": {
+              "key": "JWT_ISSUER_URI",
+              "kind": "configmap",
+              "name": "fulfillment"
+            }
+          }
+        ],
+        "evidence": [
+          "services/fulfillment/k8s/base/deployment.yaml:24",
+          "services/fulfillment/k8s/base/deployment.yaml:87"
+        ],
+        "image": "fulfillment:latest",
+        "image_pull_policy": "IfNotPresent",
+        "name": "fulfillment",
+        "probes": [
+          {
+            "evidence": [
+              "services/fulfillment/k8s/base/deployment.yaml:73"
+            ],
+            "failure_threshold": null,
+            "initial_delay_seconds": 30,
+            "name": "livenessProbe",
+            "path": "/actuator/health/liveness",
+            "period_seconds": 10,
+            "port": 8080,
+            "timeout_seconds": 5
+          },
+          {
+            "evidence": [
+              "services/fulfillment/k8s/base/deployment.yaml:80"
+            ],
+            "failure_threshold": null,
+            "initial_delay_seconds": 20,
+            "name": "readinessProbe",
+            "path": "/actuator/health/readiness",
+            "period_seconds": 5,
+            "port": 8080,
+            "timeout_seconds": 3
+          }
+        ],
+        "protocol": "TCP",
+        "resources": {
+          "limits": {
+            "cpu": "1",
+            "memory": "1.5Gi"
+          },
+          "requests": {
+            "cpu": "250m",
+            "memory": "768Mi"
+          }
+        },
+        "security": {
+          "allowPrivilegeEscalation": false,
+          "readOnlyRootFilesystem": true,
+          "runAsNonRoot": true
+        }
+      },
+      "evidence": [
+        "services/fulfillment/k8s/base/deployment.yaml:2"
+      ],
+      "name": "fulfillment",
+      "path": "services/fulfillment/k8s/base/deployment.yaml",
+      "pod_security": {
+        "fsGroup": 1000,
+        "runAsGroup": 1000,
+        "runAsNonRoot": true,
+        "runAsUser": 1000,
+        "seccompProfile": {
+          "type": "RuntimeDefault"
+        }
+      },
+      "replicas": 1
+    },
+    "service": {
+      "evidence": [
+        "services/fulfillment/k8s/base/service.yaml:2"
+      ],
+      "name": "fulfillment",
+      "path": "services/fulfillment/k8s/base/service.yaml",
+      "port": 80,
+      "protocol": "TCP",
+      "target_port": 8080,
+      "type": "ClusterIP"
+    }
+  },
+  "evidence": [
+    "services/fulfillment/k8s/base/deployment.yaml:2",
+    "services/fulfillment/k8s/base/service.yaml:2"
+  ],
+  "image": {
+    "agent_jar": "opentelemetry-javaagent.jar",
+    "agent_version": "2.17.0",
+    "base_image": "eclipse-temurin:25-jdk",
+    "environment": [
+      {
+        "evidence": [
+          "services/fulfillment/build.gradle:247"
+        ],
+        "name": "SPRING_OUTPUT_ANSI_ENABLED",
+        "value": "never"
+      },
+      {
+        "evidence": [
+          "services/fulfillment/build.gradle:248"
+        ],
+        "name": "JAVA_TOOL_OPTIONS",
+        "value": "-javaagent:/app/opentelemetry-javaagent.jar"
+      }
+    ],
+    "evidence": [
+      "services/fulfillment/build.gradle:226",
+      "services/fulfillment/build.gradle:228",
+      "services/fulfillment/build.gradle:232",
+      "services/fulfillment/build.gradle:243",
+      "services/fulfillment/build.gradle:244",
+      "services/fulfillment/build.gradle:245"
+    ],
+    "jvm_flags": [
+      "-XX:+UseZGC",
+      "-XX:MaxRAMPercentage=75"
+    ],
+    "main_class": "shop.fulfillment.AppRunner",
+    "name": "fulfillment",
+    "path": "services/fulfillment/build.gradle",
+    "ports": [
+      "8080"
+    ],
+    "tags": [
+      "latest"
+    ]
+  },
+  "infrastructure": [
+    {
+      "evidence": [
+        "services/fulfillment/k8s/infra/kafka.yaml:2"
+      ],
+      "file": "kafka.yaml",
+      "objects": [
+        {
+          "kind": "Service",
+          "name": "fulfillment-kafka",
+          "namespace": "fulfillment"
+        },
+        {
+          "kind": "Deployment",
+          "name": "kafka",
+          "namespace": "fulfillment"
+        }
+      ],
+      "path": "services/fulfillment/k8s/infra/kafka.yaml"
+    },
+    {
+      "evidence": [
+        "services/fulfillment/k8s/infra/keycloak.yaml:2"
+      ],
+      "file": "keycloak.yaml",
+      "objects": [
+        {
+          "kind": "ConfigMap",
+          "name": "keycloak-realm",
+          "namespace": "fulfillment"
+        },
+        {
+          "kind": "Service",
+          "name": "fulfillment-keycloak",
+          "namespace": "fulfillment"
+        },
+        {
+          "kind": "Deployment",
+          "name": "keycloak",
+          "namespace": "fulfillment"
+        }
+      ],
+      "path": "services/fulfillment/k8s/infra/keycloak.yaml"
+    },
+    {
+      "evidence": [
+        "services/fulfillment/k8s/infra/otel-collector.yaml:2"
+      ],
+      "file": "otel-collector.yaml",
+      "objects": [
+        {
+          "kind": "ConfigMap",
+          "name": "otel-collector-config",
+          "namespace": "fulfillment"
+        },
+        {
+          "kind": "Service",
+          "name": "otel-collector",
+          "namespace": "fulfillment"
+        },
+        {
+          "kind": "Deployment",
+          "name": "otel-collector",
+          "namespace": "fulfillment"
+        }
+      ],
+      "path": "services/fulfillment/k8s/infra/otel-collector.yaml"
+    }
+  ],
+  "overlays": [
+    {
+      "configmap_literals": [
+        "kafka-bootstrap-servers",
+        "spring-profile-active"
+      ],
+      "configmap_values": [
+        {
+          "name": "kafka-bootstrap-servers",
+          "value": "localhost:9092"
+        },
+        {
+          "name": "spring-profile-active",
+          "value": "dev"
+        }
+      ],
+      "container": {
+        "container_port": null,
+        "environment": [],
+        "evidence": [
+          "services/fulfillment/k8s/overlays/dev/deployment-patch.yaml:16",
+          "services/fulfillment/k8s/overlays/dev/deployment-patch.yaml:30"
+        ],
+        "image": null,
+        "image_pull_policy": "Always",
+        "name": "fulfillment",
+        "probes": [],
+        "protocol": null,
+        "resources": {
+          "limits": {
+            "cpu": "500m",
+            "memory": "512Mi"
+          },
+          "requests": {
+            "cpu": "100m",
+            "memory": "256Mi"
+          }
+        },
+        "security": {
+          "allowPrivilegeEscalation": false,
+          "readOnlyRootFilesystem": true,
+          "runAsNonRoot": true
+        }
+      },
+      "evidence": [
+        "services/fulfillment/k8s/overlays/dev/kustomization.yaml:2"
+      ],
+      "files": [
+        "deployment-patch.yaml",
+        "kustomization.yaml"
+      ],
+      "name": "dev",
+      "name_prefix": "dev-",
+      "namespace": "fulfillment-dev",
+      "path": "services/fulfillment/k8s/overlays/dev/kustomization.yaml",
+      "resources": [
+        "../../base"
+      ],
+      "secret_keys": [
+        "jdbc-url",
+        "password",
+        "username"
+      ]
+    },
+    {
+      "configmap_literals": [
+        "kafka-bootstrap-servers",
+        "spring-profile-active",
+        "JWT_ISSUER_URI"
+      ],
+      "configmap_values": [
+        {
+          "name": "kafka-bootstrap-servers",
+          "value": "fulfillment-kafka:9092"
+        },
+        {
+          "name": "spring-profile-active",
+          "value": "dev"
+        },
+        {
+          "name": "JWT_ISSUER_URI",
+          "value": "http://fulfillment-keycloak:8080/realms/iot"
+        }
+      ],
+      "container": {
+        "container_port": null,
+        "environment": [
+          {
+            "evidence": [
+              "services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:30"
+            ],
+            "name": "SPRING_PROFILES_ACTIVE",
+            "source": {
+              "kind": "literal",
+              "value": "dev"
+            }
+          },
+          {
+            "evidence": [
+              "services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:32"
+            ],
+            "name": "JAVA_TOOL_OPTIONS",
+            "source": {
+              "kind": "literal",
+              "value": "-javaagent:/app/opentelemetry-javaagent.jar"
+            }
+          },
+          {
+            "evidence": [
+              "services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:34"
+            ],
+            "name": "OTEL_SERVICE_NAME",
+            "source": {
+              "kind": "literal",
+              "value": "fulfillment"
+            }
+          },
+          {
+            "evidence": [
+              "services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:36"
+            ],
+            "name": "OTEL_EXPORTER_OTLP_ENDPOINT",
+            "source": {
+              "kind": "literal",
+              "value": "http://otel-collector:4317"
+            }
+          },
+          {
+            "evidence": [
+              "services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:38"
+            ],
+            "name": "OTEL_EXPORTER_OTLP_PROTOCOL",
+            "source": {
+              "kind": "literal",
+              "value": "grpc"
+            }
+          },
+          {
+            "evidence": [
+              "services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:40"
+            ],
+            "name": "OTEL_TRACES_EXPORTER",
+            "source": {
+              "kind": "literal",
+              "value": "otlp"
+            }
+          },
+          {
+            "evidence": [
+              "services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:42"
+            ],
+            "name": "OTEL_LOGS_EXPORTER",
+            "source": {
+              "kind": "literal",
+              "value": "otlp"
+            }
+          },
+          {
+            "evidence": [
+              "services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:44"
+            ],
+            "name": "OTEL_METRICS_EXPORTER",
+            "source": {
+              "kind": "literal",
+              "value": "none"
+            }
+          },
+          {
+            "evidence": [
+              "services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:46"
+            ],
+            "name": "OTEL_TRACES_SAMPLER",
+            "source": {
+              "kind": "literal",
+              "value": "parentbased_traceidratio"
+            }
+          },
+          {
+            "evidence": [
+              "services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:48"
+            ],
+            "name": "OTEL_TRACES_SAMPLER_ARG",
+            "source": {
+              "kind": "literal",
+              "value": "1.0"
+            }
+          }
+        ],
+        "evidence": [
+          "services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:15"
+        ],
+        "image": null,
+        "image_pull_policy": "IfNotPresent",
+        "name": "fulfillment",
+        "probes": [
+          {
+            "evidence": [
+              "services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:50"
+            ],
+            "failure_threshold": 60,
+            "initial_delay_seconds": 10,
+            "name": "startupProbe",
+            "path": "/actuator/health/liveness",
+            "period_seconds": 10,
+            "port": 8080,
+            "timeout_seconds": null
+          }
+        ],
+        "protocol": null,
+        "resources": {
+          "limits": {},
+          "requests": {}
+        },
+        "security": {
+          "allowPrivilegeEscalation": false,
+          "readOnlyRootFilesystem": true,
+          "runAsNonRoot": true
+        }
+      },
+      "evidence": [
+        "services/fulfillment/k8s/overlays/k3d/kustomization.yaml:2"
+      ],
+      "files": [
+        "deployment-patch.yaml",
+        "ingress.yaml",
+        "kustomization.yaml",
+        "namespace.yaml"
+      ],
+      "name": "k3d",
+      "name_prefix": null,
+      "namespace": "fulfillment",
+      "path": "services/fulfillment/k8s/overlays/k3d/kustomization.yaml",
+      "resources": [
+        "namespace.yaml",
+        "ingress.yaml",
+        "../../base"
+      ],
+      "secret_keys": [
+        "jdbc-url",
+        "password",
+        "username"
+      ]
+    }
+  ],
+  "profiles": [
+    {
+      "evidence": [
+        "services/fulfillment/k8s/base/deployment.yaml:46"
+      ],
+      "name": "prod",
+      "overlay": null
+    },
+    {
+      "evidence": [
+        "services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:30"
+      ],
+      "name": "dev",
+      "overlay": "k3d"
+    }
+  ]
+}

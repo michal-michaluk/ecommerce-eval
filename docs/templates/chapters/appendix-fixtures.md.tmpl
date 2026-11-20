@@ -1,0 +1,10 @@
+{% import "partials/macros.md.tmpl" as m -%}
+{% include "partials/banner.md.tmpl" %}
+{% for block in fixtures %}
+### B.{{ block.index }} {{ m.code(block.method) }} {{ m.code(block.path) }}
+
+{{ m.evidence(block.evidence) }}
+
+{{ m.fence("http", block.raw) }}
+
+{% endfor %}

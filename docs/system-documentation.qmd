@@ -1,0 +1,67 @@
+---
+title: "fulfillment — System Documentation"
+subtitle: "What this system is made of, how a request becomes a delivered parcel, and where it runs"
+version: "1.0"
+date: "2026-11-19"
+status: "Draft for review"
+audience: "Engineers and architects joining, operating or changing the fulfillment service"
+owner: "fulfillment context team"
+---
+
+# Part I — What this system is
+
+{{< include system/01-purpose-and-scope.md >}}
+
+{{< include system/02-architecture.md >}}
+
+# Part II — External interface
+
+{{< include system/03-crosscutting.md >}}
+
+## 4 Security decisions
+
+{{< include generated/chapters/security-policy.md >}}
+
+# Part III — Persistence
+
+## 5 Schema
+
+{{< include generated/chapters/schema.md >}}
+
+## 6 Migrations
+
+{{< include generated/chapters/migrations.md >}}
+
+{{< include system/07-write-path.md >}}
+
+## 8 Stored payload columns
+
+{{< include generated/chapters/payload-columns.md >}}
+
+# Appendix A — Payload catalogue
+
+{{< include generated/chapters/appendix-payloads.md >}}
+
+## 9 Domain events
+
+{{< include system/09-event-index.md >}}
+
+# Part IV — Runtime
+
+## 10 Deployment
+
+{{< include generated/chapters/deployment.md >}}
+
+## 11 Telemetry
+
+{{< include generated/chapters/telemetry.md >}}
+
+{{< include system/12-operating-notes.md >}}
+
+# Part V — Rationale and limits
+
+## 13 Decision records
+
+{{< include generated/chapters/appendix-decisions.md >}}
+
+{{< include system/14-gaps.md >}}

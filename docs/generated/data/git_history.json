@@ -1,0 +1,290 @@
+{
+  "commits_read": 22,
+  "quality": {
+    "conventional": 22,
+    "conventional_share": 1.0,
+    "counts": {
+      "chore": 6,
+      "docs": 7,
+      "feat": 7,
+      "fix": 1,
+      "refactor": 1
+    },
+    "dropped": {},
+    "non_conventional": 0,
+    "non_conventional_share": 0.0,
+    "other": 0,
+    "other_share": 0.0,
+    "path_classified": 0,
+    "rows": 22
+  },
+  "repository": "ecommerce",
+  "rows": [
+    {
+      "category": "docs",
+      "change": "close the plan — steps 5-7, resolutions, review residue",
+      "date": "2026-11-20",
+      "evidence": [
+        "git:6351030c46ecd45c5fc37c36a7dab537c0e0f4b4"
+      ],
+      "ref": {
+        "sha": "6351030"
+      },
+      "scope": "."
+    },
+    {
+      "category": "fix",
+      "change": "review blockers — orders-list facts, order identity, registration",
+      "date": "2026-11-19",
+      "evidence": [
+        "git:18b57a0097d8e40a681522a859d66ed78b86896d"
+      ],
+      "ref": {
+        "sha": "18b57a0"
+      },
+      "scope": "."
+    },
+    {
+      "category": "docs",
+      "change": "prove-of-done — 17/17 rows executed, plus assertion hardening",
+      "date": "2026-11-19",
+      "evidence": [
+        "git:7968023ab5e1e758aa7da6aae3115b8779381635"
+      ],
+      "ref": {
+        "sha": "7968023"
+      },
+      "scope": "."
+    },
+    {
+      "category": "feat",
+      "change": "phase 4 delivery — issues, hold with resume, dashboard",
+      "date": "2026-11-19",
+      "evidence": [
+        "git:cae383dd42b2939557edd3f1c8142e1fe75dce58"
+      ],
+      "ref": {
+        "sha": "cae383d"
+      },
+      "scope": "."
+    },
+    {
+      "category": "feat",
+      "change": "phase 3 delivery — parcel, readiness, carrier, label, customer state",
+      "date": "2026-11-19",
+      "evidence": [
+        "git:9311ac9e049c5cf9b88ded89dd4dcac840f93ba9"
+      ],
+      "ref": {
+        "sha": "9311ac9"
+      },
+      "scope": "."
+    },
+    {
+      "category": "feat",
+      "change": "phase 2 delivery — warehouse adapter, pick list, picking, packing",
+      "date": "2026-11-19",
+      "evidence": [
+        "git:8f510585e2b9a65d7675084a5914dbb9130a9739"
+      ],
+      "ref": {
+        "sha": "8f51058"
+      },
+      "scope": "."
+    },
+    {
+      "category": "feat",
+      "change": "phase 1 delivery — intake, assignment, orders list, security",
+      "date": "2026-11-19",
+      "evidence": [
+        "git:fc51884165a9b89ccf90c394030ae2ce32f33ffd"
+      ],
+      "ref": {
+        "sha": "fc51884"
+      },
+      "scope": "."
+    },
+    {
+      "category": "docs",
+      "change": "reconcile the element docs with the executable contract",
+      "date": "2026-11-19",
+      "evidence": [
+        "git:2669c8ac8de10a0905ecccbcf16da9eb9c6163c0"
+      ],
+      "ref": {
+        "sha": "2669c8a"
+      },
+      "scope": "."
+    },
+    {
+      "category": "refactor",
+      "change": "shared kernel plus two slices, aggregate renamed",
+      "date": "2026-11-19",
+      "evidence": [
+        "git:a2f3f973dbdef51972bacd7ca9f5fc97900a9c45"
+      ],
+      "ref": {
+        "sha": "a2f3f97"
+      },
+      "scope": "."
+    },
+    {
+      "category": "feat",
+      "change": "domain model of the order processing context",
+      "date": "2026-11-19",
+      "evidence": [
+        "git:b5377471b14d2d1d0b1f044e1e409daab7125a06"
+      ],
+      "ref": {
+        "sha": "b537747"
+      },
+      "scope": "."
+    },
+    {
+      "category": "feat",
+      "change": "scaffold services/fulfillment from the java-spring blueprint",
+      "date": "2026-11-19",
+      "evidence": [
+        "git:7c427b0ae4a4c1a68892a6d533164f1916db010b"
+      ],
+      "ref": {
+        "sha": "7c427b0"
+      },
+      "scope": "."
+    },
+    {
+      "category": "docs",
+      "change": "fulfillment implementation plan — 4 phases, 22 nodes",
+      "date": "2026-11-19",
+      "evidence": [
+        "git:9ad8a49f66311d0e2c2e4304f151a4b34766a797"
+      ],
+      "ref": {
+        "sha": "9ad8a49"
+      },
+      "scope": "."
+    },
+    {
+      "category": "docs",
+      "change": "fulfillment order processing specification",
+      "date": "2026-11-19",
+      "evidence": [
+        "git:0cf7e8c04895b58b244d709a6d233155bdddd02a"
+      ],
+      "ref": {
+        "sha": "0cf7e8c"
+      },
+      "scope": "."
+    },
+    {
+      "category": "chore",
+      "change": "ignore run-apps runtime state, storybook builds, demo scratch and the generated docs/arch + .agents/blueprints copies",
+      "date": "2026-11-19",
+      "evidence": [
+        "git:c2b9310b7b6c99ec462750c56d6f442f1e744f5c"
+      ],
+      "ref": {
+        "sha": "c2b9310"
+      },
+      "scope": "."
+    },
+    {
+      "category": "chore",
+      "change": "the run-apps skill",
+      "date": "2026-11-19",
+      "evidence": [
+        "git:84930cd0c95c040d6d8f35b42a36f1bb41213177"
+      ],
+      "ref": {
+        "sha": "84930cd"
+      },
+      "scope": "."
+    },
+    {
+      "category": "docs",
+      "change": "machine-readable transcriptions of the raw materials (json)",
+      "date": "2026-11-16",
+      "evidence": [
+        "git:8b3a6be0fc4594c39ede777fd4b1e3daf87d5ceb"
+      ],
+      "ref": {
+        "sha": "8b3a6be"
+      },
+      "scope": "."
+    },
+    {
+      "category": "chore",
+      "change": "track the spec's Storybook gallery and stop ignoring .storybook",
+      "date": "2026-11-16",
+      "evidence": [
+        "git:9cf2ca2703b5df6f44eaeb8ac6ea2c69663c929f"
+      ],
+      "ref": {
+        "sha": "9cf2ca2"
+      },
+      "scope": "."
+    },
+    {
+      "category": "docs",
+      "change": "catalog offer management specification",
+      "date": "2026-11-16",
+      "evidence": [
+        "git:cb42283151cfae9ab1fa89fdbd4be5ed1e983b62"
+      ],
+      "ref": {
+        "sha": "cb42283"
+      },
+      "scope": "."
+    },
+    {
+      "category": "chore",
+      "change": "drop derived raw/ material, move api docs under docs/",
+      "date": "2026-11-16",
+      "evidence": [
+        "git:d16a2190e14135d2d3226f95a0f670f60b11db55"
+      ],
+      "ref": {
+        "sha": "d16a219"
+      },
+      "scope": "."
+    },
+    {
+      "category": "chore",
+      "change": "add software-delivery-platform config for this repo",
+      "date": "2026-11-16",
+      "evidence": [
+        "git:c937c0c75fcec4870f67e47a7b1cbc1ee7e5b1a0"
+      ],
+      "ref": {
+        "sha": "c937c0c"
+      },
+      "scope": "."
+    },
+    {
+      "category": "chore",
+      "change": "add gitlink bump post-commit hook",
+      "date": "2026-11-16",
+      "evidence": [
+        "git:472a5a818aeb7aaba0881228b07ffaf5d78b81df"
+      ],
+      "ref": {
+        "sha": "472a5a8"
+      },
+      "scope": "."
+    },
+    {
+      "category": "feat",
+      "change": "e-commerce eval monorepo — business materials, warehouse API spec, catalog service",
+      "date": "2026-11-16",
+      "evidence": [
+        "git:5f81b0c07e776c4005cf69c8df08f17ef8992430"
+      ],
+      "ref": {
+        "sha": "5f81b0c"
+      },
+      "scope": "."
+    }
+  ],
+  "scope": ".",
+  "source": "git log"
+}

@@ -1,0 +1,2614 @@
+{
+  "examples": [
+    {
+      "assertions": [],
+      "body": null,
+      "body_raw": null,
+      "captures": [],
+      "end": 20,
+      "evidence": [
+        "services/fulfillment/e2e/fulfillment-api.hurl:19-20"
+      ],
+      "expected_status": "401",
+      "form_params": [],
+      "headers": [],
+      "index": 1,
+      "method": "GET",
+      "operation": {
+        "chapter": "get-orders",
+        "method": "GET",
+        "operation_id": "get-orders",
+        "path": "/orders"
+      },
+      "path": "/orders",
+      "path_matches_template": true,
+      "query": null,
+      "raw": "GET {{BASE_URL}}/orders\nHTTP 401",
+      "start": 19,
+      "target": "{{BASE_URL}}/orders"
+    },
+    {
+      "assertions": [],
+      "body": null,
+      "body_raw": null,
+      "captures": [],
+      "end": 23,
+      "evidence": [
+        "services/fulfillment/e2e/fulfillment-api.hurl:22-23"
+      ],
+      "expected_status": "401",
+      "form_params": [],
+      "headers": [],
+      "index": 2,
+      "method": "GET",
+      "operation": {
+        "chapter": "get-processing",
+        "method": "GET",
+        "operation_id": "get-processing-processingid",
+        "path": "/processing/{processingId}"
+      },
+      "path": "/processing/OP-2026-0001",
+      "path_matches_template": true,
+      "query": null,
+      "raw": "GET {{BASE_URL}}/processing/OP-2026-0001\nHTTP 401",
+      "start": 22,
+      "target": "{{BASE_URL}}/processing/OP-2026-0001"
+    },
+    {
+      "assertions": [
+        "jsonpath \"$.processingId\" isString",
+        "jsonpath \"$.processingId\" != \"\"",
+        "jsonpath \"$.state\" == \"pending\""
+      ],
+      "body": {
+        "delivery": {
+          "location": {
+            "kind": "PICKUP_POINT",
+            "pointId": "KRA01M"
+          },
+          "methodCode": "PARCEL_LOCKER"
+        },
+        "invoicing": {
+          "address": {
+            "city": "Kraków",
+            "country": "PL",
+            "postalCode": "30-001",
+            "street": "ul. Mineralna 5A"
+          },
+          "buyerName": "Jan Kowalski",
+          "nip": null
+        },
+        "lines": [
+          {
+            "name": "LEGO X-Wing 75423",
+            "productNumber": "75423",
+            "quantity": 1
+          }
+        ],
+        "orderHash": "sha256:1f3c9d0a",
+        "payment": {
+          "methodCode": "PAY_DEFERRED"
+        },
+        "placedAt": "2026-11-19T09:31:12Z"
+      },
+      "body_raw": "{\n  \"orderHash\": \"sha256:1f3c9d0a\",\n  \"placedAt\": \"2026-11-19T09:31:12Z\",\n  \"lines\": [{ \"productNumber\": \"75423\", \"name\": \"LEGO X-Wing 75423\", \"quantity\": 1 }],\n  \"delivery\": { \"methodCode\": \"PARCEL_LOCKER\", \"location\": { \"kind\": \"PICKUP_POINT\", \"pointId\": \"KRA01M\" } },\n  \"payment\": { \"methodCode\": \"PAY_DEFERRED\" },\n  \"invoicing\": { \"buyerName\": \"Jan Kowalski\", \"nip\": null,\n                 \"address\": { \"street\": \"ul. Mineralna 5A\", \"city\": \"Kraków\", \"postalCode\": \"30-001\", \"country\": \"PL\" } }\n}",
+      "captures": [
+        {
+          "name": "processingId",
+          "value": "jsonpath \"$.processingId\""
+        }
+      ],
+      "end": 44,
+      "evidence": [
+        "services/fulfillment/e2e/fulfillment-api.hurl:26-44"
+      ],
+      "expected_status": "201",
+      "form_params": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{shoppingToken}}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "index": 3,
+      "method": "POST",
+      "operation": {
+        "chapter": "post-orders",
+        "method": "POST",
+        "operation_id": "post-orders",
+        "path": "/orders"
+      },
+      "path": "/orders",
+      "path_matches_template": true,
+      "query": null,
+      "raw": "POST {{BASE_URL}}/orders\nAuthorization: Bearer {{shoppingToken}}\nContent-Type: application/json\n{\n  \"orderHash\": \"sha256:1f3c9d0a\",\n  \"placedAt\": \"2026-11-19T09:31:12Z\",\n  \"lines\": [{ \"productNumber\": \"75423\", \"name\": \"LEGO X-Wing 75423\", \"quantity\": 1 }],\n  \"delivery\": { \"methodCode\": \"PARCEL_LOCKER\", \"location\": { \"kind\": \"PICKUP_POINT\", \"pointId\": \"KRA01M\" } },\n  \"payment\": { \"methodCode\": \"PAY_DEFERRED\" },\n  \"invoicing\": { \"buyerName\": \"Jan Kowalski\", \"nip\": null,\n                 \"address\": { \"street\": \"ul. Mineralna 5A\", \"city\": \"Kraków\", \"postalCode\": \"30-001\", \"country\": \"PL\" } }\n}\nHTTP 201\n[Captures]\nprocessingId: jsonpath \"$.processingId\"\n[Asserts]\njsonpath \"$.processingId\" isString\njsonpath \"$.processingId\" != \"\"\njsonpath \"$.state\" == \"pending\"",
+      "start": 26,
+      "target": "{{BASE_URL}}/orders"
+    },
+    {
+      "assertions": [
+        "jsonpath \"$.processingId\" == \"{{processingId}}\"",
+        "jsonpath \"$.duplicate\" == true"
+      ],
+      "body": {
+        "delivery": {
+          "location": {
+            "kind": "PICKUP_POINT",
+            "pointId": "KRA01M"
+          },
+          "methodCode": "PARCEL_LOCKER"
+        },
+        "invoicing": {
+          "address": {
+            "city": "Kraków",
+            "country": "PL",
+            "postalCode": "30-001",
+            "street": "ul. Mineralna 5A"
+          },
+          "buyerName": "Jan Kowalski",
+          "nip": null
+        },
+        "lines": [
+          {
+            "name": "LEGO X-Wing 75423",
+            "productNumber": "75423",
+            "quantity": 1
+          }
+        ],
+        "orderHash": "sha256:1f3c9d0a",
+        "payment": {
+          "methodCode": "PAY_DEFERRED"
+        },
+        "placedAt": "2026-11-19T09:31:12Z"
+      },
+      "body_raw": "{\n  \"orderHash\": \"sha256:1f3c9d0a\",\n  \"placedAt\": \"2026-11-19T09:31:12Z\",\n  \"lines\": [{ \"productNumber\": \"75423\", \"name\": \"LEGO X-Wing 75423\", \"quantity\": 1 }],\n  \"delivery\": { \"methodCode\": \"PARCEL_LOCKER\", \"location\": { \"kind\": \"PICKUP_POINT\", \"pointId\": \"KRA01M\" } },\n  \"payment\": { \"methodCode\": \"PAY_DEFERRED\" },\n  \"invoicing\": { \"buyerName\": \"Jan Kowalski\", \"nip\": null,\n                 \"address\": { \"street\": \"ul. Mineralna 5A\", \"city\": \"Kraków\", \"postalCode\": \"30-001\", \"country\": \"PL\" } }\n}",
+      "captures": [],
+      "end": 62,
+      "evidence": [
+        "services/fulfillment/e2e/fulfillment-api.hurl:47-62"
+      ],
+      "expected_status": "200",
+      "form_params": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{shoppingToken}}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "index": 4,
+      "method": "POST",
+      "operation": {
+        "chapter": "post-orders",
+        "method": "POST",
+        "operation_id": "post-orders",
+        "path": "/orders"
+      },
+      "path": "/orders",
+      "path_matches_template": true,
+      "query": null,
+      "raw": "POST {{BASE_URL}}/orders\nAuthorization: Bearer {{shoppingToken}}\nContent-Type: application/json\n{\n  \"orderHash\": \"sha256:1f3c9d0a\",\n  \"placedAt\": \"2026-11-19T09:31:12Z\",\n  \"lines\": [{ \"productNumber\": \"75423\", \"name\": \"LEGO X-Wing 75423\", \"quantity\": 1 }],\n  \"delivery\": { \"methodCode\": \"PARCEL_LOCKER\", \"location\": { \"kind\": \"PICKUP_POINT\", \"pointId\": \"KRA01M\" } },\n  \"payment\": { \"methodCode\": \"PAY_DEFERRED\" },\n  \"invoicing\": { \"buyerName\": \"Jan Kowalski\", \"nip\": null,\n                 \"address\": { \"street\": \"ul. Mineralna 5A\", \"city\": \"Kraków\", \"postalCode\": \"30-001\", \"country\": \"PL\" } }\n}\nHTTP 200\n[Asserts]\njsonpath \"$.processingId\" == \"{{processingId}}\"\njsonpath \"$.duplicate\" == true",
+      "start": 47,
+      "target": "{{BASE_URL}}/orders"
+    },
+    {
+      "assertions": [
+        "jsonpath \"$.error\" == \"ORDER_HASH_CONFLICT\""
+      ],
+      "body": {
+        "delivery": {
+          "location": {
+            "kind": "PICKUP_POINT",
+            "pointId": "KRA01M"
+          },
+          "methodCode": "PARCEL_LOCKER"
+        },
+        "invoicing": {
+          "address": {
+            "city": "Kraków",
+            "country": "PL",
+            "postalCode": "30-001",
+            "street": "ul. Mineralna 5A"
+          },
+          "buyerName": "Jan Kowalski",
+          "nip": null
+        },
+        "lines": [
+          {
+            "name": "LEGO X-Wing 75423",
+            "productNumber": "75423",
+            "quantity": 2
+          }
+        ],
+        "orderHash": "sha256:1f3c9d0a",
+        "payment": {
+          "methodCode": "PAY_DEFERRED"
+        },
+        "placedAt": "2026-11-19T09:31:12Z"
+      },
+      "body_raw": "{\n  \"orderHash\": \"sha256:1f3c9d0a\",\n  \"placedAt\": \"2026-11-19T09:31:12Z\",\n  \"lines\": [{ \"productNumber\": \"75423\", \"name\": \"LEGO X-Wing 75423\", \"quantity\": 2 }],\n  \"delivery\": { \"methodCode\": \"PARCEL_LOCKER\", \"location\": { \"kind\": \"PICKUP_POINT\", \"pointId\": \"KRA01M\" } },\n  \"payment\": { \"methodCode\": \"PAY_DEFERRED\" },\n  \"invoicing\": { \"buyerName\": \"Jan Kowalski\", \"nip\": null,\n                 \"address\": { \"street\": \"ul. Mineralna 5A\", \"city\": \"Kraków\", \"postalCode\": \"30-001\", \"country\": \"PL\" } }\n}",
+      "captures": [],
+      "end": 79,
+      "evidence": [
+        "services/fulfillment/e2e/fulfillment-api.hurl:65-79"
+      ],
+      "expected_status": "409",
+      "form_params": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{shoppingToken}}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "index": 5,
+      "method": "POST",
+      "operation": {
+        "chapter": "post-orders",
+        "method": "POST",
+        "operation_id": "post-orders",
+        "path": "/orders"
+      },
+      "path": "/orders",
+      "path_matches_template": true,
+      "query": null,
+      "raw": "POST {{BASE_URL}}/orders\nAuthorization: Bearer {{shoppingToken}}\nContent-Type: application/json\n{\n  \"orderHash\": \"sha256:1f3c9d0a\",\n  \"placedAt\": \"2026-11-19T09:31:12Z\",\n  \"lines\": [{ \"productNumber\": \"75423\", \"name\": \"LEGO X-Wing 75423\", \"quantity\": 2 }],\n  \"delivery\": { \"methodCode\": \"PARCEL_LOCKER\", \"location\": { \"kind\": \"PICKUP_POINT\", \"pointId\": \"KRA01M\" } },\n  \"payment\": { \"methodCode\": \"PAY_DEFERRED\" },\n  \"invoicing\": { \"buyerName\": \"Jan Kowalski\", \"nip\": null,\n                 \"address\": { \"street\": \"ul. Mineralna 5A\", \"city\": \"Kraków\", \"postalCode\": \"30-001\", \"country\": \"PL\" } }\n}\nHTTP 409\n[Asserts]\njsonpath \"$.error\" == \"ORDER_HASH_CONFLICT\"",
+      "start": 65,
+      "target": "{{BASE_URL}}/orders"
+    },
+    {
+      "assertions": [
+        "jsonpath \"$.error\" == \"ORDER_INCOMPLETE\"",
+        "jsonpath \"$.missing\" count > 0"
+      ],
+      "body": {
+        "lines": [],
+        "orderHash": "sha256:bad",
+        "placedAt": "2026-11-19T09:31:12Z"
+      },
+      "body_raw": "{ \"orderHash\": \"sha256:bad\", \"placedAt\": \"2026-11-19T09:31:12Z\", \"lines\": [] }",
+      "captures": [],
+      "end": 89,
+      "evidence": [
+        "services/fulfillment/e2e/fulfillment-api.hurl:82-89"
+      ],
+      "expected_status": "422",
+      "form_params": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{shoppingToken}}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "index": 6,
+      "method": "POST",
+      "operation": {
+        "chapter": "post-orders",
+        "method": "POST",
+        "operation_id": "post-orders",
+        "path": "/orders"
+      },
+      "path": "/orders",
+      "path_matches_template": true,
+      "query": null,
+      "raw": "POST {{BASE_URL}}/orders\nAuthorization: Bearer {{shoppingToken}}\nContent-Type: application/json\n{ \"orderHash\": \"sha256:bad\", \"placedAt\": \"2026-11-19T09:31:12Z\", \"lines\": [] }\nHTTP 422\n[Asserts]\njsonpath \"$.error\" == \"ORDER_INCOMPLETE\"\njsonpath \"$.missing\" count > 0",
+      "start": 82,
+      "target": "{{BASE_URL}}/orders"
+    },
+    {
+      "assertions": [
+        "jsonpath \"$.error\" == \"ORDER_INCOMPLETE\"",
+        "jsonpath \"$.missing\" includes \"delivery.location.pointId\""
+      ],
+      "body": {
+        "delivery": {
+          "location": {
+            "kind": "PICKUP_POINT",
+            "pointId": null
+          },
+          "methodCode": "PARCEL_LOCKER"
+        },
+        "invoicing": {
+          "address": {
+            "city": "Kraków",
+            "country": "PL",
+            "postalCode": "30-001",
+            "street": "ul. Mineralna 5A"
+          },
+          "buyerName": "Jan Kowalski",
+          "nip": null
+        },
+        "lines": [
+          {
+            "name": "LEGO X-Wing 75423",
+            "productNumber": "75423",
+            "quantity": 1
+          }
+        ],
+        "orderHash": "sha256:no-point",
+        "payment": {
+          "methodCode": "PAY_DEFERRED"
+        },
+        "placedAt": "2026-11-19T09:31:12Z"
+      },
+      "body_raw": "{\n  \"orderHash\": \"sha256:no-point\", \"placedAt\": \"2026-11-19T09:31:12Z\",\n  \"lines\": [{ \"productNumber\": \"75423\", \"name\": \"LEGO X-Wing 75423\", \"quantity\": 1 }],\n  \"delivery\": { \"methodCode\": \"PARCEL_LOCKER\", \"location\": { \"kind\": \"PICKUP_POINT\", \"pointId\": null } },\n  \"payment\": { \"methodCode\": \"PAY_DEFERRED\" },\n  \"invoicing\": { \"buyerName\": \"Jan Kowalski\", \"nip\": null,\n                 \"address\": { \"street\": \"ul. Mineralna 5A\", \"city\": \"Kraków\", \"postalCode\": \"30-001\", \"country\": \"PL\" } }\n}",
+      "captures": [],
+      "end": 106,
+      "evidence": [
+        "services/fulfillment/e2e/fulfillment-api.hurl:92-106"
+      ],
+      "expected_status": "422",
+      "form_params": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{shoppingToken}}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "index": 7,
+      "method": "POST",
+      "operation": {
+        "chapter": "post-orders",
+        "method": "POST",
+        "operation_id": "post-orders",
+        "path": "/orders"
+      },
+      "path": "/orders",
+      "path_matches_template": true,
+      "query": null,
+      "raw": "POST {{BASE_URL}}/orders\nAuthorization: Bearer {{shoppingToken}}\nContent-Type: application/json\n{\n  \"orderHash\": \"sha256:no-point\", \"placedAt\": \"2026-11-19T09:31:12Z\",\n  \"lines\": [{ \"productNumber\": \"75423\", \"name\": \"LEGO X-Wing 75423\", \"quantity\": 1 }],\n  \"delivery\": { \"methodCode\": \"PARCEL_LOCKER\", \"location\": { \"kind\": \"PICKUP_POINT\", \"pointId\": null } },\n  \"payment\": { \"methodCode\": \"PAY_DEFERRED\" },\n  \"invoicing\": { \"buyerName\": \"Jan Kowalski\", \"nip\": null,\n                 \"address\": { \"street\": \"ul. Mineralna 5A\", \"city\": \"Kraków\", \"postalCode\": \"30-001\", \"country\": \"PL\" } }\n}\nHTTP 422\n[Asserts]\njsonpath \"$.error\" == \"ORDER_INCOMPLETE\"\njsonpath \"$.missing\" includes \"delivery.location.pointId\"",
+      "start": 92,
+      "target": "{{BASE_URL}}/orders"
+    },
+    {
+      "assertions": [
+        "jsonpath \"$.items\" count > 0",
+        "jsonpath \"$.items[0].processingId\" == \"{{processingId}}\"",
+        "jsonpath \"$.items[0].state\" == \"pending\"",
+        "jsonpath \"$.items[0].assignee\" exists"
+      ],
+      "body": null,
+      "body_raw": null,
+      "captures": [],
+      "end": 116,
+      "evidence": [
+        "services/fulfillment/e2e/fulfillment-api.hurl:109-116"
+      ],
+      "expected_status": "200",
+      "form_params": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{employeeToken}}"
+        }
+      ],
+      "index": 8,
+      "method": "GET",
+      "operation": {
+        "chapter": "get-orders",
+        "method": "GET",
+        "operation_id": "get-orders",
+        "path": "/orders"
+      },
+      "path": "/orders",
+      "path_matches_template": true,
+      "query": null,
+      "raw": "GET {{BASE_URL}}/orders\nAuthorization: Bearer {{employeeToken}}\nHTTP 200\n[Asserts]\njsonpath \"$.items\" count > 0\njsonpath \"$.items[0].processingId\" == \"{{processingId}}\"\njsonpath \"$.items[0].state\" == \"pending\"\njsonpath \"$.items[0].assignee\" exists",
+      "start": 109,
+      "target": "{{BASE_URL}}/orders"
+    },
+    {
+      "assertions": [
+        "jsonpath \"$.state\" == \"assigned\"",
+        "jsonpath \"$.assignee\" exists"
+      ],
+      "body": null,
+      "body_raw": null,
+      "captures": [],
+      "end": 124,
+      "evidence": [
+        "services/fulfillment/e2e/fulfillment-api.hurl:119-124"
+      ],
+      "expected_status": "201",
+      "form_params": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{employeeToken}}"
+        }
+      ],
+      "index": 9,
+      "method": "POST",
+      "operation": {
+        "chapter": "post-assignment",
+        "method": "POST",
+        "operation_id": "post-processing-processingid-assignment",
+        "path": "/processing/{processingId}/assignment"
+      },
+      "path": "/processing/{{processingId}}/assignment",
+      "path_matches_template": true,
+      "query": null,
+      "raw": "POST {{BASE_URL}}/processing/{{processingId}}/assignment\nAuthorization: Bearer {{employeeToken}}\nHTTP 201\n[Asserts]\njsonpath \"$.state\" == \"assigned\"\njsonpath \"$.assignee\" exists",
+      "start": 119,
+      "target": "{{BASE_URL}}/processing/{{processingId}}/assignment"
+    },
+    {
+      "assertions": [
+        "jsonpath \"$.error\" == \"ALREADY_ASSIGNED\""
+      ],
+      "body": null,
+      "body_raw": null,
+      "captures": [],
+      "end": 131,
+      "evidence": [
+        "services/fulfillment/e2e/fulfillment-api.hurl:127-131"
+      ],
+      "expected_status": "409",
+      "form_params": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{otherEmployeeToken}}"
+        }
+      ],
+      "index": 10,
+      "method": "POST",
+      "operation": {
+        "chapter": "post-assignment",
+        "method": "POST",
+        "operation_id": "post-processing-processingid-assignment",
+        "path": "/processing/{processingId}/assignment"
+      },
+      "path": "/processing/{{processingId}}/assignment",
+      "path_matches_template": true,
+      "query": null,
+      "raw": "POST {{BASE_URL}}/processing/{{processingId}}/assignment\nAuthorization: Bearer {{otherEmployeeToken}}\nHTTP 409\n[Asserts]\njsonpath \"$.error\" == \"ALREADY_ASSIGNED\"",
+      "start": 127,
+      "target": "{{BASE_URL}}/processing/{{processingId}}/assignment"
+    },
+    {
+      "assertions": [
+        "jsonpath \"$.state\" == \"assigned\""
+      ],
+      "body": null,
+      "body_raw": null,
+      "captures": [],
+      "end": 138,
+      "evidence": [
+        "services/fulfillment/e2e/fulfillment-api.hurl:134-138"
+      ],
+      "expected_status": "200",
+      "form_params": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{employeeToken}}"
+        }
+      ],
+      "index": 11,
+      "method": "POST",
+      "operation": {
+        "chapter": "post-assignment",
+        "method": "POST",
+        "operation_id": "post-processing-processingid-assignment",
+        "path": "/processing/{processingId}/assignment"
+      },
+      "path": "/processing/{{processingId}}/assignment",
+      "path_matches_template": true,
+      "query": null,
+      "raw": "POST {{BASE_URL}}/processing/{{processingId}}/assignment\nAuthorization: Bearer {{employeeToken}}\nHTTP 200\n[Asserts]\njsonpath \"$.state\" == \"assigned\"",
+      "start": 134,
+      "target": "{{BASE_URL}}/processing/{{processingId}}/assignment"
+    },
+    {
+      "assertions": [
+        "jsonpath \"$.items[0].state\" == \"assigned\"",
+        "jsonpath \"$.items[0].assignee\" exists"
+      ],
+      "body": null,
+      "body_raw": null,
+      "captures": [],
+      "end": 146,
+      "evidence": [
+        "services/fulfillment/e2e/fulfillment-api.hurl:141-146"
+      ],
+      "expected_status": "200",
+      "form_params": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{employeeToken}}"
+        }
+      ],
+      "index": 12,
+      "method": "GET",
+      "operation": {
+        "chapter": "get-orders",
+        "method": "GET",
+        "operation_id": "get-orders",
+        "path": "/orders"
+      },
+      "path": "/orders",
+      "path_matches_template": true,
+      "query": null,
+      "raw": "GET {{BASE_URL}}/orders\nAuthorization: Bearer {{employeeToken}}\nHTTP 200\n[Asserts]\njsonpath \"$.items[0].state\" == \"assigned\"\njsonpath \"$.items[0].assignee\" exists",
+      "start": 141,
+      "target": "{{BASE_URL}}/orders"
+    },
+    {
+      "assertions": [],
+      "body": {
+        "lines": [],
+        "orderHash": "sha256:not-mine",
+        "placedAt": "2026-11-19T09:31:12Z"
+      },
+      "body_raw": "{ \"orderHash\": \"sha256:not-mine\", \"placedAt\": \"2026-11-19T09:31:12Z\", \"lines\": [] }",
+      "captures": [],
+      "end": 153,
+      "evidence": [
+        "services/fulfillment/e2e/fulfillment-api.hurl:149-153"
+      ],
+      "expected_status": "403",
+      "form_params": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{employeeToken}}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "index": 13,
+      "method": "POST",
+      "operation": {
+        "chapter": "post-orders",
+        "method": "POST",
+        "operation_id": "post-orders",
+        "path": "/orders"
+      },
+      "path": "/orders",
+      "path_matches_template": true,
+      "query": null,
+      "raw": "POST {{BASE_URL}}/orders\nAuthorization: Bearer {{employeeToken}}\nContent-Type: application/json\n{ \"orderHash\": \"sha256:not-mine\", \"placedAt\": \"2026-11-19T09:31:12Z\", \"lines\": [] }\nHTTP 403",
+      "start": 149,
+      "target": "{{BASE_URL}}/orders"
+    },
+    {
+      "assertions": [
+        "jsonpath \"$.processingId\" == \"{{processingId}}\"",
+        "jsonpath \"$.state\" == \"assigned\"",
+        "jsonpath \"$.assignee\" exists",
+        "jsonpath \"$.positions[0].state\" == \"awaitingScan\"",
+        "jsonpath \"$.openIssues\" == 0"
+      ],
+      "body": null,
+      "body_raw": null,
+      "captures": [],
+      "end": 164,
+      "evidence": [
+        "services/fulfillment/e2e/fulfillment-api.hurl:156-164"
+      ],
+      "expected_status": "200",
+      "form_params": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{employeeToken}}"
+        }
+      ],
+      "index": 14,
+      "method": "GET",
+      "operation": {
+        "chapter": "get-processing",
+        "method": "GET",
+        "operation_id": "get-processing-processingid",
+        "path": "/processing/{processingId}"
+      },
+      "path": "/processing/{{processingId}}",
+      "path_matches_template": true,
+      "query": null,
+      "raw": "GET {{BASE_URL}}/processing/{{processingId}}\nAuthorization: Bearer {{employeeToken}}\nHTTP 200\n[Asserts]\njsonpath \"$.processingId\" == \"{{processingId}}\"\njsonpath \"$.state\" == \"assigned\"\njsonpath \"$.assignee\" exists\njsonpath \"$.positions[0].state\" == \"awaitingScan\"\njsonpath \"$.openIssues\" == 0",
+      "start": 156,
+      "target": "{{BASE_URL}}/processing/{{processingId}}"
+    },
+    {
+      "assertions": [],
+      "body": null,
+      "body_raw": null,
+      "captures": [],
+      "end": 169,
+      "evidence": [
+        "services/fulfillment/e2e/fulfillment-api.hurl:167-169"
+      ],
+      "expected_status": "200",
+      "form_params": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{resolverToken}}"
+        }
+      ],
+      "index": 15,
+      "method": "GET",
+      "operation": {
+        "chapter": "get-processing",
+        "method": "GET",
+        "operation_id": "get-processing-processingid",
+        "path": "/processing/{processingId}"
+      },
+      "path": "/processing/{{processingId}}",
+      "path_matches_template": true,
+      "query": null,
+      "raw": "GET {{BASE_URL}}/processing/{{processingId}}\nAuthorization: Bearer {{resolverToken}}\nHTTP 200",
+      "start": 167,
+      "target": "{{BASE_URL}}/processing/{{processingId}}"
+    },
+    {
+      "assertions": [
+        "jsonpath \"$.lines[0].productNumber\" == \"75423\"",
+        "jsonpath \"$.lines[0].quantity\" == 1",
+        "jsonpath \"$.lines[0].locations\" count > 0"
+      ],
+      "body": null,
+      "body_raw": null,
+      "captures": [],
+      "end": 178,
+      "evidence": [
+        "services/fulfillment/e2e/fulfillment-api.hurl:172-178"
+      ],
+      "expected_status": "200",
+      "form_params": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{employeeToken}}"
+        }
+      ],
+      "index": 16,
+      "method": "GET",
+      "operation": {
+        "chapter": "get-pick-list",
+        "method": "GET",
+        "operation_id": "get-processing-processingid-pick-list",
+        "path": "/processing/{processingId}/pick-list"
+      },
+      "path": "/processing/{{processingId}}/pick-list",
+      "path_matches_template": true,
+      "query": null,
+      "raw": "GET {{BASE_URL}}/processing/{{processingId}}/pick-list\nAuthorization: Bearer {{employeeToken}}\nHTTP 200\n[Asserts]\njsonpath \"$.lines[0].productNumber\" == \"75423\"\njsonpath \"$.lines[0].quantity\" == 1\njsonpath \"$.lines[0].locations\" count > 0",
+      "start": 172,
+      "target": "{{BASE_URL}}/processing/{{processingId}}/pick-list"
+    },
+    {
+      "assertions": [
+        "jsonpath \"$.positions[0].state\" == \"picked\"",
+        "jsonpath \"$.state\" == \"picking\""
+      ],
+      "body": {
+        "confirmation": "picked"
+      },
+      "body_raw": "{ \"confirmation\": \"picked\" }",
+      "captures": [],
+      "end": 188,
+      "evidence": [
+        "services/fulfillment/e2e/fulfillment-api.hurl:181-188"
+      ],
+      "expected_status": "200",
+      "form_params": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{employeeToken}}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "index": 17,
+      "method": "POST",
+      "operation": {
+        "chapter": "post-scan-position",
+        "method": "POST",
+        "operation_id": "post-processing-processingid-positions-productnumber",
+        "path": "/processing/{processingId}/positions/{productNumber}"
+      },
+      "path": "/processing/{{processingId}}/positions/75423",
+      "path_matches_template": true,
+      "query": null,
+      "raw": "POST {{BASE_URL}}/processing/{{processingId}}/positions/75423\nAuthorization: Bearer {{employeeToken}}\nContent-Type: application/json\n{ \"confirmation\": \"picked\" }\nHTTP 200\n[Asserts]\njsonpath \"$.positions[0].state\" == \"picked\"\njsonpath \"$.state\" == \"picking\"",
+      "start": 181,
+      "target": "{{BASE_URL}}/processing/{{processingId}}/positions/75423"
+    },
+    {
+      "assertions": [
+        "jsonpath \"$.positions[0].state\" == \"picked\""
+      ],
+      "body": {
+        "confirmation": "picked"
+      },
+      "body_raw": "{ \"confirmation\": \"picked\" }",
+      "captures": [],
+      "end": 197,
+      "evidence": [
+        "services/fulfillment/e2e/fulfillment-api.hurl:191-197"
+      ],
+      "expected_status": "200",
+      "form_params": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{employeeToken}}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "index": 18,
+      "method": "POST",
+      "operation": {
+        "chapter": "post-scan-position",
+        "method": "POST",
+        "operation_id": "post-processing-processingid-positions-productnumber",
+        "path": "/processing/{processingId}/positions/{productNumber}"
+      },
+      "path": "/processing/{{processingId}}/positions/75423",
+      "path_matches_template": true,
+      "query": null,
+      "raw": "POST {{BASE_URL}}/processing/{{processingId}}/positions/75423\nAuthorization: Bearer {{employeeToken}}\nContent-Type: application/json\n{ \"confirmation\": \"picked\" }\nHTTP 200\n[Asserts]\njsonpath \"$.positions[0].state\" == \"picked\"",
+      "start": 191,
+      "target": "{{BASE_URL}}/processing/{{processingId}}/positions/75423"
+    },
+    {
+      "assertions": [
+        "jsonpath \"$.error\" == \"POSITION_NOT_FOUND\""
+      ],
+      "body": {
+        "confirmation": "picked"
+      },
+      "body_raw": "{ \"confirmation\": \"picked\" }",
+      "captures": [],
+      "end": 206,
+      "evidence": [
+        "services/fulfillment/e2e/fulfillment-api.hurl:200-206"
+      ],
+      "expected_status": "404",
+      "form_params": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{employeeToken}}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "index": 19,
+      "method": "POST",
+      "operation": {
+        "chapter": "post-scan-position",
+        "method": "POST",
+        "operation_id": "post-processing-processingid-positions-productnumber",
+        "path": "/processing/{processingId}/positions/{productNumber}"
+      },
+      "path": "/processing/{{processingId}}/positions/40404",
+      "path_matches_template": true,
+      "query": null,
+      "raw": "POST {{BASE_URL}}/processing/{{processingId}}/positions/40404\nAuthorization: Bearer {{employeeToken}}\nContent-Type: application/json\n{ \"confirmation\": \"picked\" }\nHTTP 404\n[Asserts]\njsonpath \"$.error\" == \"POSITION_NOT_FOUND\"",
+      "start": 200,
+      "target": "{{BASE_URL}}/processing/{{processingId}}/positions/40404"
+    },
+    {
+      "assertions": [
+        "jsonpath \"$.positions[0].state\" == \"packed\"",
+        "jsonpath \"$.state\" == \"packed\""
+      ],
+      "body": {
+        "productNumbers": [
+          "75423"
+        ]
+      },
+      "body_raw": "{ \"productNumbers\": [\"75423\"] }",
+      "captures": [],
+      "end": 216,
+      "evidence": [
+        "services/fulfillment/e2e/fulfillment-api.hurl:209-216"
+      ],
+      "expected_status": "200",
+      "form_params": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{employeeToken}}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "index": 20,
+      "method": "POST",
+      "operation": {
+        "chapter": "post-packing",
+        "method": "POST",
+        "operation_id": "post-processing-processingid-packing",
+        "path": "/processing/{processingId}/packing"
+      },
+      "path": "/processing/{{processingId}}/packing",
+      "path_matches_template": true,
+      "query": null,
+      "raw": "POST {{BASE_URL}}/processing/{{processingId}}/packing\nAuthorization: Bearer {{employeeToken}}\nContent-Type: application/json\n{ \"productNumbers\": [\"75423\"] }\nHTTP 200\n[Asserts]\njsonpath \"$.positions[0].state\" == \"packed\"\njsonpath \"$.state\" == \"packed\"",
+      "start": 209,
+      "target": "{{BASE_URL}}/processing/{{processingId}}/packing"
+    },
+    {
+      "assertions": [
+        "jsonpath \"$.state\" == \"readyForDelivery\"",
+        "jsonpath \"$.parcel.waybill\" isString",
+        "jsonpath \"$.parcel.waybill\" != \"\""
+      ],
+      "body": null,
+      "body_raw": null,
+      "captures": [],
+      "end": 225,
+      "evidence": [
+        "services/fulfillment/e2e/fulfillment-api.hurl:219-225"
+      ],
+      "expected_status": "200",
+      "form_params": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{employeeToken}}"
+        }
+      ],
+      "index": 21,
+      "method": "POST",
+      "operation": {
+        "chapter": "post-readiness",
+        "method": "POST",
+        "operation_id": "post-processing-processingid-readiness",
+        "path": "/processing/{processingId}/readiness"
+      },
+      "path": "/processing/{{processingId}}/readiness",
+      "path_matches_template": true,
+      "query": null,
+      "raw": "POST {{BASE_URL}}/processing/{{processingId}}/readiness\nAuthorization: Bearer {{employeeToken}}\nHTTP 200\n[Asserts]\njsonpath \"$.state\" == \"readyForDelivery\"\njsonpath \"$.parcel.waybill\" isString\njsonpath \"$.parcel.waybill\" != \"\"",
+      "start": 219,
+      "target": "{{BASE_URL}}/processing/{{processingId}}/readiness"
+    },
+    {
+      "assertions": [
+        "jsonpath \"$.items[0].processingId\" == \"{{processingId}}\"",
+        "jsonpath \"$.items[0].state\" == \"readyForDelivery\"",
+        "jsonpath \"$.items[0].positionProgress\" == \"1/1 packed\""
+      ],
+      "body": null,
+      "body_raw": null,
+      "captures": [],
+      "end": 234,
+      "evidence": [
+        "services/fulfillment/e2e/fulfillment-api.hurl:228-234"
+      ],
+      "expected_status": "200",
+      "form_params": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{employeeToken}}"
+        }
+      ],
+      "index": 22,
+      "method": "GET",
+      "operation": {
+        "chapter": "get-orders",
+        "method": "GET",
+        "operation_id": "get-orders",
+        "path": "/orders"
+      },
+      "path": "/orders",
+      "path_matches_template": true,
+      "query": null,
+      "raw": "GET {{BASE_URL}}/orders\nAuthorization: Bearer {{employeeToken}}\nHTTP 200\n[Asserts]\njsonpath \"$.items[0].processingId\" == \"{{processingId}}\"\njsonpath \"$.items[0].state\" == \"readyForDelivery\"\njsonpath \"$.items[0].positionProgress\" == \"1/1 packed\"",
+      "start": 228,
+      "target": "{{BASE_URL}}/orders"
+    },
+    {
+      "assertions": [
+        "jsonpath \"$.state\" == \"pending\""
+      ],
+      "body": {
+        "delivery": {
+          "location": {
+            "kind": "PICKUP_POINT",
+            "pointId": "KRA01M"
+          },
+          "methodCode": "PARCEL_LOCKER"
+        },
+        "invoicing": {
+          "address": {
+            "city": "Kraków",
+            "country": "PL",
+            "postalCode": "30-001",
+            "street": "ul. Mineralna 5A"
+          },
+          "buyerName": "Jan Kowalski",
+          "nip": null
+        },
+        "lines": [
+          {
+            "name": "LEGO X-Wing 75423",
+            "productNumber": "75423",
+            "quantity": 1
+          },
+          {
+            "name": "LEGO Orchidea 99881",
+            "productNumber": "99881",
+            "quantity": 3
+          }
+        ],
+        "orderHash": "sha256:2b7e4c11",
+        "payment": {
+          "methodCode": "PAY_DEFERRED"
+        },
+        "placedAt": "2026-11-19T10:02:00Z"
+      },
+      "body_raw": "{\n  \"orderHash\": \"sha256:2b7e4c11\",\n  \"placedAt\": \"2026-11-19T10:02:00Z\",\n  \"lines\": [{ \"productNumber\": \"75423\", \"name\": \"LEGO X-Wing 75423\", \"quantity\": 1 },\n            { \"productNumber\": \"99881\", \"name\": \"LEGO Orchidea 99881\", \"quantity\": 3 }],\n  \"delivery\": { \"methodCode\": \"PARCEL_LOCKER\", \"location\": { \"kind\": \"PICKUP_POINT\", \"pointId\": \"KRA01M\" } },\n  \"payment\": { \"methodCode\": \"PAY_DEFERRED\" },\n  \"invoicing\": { \"buyerName\": \"Jan Kowalski\", \"nip\": null,\n                 \"address\": { \"street\": \"ul. Mineralna 5A\", \"city\": \"Kraków\", \"postalCode\": \"30-001\", \"country\": \"PL\" } }\n}",
+      "captures": [
+        {
+          "name": "openProcessingId",
+          "value": "jsonpath \"$.processingId\""
+        }
+      ],
+      "end": 254,
+      "evidence": [
+        "services/fulfillment/e2e/fulfillment-api.hurl:237-254"
+      ],
+      "expected_status": "201",
+      "form_params": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{shoppingToken}}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "index": 23,
+      "method": "POST",
+      "operation": {
+        "chapter": "post-orders",
+        "method": "POST",
+        "operation_id": "post-orders",
+        "path": "/orders"
+      },
+      "path": "/orders",
+      "path_matches_template": true,
+      "query": null,
+      "raw": "POST {{BASE_URL}}/orders\nAuthorization: Bearer {{shoppingToken}}\nContent-Type: application/json\n{\n  \"orderHash\": \"sha256:2b7e4c11\",\n  \"placedAt\": \"2026-11-19T10:02:00Z\",\n  \"lines\": [{ \"productNumber\": \"75423\", \"name\": \"LEGO X-Wing 75423\", \"quantity\": 1 },\n            { \"productNumber\": \"99881\", \"name\": \"LEGO Orchidea 99881\", \"quantity\": 3 }],\n  \"delivery\": { \"methodCode\": \"PARCEL_LOCKER\", \"location\": { \"kind\": \"PICKUP_POINT\", \"pointId\": \"KRA01M\" } },\n  \"payment\": { \"methodCode\": \"PAY_DEFERRED\" },\n  \"invoicing\": { \"buyerName\": \"Jan Kowalski\", \"nip\": null,\n                 \"address\": { \"street\": \"ul. Mineralna 5A\", \"city\": \"Kraków\", \"postalCode\": \"30-001\", \"country\": \"PL\" } }\n}\nHTTP 201\n[Captures]\nopenProcessingId: jsonpath \"$.processingId\"\n[Asserts]\njsonpath \"$.state\" == \"pending\"",
+      "start": 237,
+      "target": "{{BASE_URL}}/orders"
+    },
+    {
+      "assertions": [],
+      "body": null,
+      "body_raw": null,
+      "captures": [],
+      "end": 258,
+      "evidence": [
+        "services/fulfillment/e2e/fulfillment-api.hurl:256-258"
+      ],
+      "expected_status": "201",
+      "form_params": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{employeeToken}}"
+        }
+      ],
+      "index": 24,
+      "method": "POST",
+      "operation": {
+        "chapter": "post-assignment",
+        "method": "POST",
+        "operation_id": "post-processing-processingid-assignment",
+        "path": "/processing/{processingId}/assignment"
+      },
+      "path": "/processing/{{openProcessingId}}/assignment",
+      "path_matches_template": true,
+      "query": null,
+      "raw": "POST {{BASE_URL}}/processing/{{openProcessingId}}/assignment\nAuthorization: Bearer {{employeeToken}}\nHTTP 201",
+      "start": 256,
+      "target": "{{BASE_URL}}/processing/{{openProcessingId}}/assignment"
+    },
+    {
+      "assertions": [
+        "jsonpath \"$.state\" == \"picking\""
+      ],
+      "body": {
+        "confirmation": "picked"
+      },
+      "body_raw": "{ \"confirmation\": \"picked\" }",
+      "captures": [],
+      "end": 266,
+      "evidence": [
+        "services/fulfillment/e2e/fulfillment-api.hurl:260-266"
+      ],
+      "expected_status": "200",
+      "form_params": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{employeeToken}}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "index": 25,
+      "method": "POST",
+      "operation": {
+        "chapter": "post-scan-position",
+        "method": "POST",
+        "operation_id": "post-processing-processingid-positions-productnumber",
+        "path": "/processing/{processingId}/positions/{productNumber}"
+      },
+      "path": "/processing/{{openProcessingId}}/positions/75423",
+      "path_matches_template": true,
+      "query": null,
+      "raw": "POST {{BASE_URL}}/processing/{{openProcessingId}}/positions/75423\nAuthorization: Bearer {{employeeToken}}\nContent-Type: application/json\n{ \"confirmation\": \"picked\" }\nHTTP 200\n[Asserts]\njsonpath \"$.state\" == \"picking\"",
+      "start": 260,
+      "target": "{{BASE_URL}}/processing/{{openProcessingId}}/positions/75423"
+    },
+    {
+      "assertions": [
+        "jsonpath \"$.state\" == \"picking\""
+      ],
+      "body": {
+        "productNumbers": [
+          "75423"
+        ]
+      },
+      "body_raw": "{ \"productNumbers\": [\"75423\"] }",
+      "captures": [],
+      "end": 274,
+      "evidence": [
+        "services/fulfillment/e2e/fulfillment-api.hurl:268-274"
+      ],
+      "expected_status": "200",
+      "form_params": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{employeeToken}}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "index": 26,
+      "method": "POST",
+      "operation": {
+        "chapter": "post-packing",
+        "method": "POST",
+        "operation_id": "post-processing-processingid-packing",
+        "path": "/processing/{processingId}/packing"
+      },
+      "path": "/processing/{{openProcessingId}}/packing",
+      "path_matches_template": true,
+      "query": null,
+      "raw": "POST {{BASE_URL}}/processing/{{openProcessingId}}/packing\nAuthorization: Bearer {{employeeToken}}\nContent-Type: application/json\n{ \"productNumbers\": [\"75423\"] }\nHTTP 200\n[Asserts]\njsonpath \"$.state\" == \"picking\"",
+      "start": 268,
+      "target": "{{BASE_URL}}/processing/{{openProcessingId}}/packing"
+    },
+    {
+      "assertions": [
+        "jsonpath \"$.error\" == \"NOT_READY\"",
+        "jsonpath \"$.reasons\" count > 0",
+        "jsonpath \"$.reasons[0]\" == \"notPacked\""
+      ],
+      "body": null,
+      "body_raw": null,
+      "captures": [],
+      "end": 283,
+      "evidence": [
+        "services/fulfillment/e2e/fulfillment-api.hurl:277-283"
+      ],
+      "expected_status": "409",
+      "form_params": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{employeeToken}}"
+        }
+      ],
+      "index": 27,
+      "method": "POST",
+      "operation": {
+        "chapter": "post-readiness",
+        "method": "POST",
+        "operation_id": "post-processing-processingid-readiness",
+        "path": "/processing/{processingId}/readiness"
+      },
+      "path": "/processing/{{openProcessingId}}/readiness",
+      "path_matches_template": true,
+      "query": null,
+      "raw": "POST {{BASE_URL}}/processing/{{openProcessingId}}/readiness\nAuthorization: Bearer {{employeeToken}}\nHTTP 409\n[Asserts]\njsonpath \"$.error\" == \"NOT_READY\"\njsonpath \"$.reasons\" count > 0\njsonpath \"$.reasons[0]\" == \"notPacked\"",
+      "start": 277,
+      "target": "{{BASE_URL}}/processing/{{openProcessingId}}/readiness"
+    },
+    {
+      "assertions": [
+        "jsonpath \"$.issueId\" isString",
+        "jsonpath \"$.issueId\" != \"\"",
+        "jsonpath \"$.orderState\" == \"onHold\"",
+        "jsonpath \"$.state\" == \"onHold\"",
+        "jsonpath \"$.openIssues\" == 1"
+      ],
+      "body": {
+        "kind": "LOST",
+        "productNumber": "99881"
+      },
+      "body_raw": "{ \"kind\": \"LOST\", \"productNumber\": \"99881\" }",
+      "captures": [
+        {
+          "name": "issueId",
+          "value": "jsonpath \"$.issueId\""
+        }
+      ],
+      "end": 299,
+      "evidence": [
+        "services/fulfillment/e2e/fulfillment-api.hurl:287-299"
+      ],
+      "expected_status": "201",
+      "form_params": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{employeeToken}}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "index": 28,
+      "method": "POST",
+      "operation": {
+        "chapter": "post-issues",
+        "method": "POST",
+        "operation_id": "post-processing-processingid-issues",
+        "path": "/processing/{processingId}/issues"
+      },
+      "path": "/processing/{{openProcessingId}}/issues",
+      "path_matches_template": true,
+      "query": null,
+      "raw": "POST {{BASE_URL}}/processing/{{openProcessingId}}/issues\nAuthorization: Bearer {{employeeToken}}\nContent-Type: application/json\n{ \"kind\": \"LOST\", \"productNumber\": \"99881\" }\nHTTP 201\n[Captures]\nissueId: jsonpath \"$.issueId\"\n[Asserts]\njsonpath \"$.issueId\" isString\njsonpath \"$.issueId\" != \"\"\njsonpath \"$.orderState\" == \"onHold\"\njsonpath \"$.state\" == \"onHold\"\njsonpath \"$.openIssues\" == 1",
+      "start": 287,
+      "target": "{{BASE_URL}}/processing/{{openProcessingId}}/issues"
+    },
+    {
+      "assertions": [
+        "jsonpath \"$.orderState\" == \"onHold\"",
+        "jsonpath \"$.openIssues\" == 2"
+      ],
+      "body": {
+        "kind": "WRONG_LOCATION",
+        "productNumber": "99881"
+      },
+      "body_raw": "{ \"kind\": \"WRONG_LOCATION\", \"productNumber\": \"99881\" }",
+      "captures": [
+        {
+          "name": "secondIssueId",
+          "value": "jsonpath \"$.issueId\""
+        }
+      ],
+      "end": 311,
+      "evidence": [
+        "services/fulfillment/e2e/fulfillment-api.hurl:302-311"
+      ],
+      "expected_status": "201",
+      "form_params": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{employeeToken}}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "index": 29,
+      "method": "POST",
+      "operation": {
+        "chapter": "post-issues",
+        "method": "POST",
+        "operation_id": "post-processing-processingid-issues",
+        "path": "/processing/{processingId}/issues"
+      },
+      "path": "/processing/{{openProcessingId}}/issues",
+      "path_matches_template": true,
+      "query": null,
+      "raw": "POST {{BASE_URL}}/processing/{{openProcessingId}}/issues\nAuthorization: Bearer {{employeeToken}}\nContent-Type: application/json\n{ \"kind\": \"WRONG_LOCATION\", \"productNumber\": \"99881\" }\nHTTP 201\n[Captures]\nsecondIssueId: jsonpath \"$.issueId\"\n[Asserts]\njsonpath \"$.orderState\" == \"onHold\"\njsonpath \"$.openIssues\" == 2",
+      "start": 302,
+      "target": "{{BASE_URL}}/processing/{{openProcessingId}}/issues"
+    },
+    {
+      "assertions": [
+        "jsonpath \"$.error\" == \"ON_HOLD\""
+      ],
+      "body": {
+        "confirmation": "picked"
+      },
+      "body_raw": "{ \"confirmation\": \"picked\" }",
+      "captures": [],
+      "end": 320,
+      "evidence": [
+        "services/fulfillment/e2e/fulfillment-api.hurl:314-320"
+      ],
+      "expected_status": "409",
+      "form_params": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{employeeToken}}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "index": 30,
+      "method": "POST",
+      "operation": {
+        "chapter": "post-scan-position",
+        "method": "POST",
+        "operation_id": "post-processing-processingid-positions-productnumber",
+        "path": "/processing/{processingId}/positions/{productNumber}"
+      },
+      "path": "/processing/{{openProcessingId}}/positions/99881",
+      "path_matches_template": true,
+      "query": null,
+      "raw": "POST {{BASE_URL}}/processing/{{openProcessingId}}/positions/99881\nAuthorization: Bearer {{employeeToken}}\nContent-Type: application/json\n{ \"confirmation\": \"picked\" }\nHTTP 409\n[Asserts]\njsonpath \"$.error\" == \"ON_HOLD\"",
+      "start": 314,
+      "target": "{{BASE_URL}}/processing/{{openProcessingId}}/positions/99881"
+    },
+    {
+      "assertions": [
+        "jsonpath \"$.error\" == \"NOT_READY\"",
+        "jsonpath \"$.reasons[0]\" == \"onHold\""
+      ],
+      "body": null,
+      "body_raw": null,
+      "captures": [],
+      "end": 328,
+      "evidence": [
+        "services/fulfillment/e2e/fulfillment-api.hurl:323-328"
+      ],
+      "expected_status": "409",
+      "form_params": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{employeeToken}}"
+        }
+      ],
+      "index": 31,
+      "method": "POST",
+      "operation": {
+        "chapter": "post-readiness",
+        "method": "POST",
+        "operation_id": "post-processing-processingid-readiness",
+        "path": "/processing/{processingId}/readiness"
+      },
+      "path": "/processing/{{openProcessingId}}/readiness",
+      "path_matches_template": true,
+      "query": null,
+      "raw": "POST {{BASE_URL}}/processing/{{openProcessingId}}/readiness\nAuthorization: Bearer {{employeeToken}}\nHTTP 409\n[Asserts]\njsonpath \"$.error\" == \"NOT_READY\"\njsonpath \"$.reasons[0]\" == \"onHold\"",
+      "start": 323,
+      "target": "{{BASE_URL}}/processing/{{openProcessingId}}/readiness"
+    },
+    {
+      "assertions": [
+        "jsonpath \"$.items[0].issueId\" isString",
+        "jsonpath \"$.items[0].issueId\" != \"\"",
+        "jsonpath \"$.items[0].kind\" exists",
+        "jsonpath \"$.items[0].issueId\" == \"{{issueId}}\"",
+        "jsonpath \"$.items[0].orderState\" == \"onHold\"",
+        "jsonpath \"$.items[0].product.productNumber\" == \"99881\""
+      ],
+      "body": null,
+      "body_raw": null,
+      "captures": [],
+      "end": 340,
+      "evidence": [
+        "services/fulfillment/e2e/fulfillment-api.hurl:331-340"
+      ],
+      "expected_status": "200",
+      "form_params": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{resolverToken}}"
+        }
+      ],
+      "index": 32,
+      "method": "GET",
+      "operation": {
+        "chapter": "get-issues",
+        "method": "GET",
+        "operation_id": "get-issues",
+        "path": "/issues"
+      },
+      "path": "/issues",
+      "path_matches_template": true,
+      "query": null,
+      "raw": "GET {{BASE_URL}}/issues\nAuthorization: Bearer {{resolverToken}}\nHTTP 200\n[Asserts]\njsonpath \"$.items[0].issueId\" isString\njsonpath \"$.items[0].issueId\" != \"\"\njsonpath \"$.items[0].kind\" exists\njsonpath \"$.items[0].issueId\" == \"{{issueId}}\"\njsonpath \"$.items[0].orderState\" == \"onHold\"\njsonpath \"$.items[0].product.productNumber\" == \"99881\"",
+      "start": 331,
+      "target": "{{BASE_URL}}/issues"
+    },
+    {
+      "assertions": [],
+      "body": null,
+      "body_raw": null,
+      "captures": [],
+      "end": 345,
+      "evidence": [
+        "services/fulfillment/e2e/fulfillment-api.hurl:343-345"
+      ],
+      "expected_status": "403",
+      "form_params": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{employeeToken}}"
+        }
+      ],
+      "index": 33,
+      "method": "GET",
+      "operation": {
+        "chapter": "get-issues",
+        "method": "GET",
+        "operation_id": "get-issues",
+        "path": "/issues"
+      },
+      "path": "/issues",
+      "path_matches_template": true,
+      "query": null,
+      "raw": "GET {{BASE_URL}}/issues\nAuthorization: Bearer {{employeeToken}}\nHTTP 403",
+      "start": 343,
+      "target": "{{BASE_URL}}/issues"
+    },
+    {
+      "assertions": [
+        "jsonpath \"$.error\" == \"ISSUES_REMAIN\"",
+        "jsonpath \"$.openIssues\" == 1"
+      ],
+      "body": {
+        "closedIssueIds": [
+          "{{issueId}}"
+        ]
+      },
+      "body_raw": "{ \"closedIssueIds\": [\"{{issueId}}\"] }",
+      "captures": [],
+      "end": 355,
+      "evidence": [
+        "services/fulfillment/e2e/fulfillment-api.hurl:348-355"
+      ],
+      "expected_status": "409",
+      "form_params": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{resolverToken}}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "index": 34,
+      "method": "POST",
+      "operation": {
+        "chapter": "post-hold-resume",
+        "method": "POST",
+        "operation_id": "post-processing-processingid-hold-resume",
+        "path": "/processing/{processingId}/hold/resume"
+      },
+      "path": "/processing/{{openProcessingId}}/hold/resume",
+      "path_matches_template": true,
+      "query": null,
+      "raw": "POST {{BASE_URL}}/processing/{{openProcessingId}}/hold/resume\nAuthorization: Bearer {{resolverToken}}\nContent-Type: application/json\n{ \"closedIssueIds\": [\"{{issueId}}\"] }\nHTTP 409\n[Asserts]\njsonpath \"$.error\" == \"ISSUES_REMAIN\"\njsonpath \"$.openIssues\" == 1",
+      "start": 348,
+      "target": "{{BASE_URL}}/processing/{{openProcessingId}}/hold/resume"
+    },
+    {
+      "assertions": [
+        "jsonpath \"$.error\" == \"ISSUE_UNKNOWN\""
+      ],
+      "body": {
+        "closedIssueIds": [
+          "ISS-2026-9999"
+        ]
+      },
+      "body_raw": "{ \"closedIssueIds\": [\"ISS-2026-9999\"] }",
+      "captures": [],
+      "end": 364,
+      "evidence": [
+        "services/fulfillment/e2e/fulfillment-api.hurl:358-364"
+      ],
+      "expected_status": "404",
+      "form_params": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{resolverToken}}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "index": 35,
+      "method": "POST",
+      "operation": {
+        "chapter": "post-hold-resume",
+        "method": "POST",
+        "operation_id": "post-processing-processingid-hold-resume",
+        "path": "/processing/{processingId}/hold/resume"
+      },
+      "path": "/processing/{{openProcessingId}}/hold/resume",
+      "path_matches_template": true,
+      "query": null,
+      "raw": "POST {{BASE_URL}}/processing/{{openProcessingId}}/hold/resume\nAuthorization: Bearer {{resolverToken}}\nContent-Type: application/json\n{ \"closedIssueIds\": [\"ISS-2026-9999\"] }\nHTTP 404\n[Asserts]\njsonpath \"$.error\" == \"ISSUE_UNKNOWN\"",
+      "start": 358,
+      "target": "{{BASE_URL}}/processing/{{openProcessingId}}/hold/resume"
+    },
+    {
+      "assertions": [
+        "jsonpath \"$.state\" == \"picking\"",
+        "jsonpath \"$.openIssues\" == 0",
+        "jsonpath \"$.issue\" == null",
+        "jsonpath \"$.closedIssueIds[0]\" == \"{{issueId}}\""
+      ],
+      "body": {
+        "closedIssueIds": [
+          "{{issueId}}",
+          "{{secondIssueId}}"
+        ]
+      },
+      "body_raw": "{ \"closedIssueIds\": [\"{{issueId}}\", \"{{secondIssueId}}\"] }",
+      "captures": [],
+      "end": 376,
+      "evidence": [
+        "services/fulfillment/e2e/fulfillment-api.hurl:367-376"
+      ],
+      "expected_status": "200",
+      "form_params": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{resolverToken}}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "index": 36,
+      "method": "POST",
+      "operation": {
+        "chapter": "post-hold-resume",
+        "method": "POST",
+        "operation_id": "post-processing-processingid-hold-resume",
+        "path": "/processing/{processingId}/hold/resume"
+      },
+      "path": "/processing/{{openProcessingId}}/hold/resume",
+      "path_matches_template": true,
+      "query": null,
+      "raw": "POST {{BASE_URL}}/processing/{{openProcessingId}}/hold/resume\nAuthorization: Bearer {{resolverToken}}\nContent-Type: application/json\n{ \"closedIssueIds\": [\"{{issueId}}\", \"{{secondIssueId}}\"] }\nHTTP 200\n[Asserts]\njsonpath \"$.state\" == \"picking\"\njsonpath \"$.openIssues\" == 0\njsonpath \"$.issue\" == null\njsonpath \"$.closedIssueIds[0]\" == \"{{issueId}}\"",
+      "start": 367,
+      "target": "{{BASE_URL}}/processing/{{openProcessingId}}/hold/resume"
+    },
+    {
+      "assertions": [
+        "jsonpath \"$.items[0]\" not exists"
+      ],
+      "body": null,
+      "body_raw": null,
+      "captures": [],
+      "end": 383,
+      "evidence": [
+        "services/fulfillment/e2e/fulfillment-api.hurl:379-383"
+      ],
+      "expected_status": "200",
+      "form_params": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{resolverToken}}"
+        }
+      ],
+      "index": 37,
+      "method": "GET",
+      "operation": {
+        "chapter": "get-issues",
+        "method": "GET",
+        "operation_id": "get-issues",
+        "path": "/issues"
+      },
+      "path": "/issues",
+      "path_matches_template": true,
+      "query": null,
+      "raw": "GET {{BASE_URL}}/issues\nAuthorization: Bearer {{resolverToken}}\nHTTP 200\n[Asserts]\njsonpath \"$.items[0]\" not exists",
+      "start": 379,
+      "target": "{{BASE_URL}}/issues"
+    },
+    {
+      "assertions": [
+        "jsonpath \"$.state\" == \"picking\"",
+        "jsonpath \"$.closedIssueIds\" isEmpty"
+      ],
+      "body": {
+        "closedIssueIds": []
+      },
+      "body_raw": "{ \"closedIssueIds\": [] }",
+      "captures": [],
+      "end": 393,
+      "evidence": [
+        "services/fulfillment/e2e/fulfillment-api.hurl:386-393"
+      ],
+      "expected_status": "200",
+      "form_params": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{employeeToken}}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "index": 38,
+      "method": "POST",
+      "operation": {
+        "chapter": "post-hold-resume",
+        "method": "POST",
+        "operation_id": "post-processing-processingid-hold-resume",
+        "path": "/processing/{processingId}/hold/resume"
+      },
+      "path": "/processing/{{openProcessingId}}/hold/resume",
+      "path_matches_template": true,
+      "query": null,
+      "raw": "POST {{BASE_URL}}/processing/{{openProcessingId}}/hold/resume\nAuthorization: Bearer {{employeeToken}}\nContent-Type: application/json\n{ \"closedIssueIds\": [] }\nHTTP 200\n[Asserts]\njsonpath \"$.state\" == \"picking\"\njsonpath \"$.closedIssueIds\" isEmpty",
+      "start": 386,
+      "target": "{{BASE_URL}}/processing/{{openProcessingId}}/hold/resume"
+    },
+    {
+      "assertions": [
+        "jsonpath \"$.state\" == \"pending\""
+      ],
+      "body": {
+        "delivery": {
+          "location": {
+            "kind": "PICKUP_POINT",
+            "pointId": "KRA01M"
+          },
+          "methodCode": "PARCEL_LOCKER"
+        },
+        "invoicing": {
+          "address": {
+            "city": "Kraków",
+            "country": "PL",
+            "postalCode": "30-001",
+            "street": "ul. Mineralna 5A"
+          },
+          "buyerName": "Jan Kowalski",
+          "nip": null
+        },
+        "lines": [
+          {
+            "name": "LEGO X-Wing 75423",
+            "productNumber": "75423",
+            "quantity": 1
+          }
+        ],
+        "orderHash": "sha256:3c9d7e21",
+        "payment": {
+          "methodCode": "PAY_DEFERRED"
+        },
+        "placedAt": "2026-11-19T10:41:09Z"
+      },
+      "body_raw": "{\n  \"orderHash\": \"sha256:3c9d7e21\",\n  \"placedAt\": \"2026-11-19T10:41:09Z\",\n  \"lines\": [{ \"productNumber\": \"75423\", \"name\": \"LEGO X-Wing 75423\", \"quantity\": 1 }],\n  \"delivery\": { \"methodCode\": \"PARCEL_LOCKER\", \"location\": { \"kind\": \"PICKUP_POINT\", \"pointId\": \"KRA01M\" } },\n  \"payment\": { \"methodCode\": \"PAY_DEFERRED\" },\n  \"invoicing\": { \"buyerName\": \"Jan Kowalski\", \"nip\": null,\n                 \"address\": { \"street\": \"ul. Mineralna 5A\", \"city\": \"Kraków\", \"postalCode\": \"30-001\", \"country\": \"PL\" } }\n}",
+      "captures": [
+        {
+          "name": "heldProcessingId",
+          "value": "jsonpath \"$.processingId\""
+        }
+      ],
+      "end": 412,
+      "evidence": [
+        "services/fulfillment/e2e/fulfillment-api.hurl:396-412"
+      ],
+      "expected_status": "201",
+      "form_params": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{shoppingToken}}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "index": 39,
+      "method": "POST",
+      "operation": {
+        "chapter": "post-orders",
+        "method": "POST",
+        "operation_id": "post-orders",
+        "path": "/orders"
+      },
+      "path": "/orders",
+      "path_matches_template": true,
+      "query": null,
+      "raw": "POST {{BASE_URL}}/orders\nAuthorization: Bearer {{shoppingToken}}\nContent-Type: application/json\n{\n  \"orderHash\": \"sha256:3c9d7e21\",\n  \"placedAt\": \"2026-11-19T10:41:09Z\",\n  \"lines\": [{ \"productNumber\": \"75423\", \"name\": \"LEGO X-Wing 75423\", \"quantity\": 1 }],\n  \"delivery\": { \"methodCode\": \"PARCEL_LOCKER\", \"location\": { \"kind\": \"PICKUP_POINT\", \"pointId\": \"KRA01M\" } },\n  \"payment\": { \"methodCode\": \"PAY_DEFERRED\" },\n  \"invoicing\": { \"buyerName\": \"Jan Kowalski\", \"nip\": null,\n                 \"address\": { \"street\": \"ul. Mineralna 5A\", \"city\": \"Kraków\", \"postalCode\": \"30-001\", \"country\": \"PL\" } }\n}\nHTTP 201\n[Captures]\nheldProcessingId: jsonpath \"$.processingId\"\n[Asserts]\njsonpath \"$.state\" == \"pending\"",
+      "start": 396,
+      "target": "{{BASE_URL}}/orders"
+    },
+    {
+      "assertions": [],
+      "body": null,
+      "body_raw": null,
+      "captures": [],
+      "end": 416,
+      "evidence": [
+        "services/fulfillment/e2e/fulfillment-api.hurl:414-416"
+      ],
+      "expected_status": "201",
+      "form_params": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{employeeToken}}"
+        }
+      ],
+      "index": 40,
+      "method": "POST",
+      "operation": {
+        "chapter": "post-assignment",
+        "method": "POST",
+        "operation_id": "post-processing-processingid-assignment",
+        "path": "/processing/{processingId}/assignment"
+      },
+      "path": "/processing/{{heldProcessingId}}/assignment",
+      "path_matches_template": true,
+      "query": null,
+      "raw": "POST {{BASE_URL}}/processing/{{heldProcessingId}}/assignment\nAuthorization: Bearer {{employeeToken}}\nHTTP 201",
+      "start": 414,
+      "target": "{{BASE_URL}}/processing/{{heldProcessingId}}/assignment"
+    },
+    {
+      "assertions": [
+        "jsonpath \"$.state\" == \"picking\""
+      ],
+      "body": {
+        "confirmation": "picked"
+      },
+      "body_raw": "{ \"confirmation\": \"picked\" }",
+      "captures": [],
+      "end": 424,
+      "evidence": [
+        "services/fulfillment/e2e/fulfillment-api.hurl:418-424"
+      ],
+      "expected_status": "200",
+      "form_params": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{employeeToken}}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "index": 41,
+      "method": "POST",
+      "operation": {
+        "chapter": "post-scan-position",
+        "method": "POST",
+        "operation_id": "post-processing-processingid-positions-productnumber",
+        "path": "/processing/{processingId}/positions/{productNumber}"
+      },
+      "path": "/processing/{{heldProcessingId}}/positions/75423",
+      "path_matches_template": true,
+      "query": null,
+      "raw": "POST {{BASE_URL}}/processing/{{heldProcessingId}}/positions/75423\nAuthorization: Bearer {{employeeToken}}\nContent-Type: application/json\n{ \"confirmation\": \"picked\" }\nHTTP 200\n[Asserts]\njsonpath \"$.state\" == \"picking\"",
+      "start": 418,
+      "target": "{{BASE_URL}}/processing/{{heldProcessingId}}/positions/75423"
+    },
+    {
+      "assertions": [
+        "jsonpath \"$.orderState\" == \"onHold\""
+      ],
+      "body": {
+        "kind": "STOLEN",
+        "productNumber": "75423"
+      },
+      "body_raw": "{ \"kind\": \"STOLEN\", \"productNumber\": \"75423\" }",
+      "captures": [],
+      "end": 432,
+      "evidence": [
+        "services/fulfillment/e2e/fulfillment-api.hurl:426-432"
+      ],
+      "expected_status": "201",
+      "form_params": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{employeeToken}}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "index": 42,
+      "method": "POST",
+      "operation": {
+        "chapter": "post-issues",
+        "method": "POST",
+        "operation_id": "post-processing-processingid-issues",
+        "path": "/processing/{processingId}/issues"
+      },
+      "path": "/processing/{{heldProcessingId}}/issues",
+      "path_matches_template": true,
+      "query": null,
+      "raw": "POST {{BASE_URL}}/processing/{{heldProcessingId}}/issues\nAuthorization: Bearer {{employeeToken}}\nContent-Type: application/json\n{ \"kind\": \"STOLEN\", \"productNumber\": \"75423\" }\nHTTP 201\n[Asserts]\njsonpath \"$.orderState\" == \"onHold\"",
+      "start": 426,
+      "target": "{{BASE_URL}}/processing/{{heldProcessingId}}/issues"
+    },
+    {
+      "assertions": [
+        "jsonpath \"$.error\" == \"ISSUES_REMAIN\"",
+        "jsonpath \"$.openIssues\" == 1"
+      ],
+      "body": {
+        "closedIssueIds": []
+      },
+      "body_raw": "{ \"closedIssueIds\": [] }",
+      "captures": [],
+      "end": 441,
+      "evidence": [
+        "services/fulfillment/e2e/fulfillment-api.hurl:434-441"
+      ],
+      "expected_status": "409",
+      "form_params": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{employeeToken}}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "index": 43,
+      "method": "POST",
+      "operation": {
+        "chapter": "post-hold-resume",
+        "method": "POST",
+        "operation_id": "post-processing-processingid-hold-resume",
+        "path": "/processing/{processingId}/hold/resume"
+      },
+      "path": "/processing/{{heldProcessingId}}/hold/resume",
+      "path_matches_template": true,
+      "query": null,
+      "raw": "POST {{BASE_URL}}/processing/{{heldProcessingId}}/hold/resume\nAuthorization: Bearer {{employeeToken}}\nContent-Type: application/json\n{ \"closedIssueIds\": [] }\nHTTP 409\n[Asserts]\njsonpath \"$.error\" == \"ISSUES_REMAIN\"\njsonpath \"$.openIssues\" == 1",
+      "start": 434,
+      "target": "{{BASE_URL}}/processing/{{heldProcessingId}}/hold/resume"
+    },
+    {
+      "assertions": [
+        "header \"Content-Type\" contains \"application/pdf\""
+      ],
+      "body": null,
+      "body_raw": null,
+      "captures": [],
+      "end": 448,
+      "evidence": [
+        "services/fulfillment/e2e/fulfillment-api.hurl:444-448"
+      ],
+      "expected_status": "200",
+      "form_params": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{employeeToken}}"
+        }
+      ],
+      "index": 44,
+      "method": "GET",
+      "operation": {
+        "chapter": "get-label",
+        "method": "GET",
+        "operation_id": "get-processing-processingid-documents-label",
+        "path": "/processing/{processingId}/documents/label"
+      },
+      "path": "/processing/{{processingId}}/documents/label",
+      "path_matches_template": true,
+      "query": null,
+      "raw": "GET {{BASE_URL}}/processing/{{processingId}}/documents/label\nAuthorization: Bearer {{employeeToken}}\nHTTP 200\n[Asserts]\nheader \"Content-Type\" contains \"application/pdf\"",
+      "start": 444,
+      "target": "{{BASE_URL}}/processing/{{processingId}}/documents/label"
+    },
+    {
+      "assertions": [
+        "jsonpath \"$.state\" == \"readyForDelivery\"",
+        "jsonpath \"$.legs\" count > 0",
+        "jsonpath \"$.assignee\" not exists",
+        "jsonpath \"$.issue\" not exists"
+      ],
+      "body": null,
+      "body_raw": null,
+      "captures": [],
+      "end": 458,
+      "evidence": [
+        "services/fulfillment/e2e/fulfillment-api.hurl:451-458"
+      ],
+      "expected_status": "200",
+      "form_params": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{customerToken}}"
+        }
+      ],
+      "index": 45,
+      "method": "GET",
+      "operation": {
+        "chapter": "get-customer-state",
+        "method": "GET",
+        "operation_id": "get-processing-processingid-state",
+        "path": "/processing/{processingId}/state"
+      },
+      "path": "/processing/{{processingId}}/state",
+      "path_matches_template": true,
+      "query": null,
+      "raw": "GET {{BASE_URL}}/processing/{{processingId}}/state\nAuthorization: Bearer {{customerToken}}\nHTTP 200\n[Asserts]\njsonpath \"$.state\" == \"readyForDelivery\"\njsonpath \"$.legs\" count > 0\njsonpath \"$.assignee\" not exists\njsonpath \"$.issue\" not exists",
+      "start": 451,
+      "target": "{{BASE_URL}}/processing/{{processingId}}/state"
+    },
+    {
+      "assertions": [
+        "jsonpath \"$.error\" == \"PROCESSING_NOT_FOUND\""
+      ],
+      "body": null,
+      "body_raw": null,
+      "captures": [],
+      "end": 465,
+      "evidence": [
+        "services/fulfillment/e2e/fulfillment-api.hurl:461-465"
+      ],
+      "expected_status": "404",
+      "form_params": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{employeeToken}}"
+        }
+      ],
+      "index": 46,
+      "method": "POST",
+      "operation": {
+        "chapter": "post-assignment",
+        "method": "POST",
+        "operation_id": "post-processing-processingid-assignment",
+        "path": "/processing/{processingId}/assignment"
+      },
+      "path": "/processing/OP-DOES-NOT-EXIST/assignment",
+      "path_matches_template": true,
+      "query": null,
+      "raw": "POST {{BASE_URL}}/processing/OP-DOES-NOT-EXIST/assignment\nAuthorization: Bearer {{employeeToken}}\nHTTP 404\n[Asserts]\njsonpath \"$.error\" == \"PROCESSING_NOT_FOUND\"",
+      "start": 461,
+      "target": "{{BASE_URL}}/processing/OP-DOES-NOT-EXIST/assignment"
+    },
+    {
+      "assertions": [
+        "jsonpath \"$.error\" == \"PROCESSING_NOT_FOUND\""
+      ],
+      "body": null,
+      "body_raw": null,
+      "captures": [],
+      "end": 471,
+      "evidence": [
+        "services/fulfillment/e2e/fulfillment-api.hurl:467-471"
+      ],
+      "expected_status": "404",
+      "form_params": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{employeeToken}}"
+        }
+      ],
+      "index": 47,
+      "method": "GET",
+      "operation": {
+        "chapter": "get-processing",
+        "method": "GET",
+        "operation_id": "get-processing-processingid",
+        "path": "/processing/{processingId}"
+      },
+      "path": "/processing/OP-DOES-NOT-EXIST",
+      "path_matches_template": true,
+      "query": null,
+      "raw": "GET {{BASE_URL}}/processing/OP-DOES-NOT-EXIST\nAuthorization: Bearer {{employeeToken}}\nHTTP 404\n[Asserts]\njsonpath \"$.error\" == \"PROCESSING_NOT_FOUND\"",
+      "start": 467,
+      "target": "{{BASE_URL}}/processing/OP-DOES-NOT-EXIST"
+    },
+    {
+      "assertions": [
+        "jsonpath \"$.error\" == \"PROCESSING_NOT_FOUND\""
+      ],
+      "body": null,
+      "body_raw": null,
+      "captures": [],
+      "end": 478,
+      "evidence": [
+        "services/fulfillment/e2e/fulfillment-api.hurl:474-478"
+      ],
+      "expected_status": "404",
+      "form_params": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{employeeToken}}"
+        }
+      ],
+      "index": 48,
+      "method": "GET",
+      "operation": {
+        "chapter": "get-label",
+        "method": "GET",
+        "operation_id": "get-processing-processingid-documents-label",
+        "path": "/processing/{processingId}/documents/label"
+      },
+      "path": "/processing/OP-DOES-NOT-EXIST/documents/label",
+      "path_matches_template": true,
+      "query": null,
+      "raw": "GET {{BASE_URL}}/processing/OP-DOES-NOT-EXIST/documents/label\nAuthorization: Bearer {{employeeToken}}\nHTTP 404\n[Asserts]\njsonpath \"$.error\" == \"PROCESSING_NOT_FOUND\"",
+      "start": 474,
+      "target": "{{BASE_URL}}/processing/OP-DOES-NOT-EXIST/documents/label"
+    }
+  ],
+  "operations": [
+    {
+      "access": "authenticated",
+      "access_evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:116"
+      ],
+      "access_scope": [
+        "SCOPE_fulfillment-customer"
+      ],
+      "chapter": "get-customer-state",
+      "consumes": [],
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:116",
+        "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateController.java:26",
+        "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateController.java:27"
+      ],
+      "handlers": [
+        {
+          "name": "state",
+          "return_type": "CustomerState"
+        }
+      ],
+      "method": "GET",
+      "operation_id": "get-processing-processingid-state",
+      "path": "/processing/{processingId}/state",
+      "path_params": [
+        "processingId"
+      ],
+      "produces": [
+        "application/json"
+      ],
+      "query_params": [],
+      "request_types": [],
+      "sources": [
+        {
+          "class_line": 20,
+          "line": 26,
+          "path": "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateController.java",
+          "signature_line": 27
+        }
+      ]
+    },
+    {
+      "access": "authenticated",
+      "access_evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:108"
+      ],
+      "access_scope": [
+        "SCOPE_fulfillment-resolver"
+      ],
+      "chapter": "get-issues",
+      "consumes": [],
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:108",
+        "services/fulfillment/src/main/java/shop/fulfillment/issues/IssueDashboardController.java:26",
+        "services/fulfillment/src/main/java/shop/fulfillment/issues/IssueDashboardController.java:27"
+      ],
+      "handlers": [
+        {
+          "name": "list",
+          "return_type": "IssuesPage"
+        }
+      ],
+      "method": "GET",
+      "operation_id": "get-issues",
+      "path": "/issues",
+      "path_params": [],
+      "produces": [
+        "application/json"
+      ],
+      "query_params": [],
+      "request_types": [],
+      "sources": [
+        {
+          "class_line": 20,
+          "line": 26,
+          "path": "services/fulfillment/src/main/java/shop/fulfillment/issues/IssueDashboardController.java",
+          "signature_line": 27
+        }
+      ]
+    },
+    {
+      "access": "authenticated",
+      "access_evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:76"
+      ],
+      "access_scope": [
+        "SCOPE_fulfillment-employee"
+      ],
+      "chapter": "get-orders",
+      "consumes": [],
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:76",
+        "services/fulfillment/src/main/java/shop/fulfillment/orders/OrdersListController.java:25",
+        "services/fulfillment/src/main/java/shop/fulfillment/orders/OrdersListController.java:26"
+      ],
+      "handlers": [
+        {
+          "name": "list",
+          "return_type": "OrdersPage"
+        }
+      ],
+      "method": "GET",
+      "operation_id": "get-orders",
+      "path": "/orders",
+      "path_params": [],
+      "produces": [
+        "application/json"
+      ],
+      "query_params": [],
+      "request_types": [],
+      "sources": [
+        {
+          "class_line": 19,
+          "line": 25,
+          "path": "services/fulfillment/src/main/java/shop/fulfillment/orders/OrdersListController.java",
+          "signature_line": 26
+        }
+      ]
+    },
+    {
+      "access": "authenticated",
+      "access_evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:114"
+      ],
+      "access_scope": [
+        "SCOPE_fulfillment-employee"
+      ],
+      "chapter": "get-label",
+      "consumes": [],
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:114",
+        "services/fulfillment/src/main/java/shop/fulfillment/parcel/ParcelLabelController.java:24",
+        "services/fulfillment/src/main/java/shop/fulfillment/parcel/ParcelLabelController.java:25"
+      ],
+      "handlers": [
+        {
+          "name": "label",
+          "return_type": "byte[]"
+        }
+      ],
+      "method": "GET",
+      "operation_id": "get-processing-processingid-documents-label",
+      "path": "/processing/{processingId}/documents/label",
+      "path_params": [
+        "processingId"
+      ],
+      "produces": [
+        "application/pdf"
+      ],
+      "query_params": [],
+      "request_types": [],
+      "sources": [
+        {
+          "class_line": 18,
+          "line": 24,
+          "path": "services/fulfillment/src/main/java/shop/fulfillment/parcel/ParcelLabelController.java",
+          "signature_line": 25
+        }
+      ]
+    },
+    {
+      "access": "authenticated",
+      "access_evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:84"
+      ],
+      "access_scope": [
+        "SCOPE_fulfillment-employee"
+      ],
+      "chapter": "post-assignment",
+      "consumes": [],
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:84",
+        "services/fulfillment/src/main/java/shop/fulfillment/processing/AssignmentController.java:31",
+        "services/fulfillment/src/main/java/shop/fulfillment/processing/AssignmentController.java:32"
+      ],
+      "handlers": [
+        {
+          "name": "claim",
+          "return_type": "OrderAssignmentView"
+        }
+      ],
+      "method": "POST",
+      "operation_id": "post-processing-processingid-assignment",
+      "path": "/processing/{processingId}/assignment",
+      "path_params": [
+        "processingId"
+      ],
+      "produces": [
+        "application/json"
+      ],
+      "query_params": [],
+      "request_types": [
+        "AssignOrder"
+      ],
+      "sources": [
+        {
+          "class_line": 25,
+          "line": 31,
+          "path": "services/fulfillment/src/main/java/shop/fulfillment/processing/AssignmentController.java",
+          "signature_line": 32
+        }
+      ]
+    },
+    {
+      "access": "authenticated",
+      "access_evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:75"
+      ],
+      "access_scope": [
+        "SCOPE_shopping-service"
+      ],
+      "chapter": "post-orders",
+      "consumes": [
+        "application/json"
+      ],
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:75",
+        "services/fulfillment/src/main/java/shop/fulfillment/processing/OrderIntakeController.java:28",
+        "services/fulfillment/src/main/java/shop/fulfillment/processing/OrderIntakeController.java:29"
+      ],
+      "handlers": [
+        {
+          "name": "accept",
+          "return_type": "OrderIntakeView"
+        }
+      ],
+      "method": "POST",
+      "operation_id": "post-orders",
+      "path": "/orders",
+      "path_params": [],
+      "produces": [
+        "application/json"
+      ],
+      "query_params": [],
+      "request_types": [
+        "OrderHandover"
+      ],
+      "sources": [
+        {
+          "class_line": 22,
+          "line": 28,
+          "path": "services/fulfillment/src/main/java/shop/fulfillment/processing/OrderIntakeController.java",
+          "signature_line": 29
+        }
+      ]
+    },
+    {
+      "access": "authenticated",
+      "access_evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:110"
+      ],
+      "access_scope": [
+        "SCOPE_fulfillment-employee"
+      ],
+      "chapter": "get-pick-list",
+      "consumes": [],
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:110",
+        "services/fulfillment/src/main/java/shop/fulfillment/processing/PickListController.java:23",
+        "services/fulfillment/src/main/java/shop/fulfillment/processing/PickListController.java:24"
+      ],
+      "handlers": [
+        {
+          "name": "pickList",
+          "return_type": "PickList"
+        }
+      ],
+      "method": "GET",
+      "operation_id": "get-processing-processingid-pick-list",
+      "path": "/processing/{processingId}/pick-list",
+      "path_params": [
+        "processingId"
+      ],
+      "produces": [
+        "application/json"
+      ],
+      "query_params": [],
+      "request_types": [],
+      "sources": [
+        {
+          "class_line": 17,
+          "line": 23,
+          "path": "services/fulfillment/src/main/java/shop/fulfillment/processing/PickListController.java",
+          "signature_line": 24
+        }
+      ]
+    },
+    {
+      "access": "authenticated",
+      "access_evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:112"
+      ],
+      "access_scope": [
+        "SCOPE_fulfillment-employee"
+      ],
+      "chapter": "get-pick-workstation",
+      "consumes": [],
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:112",
+        "services/fulfillment/src/main/java/shop/fulfillment/processing/PickWorkstationController.java:24",
+        "services/fulfillment/src/main/java/shop/fulfillment/processing/PickWorkstationController.java:25"
+      ],
+      "handlers": [
+        {
+          "name": "workstation",
+          "return_type": "PickWorkstation"
+        }
+      ],
+      "method": "GET",
+      "operation_id": "get-processing-processingid-pick-workstation",
+      "path": "/processing/{processingId}/pick-workstation",
+      "path_params": [
+        "processingId"
+      ],
+      "produces": [
+        "application/json"
+      ],
+      "query_params": [],
+      "request_types": [],
+      "sources": [
+        {
+          "class_line": 18,
+          "line": 24,
+          "path": "services/fulfillment/src/main/java/shop/fulfillment/processing/PickWorkstationController.java",
+          "signature_line": 25
+        }
+      ]
+    },
+    {
+      "access": "authenticated",
+      "access_evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:86"
+      ],
+      "access_scope": [
+        "SCOPE_fulfillment-employee"
+      ],
+      "chapter": "post-scan-position",
+      "consumes": [
+        "application/json"
+      ],
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:86",
+        "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingCommandController.java:41",
+        "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingCommandController.java:43"
+      ],
+      "handlers": [
+        {
+          "name": "scan",
+          "return_type": "ProcessingSnapshot"
+        }
+      ],
+      "method": "POST",
+      "operation_id": "post-processing-processingid-positions-productnumber",
+      "path": "/processing/{processingId}/positions/{productNumber}",
+      "path_params": [
+        "processingId",
+        "productNumber"
+      ],
+      "produces": [
+        "application/json"
+      ],
+      "query_params": [],
+      "request_types": [
+        "ScanPosition"
+      ],
+      "sources": [
+        {
+          "class_line": 35,
+          "line": 41,
+          "path": "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingCommandController.java",
+          "signature_line": 43
+        }
+      ]
+    },
+    {
+      "access": "authenticated",
+      "access_evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:88"
+      ],
+      "access_scope": [
+        "SCOPE_fulfillment-employee"
+      ],
+      "chapter": "post-packing",
+      "consumes": [
+        "application/json"
+      ],
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:88",
+        "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingCommandController.java:48",
+        "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingCommandController.java:50"
+      ],
+      "handlers": [
+        {
+          "name": "pack",
+          "return_type": "ProcessingSnapshot"
+        }
+      ],
+      "method": "POST",
+      "operation_id": "post-processing-processingid-packing",
+      "path": "/processing/{processingId}/packing",
+      "path_params": [
+        "processingId"
+      ],
+      "produces": [
+        "application/json"
+      ],
+      "query_params": [],
+      "request_types": [
+        "PackPositions"
+      ],
+      "sources": [
+        {
+          "class_line": 35,
+          "line": 48,
+          "path": "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingCommandController.java",
+          "signature_line": 50
+        }
+      ]
+    },
+    {
+      "access": "authenticated",
+      "access_evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:90"
+      ],
+      "access_scope": [
+        "SCOPE_fulfillment-employee"
+      ],
+      "chapter": "post-readiness",
+      "consumes": [],
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:90",
+        "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingCommandController.java:54",
+        "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingCommandController.java:55"
+      ],
+      "handlers": [
+        {
+          "name": "markReady",
+          "return_type": "ProcessingSnapshot"
+        }
+      ],
+      "method": "POST",
+      "operation_id": "post-processing-processingid-readiness",
+      "path": "/processing/{processingId}/readiness",
+      "path_params": [
+        "processingId"
+      ],
+      "produces": [
+        "application/json"
+      ],
+      "query_params": [],
+      "request_types": [
+        "MarkOrderReady"
+      ],
+      "sources": [
+        {
+          "class_line": 35,
+          "line": 54,
+          "path": "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingCommandController.java",
+          "signature_line": 55
+        }
+      ]
+    },
+    {
+      "access": "authenticated",
+      "access_evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:92"
+      ],
+      "access_scope": [
+        "SCOPE_fulfillment-employee"
+      ],
+      "chapter": "post-issues",
+      "consumes": [
+        "application/json"
+      ],
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:92",
+        "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingCommandController.java:60",
+        "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingCommandController.java:62"
+      ],
+      "handlers": [
+        {
+          "name": "reportIssue",
+          "return_type": "ProcessingSnapshot"
+        }
+      ],
+      "method": "POST",
+      "operation_id": "post-processing-processingid-issues",
+      "path": "/processing/{processingId}/issues",
+      "path_params": [
+        "processingId"
+      ],
+      "produces": [
+        "application/json"
+      ],
+      "query_params": [],
+      "request_types": [
+        "ReportIssue"
+      ],
+      "sources": [
+        {
+          "class_line": 35,
+          "line": 60,
+          "path": "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingCommandController.java",
+          "signature_line": 62
+        }
+      ]
+    },
+    {
+      "access": "authenticated",
+      "access_evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:94"
+      ],
+      "access_scope": [
+        "SCOPE_fulfillment-employee",
+        "SCOPE_fulfillment-resolver"
+      ],
+      "chapter": "post-hold-resume",
+      "consumes": [
+        "application/json"
+      ],
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:94",
+        "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingCommandController.java:68",
+        "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingCommandController.java:70"
+      ],
+      "handlers": [
+        {
+          "name": "resume",
+          "return_type": "ProcessingSnapshot"
+        }
+      ],
+      "method": "POST",
+      "operation_id": "post-processing-processingid-hold-resume",
+      "path": "/processing/{processingId}/hold/resume",
+      "path_params": [
+        "processingId"
+      ],
+      "produces": [
+        "application/json"
+      ],
+      "query_params": [],
+      "request_types": [
+        "ResumeHold"
+      ],
+      "sources": [
+        {
+          "class_line": 35,
+          "line": 68,
+          "path": "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingCommandController.java",
+          "signature_line": 70
+        }
+      ]
+    },
+    {
+      "access": "authenticated",
+      "access_evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:118"
+      ],
+      "access_scope": [
+        "SCOPE_fulfillment-employee",
+        "SCOPE_fulfillment-resolver"
+      ],
+      "chapter": "get-processing",
+      "consumes": [],
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:118",
+        "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingSnapshotController.java:24",
+        "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingSnapshotController.java:25"
+      ],
+      "handlers": [
+        {
+          "name": "processing",
+          "return_type": "ProcessingSnapshot"
+        }
+      ],
+      "method": "GET",
+      "operation_id": "get-processing-processingid",
+      "path": "/processing/{processingId}",
+      "path_params": [
+        "processingId"
+      ],
+      "produces": [
+        "application/json"
+      ],
+      "query_params": [],
+      "request_types": [],
+      "sources": [
+        {
+          "class_line": 18,
+          "line": 24,
+          "path": "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingSnapshotController.java",
+          "signature_line": 25
+        }
+      ]
+    }
+  ],
+  "scenario": "services/fulfillment/e2e/fulfillment-api.hurl"
+}

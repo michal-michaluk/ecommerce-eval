@@ -1,0 +1,236 @@
+{
+  "authentication": {
+    "evidence": [
+      "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:58"
+    ],
+    "issuer": {
+      "default": "https://keycloak.auth/realms/iot",
+      "evidence": [
+        "services/fulfillment/src/main/resources/application.yml:21"
+      ],
+      "expression": "${JWT_ISSUER_URI:https://keycloak.auth/realms/iot}",
+      "line": 21,
+      "path": "services/fulfillment/src/main/resources/application.yml",
+      "variable": "JWT_ISSUER_URI"
+    },
+    "mechanism": {
+      "chain": "oauth2ResourceServer",
+      "line": 58,
+      "scheme": "jwt"
+    }
+  },
+  "evidence": [
+    "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:71",
+    "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:72",
+    "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:73",
+    "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:74",
+    "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:75",
+    "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:76",
+    "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:84",
+    "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:86",
+    "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:88",
+    "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:90",
+    "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:92",
+    "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:94",
+    "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:108",
+    "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:110",
+    "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:112",
+    "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:114",
+    "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:116",
+    "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:118",
+    "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:54"
+  ],
+  "filter_chain": {
+    "evidence": [
+      "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:71",
+      "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:72",
+      "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:73",
+      "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:74",
+      "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:75",
+      "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:76",
+      "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:84",
+      "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:86",
+      "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:88",
+      "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:90",
+      "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:92",
+      "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:94",
+      "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:108",
+      "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:110",
+      "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:112",
+      "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:114",
+      "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:116",
+      "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:118",
+      "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java:54"
+    ],
+    "fallback": {
+      "decision": "denyAll",
+      "line": 54,
+      "matcher": null
+    },
+    "line": 50,
+    "path": "services/fulfillment/src/main/java/shop/fulfillment/AppConfiguration.java",
+    "rules": [
+      {
+        "authorities": [],
+        "decision": "permitAll",
+        "line": 71,
+        "matcher": "/actuator/health/**",
+        "method": null
+      },
+      {
+        "authorities": [],
+        "decision": "permitAll",
+        "line": 72,
+        "matcher": "/actuator/info",
+        "method": null
+      },
+      {
+        "authorities": [],
+        "decision": "permitAll",
+        "line": 73,
+        "matcher": "/error",
+        "method": null
+      },
+      {
+        "authorities": [],
+        "decision": "authenticated",
+        "line": 74,
+        "matcher": "/actuator/**",
+        "method": null
+      },
+      {
+        "authorities": [
+          "SCOPE_shopping-service"
+        ],
+        "decision": "hasAuthority(SCOPE_shopping-service)",
+        "line": 75,
+        "matcher": "/orders",
+        "method": "POST"
+      },
+      {
+        "authorities": [
+          "SCOPE_fulfillment-employee"
+        ],
+        "decision": "hasAuthority(SCOPE_fulfillment-employee)",
+        "line": 76,
+        "matcher": "/orders",
+        "method": null
+      },
+      {
+        "authorities": [
+          "SCOPE_fulfillment-employee"
+        ],
+        "decision": "hasAuthority(SCOPE_fulfillment-employee)",
+        "line": 84,
+        "matcher": "/processing/{processingId}/assignment",
+        "method": "POST"
+      },
+      {
+        "authorities": [
+          "SCOPE_fulfillment-employee"
+        ],
+        "decision": "hasAuthority(SCOPE_fulfillment-employee)",
+        "line": 86,
+        "matcher": "/processing/{processingId}/positions/{productNumber}",
+        "method": "POST"
+      },
+      {
+        "authorities": [
+          "SCOPE_fulfillment-employee"
+        ],
+        "decision": "hasAuthority(SCOPE_fulfillment-employee)",
+        "line": 88,
+        "matcher": "/processing/{processingId}/packing",
+        "method": "POST"
+      },
+      {
+        "authorities": [
+          "SCOPE_fulfillment-employee"
+        ],
+        "decision": "hasAuthority(SCOPE_fulfillment-employee)",
+        "line": 90,
+        "matcher": "/processing/{processingId}/readiness",
+        "method": "POST"
+      },
+      {
+        "authorities": [
+          "SCOPE_fulfillment-employee"
+        ],
+        "decision": "hasAuthority(SCOPE_fulfillment-employee)",
+        "line": 92,
+        "matcher": "/processing/{processingId}/issues",
+        "method": "POST"
+      },
+      {
+        "authorities": [
+          "SCOPE_fulfillment-employee",
+          "SCOPE_fulfillment-resolver"
+        ],
+        "decision": "hasAnyAuthority(SCOPE_fulfillment-employee, SCOPE_fulfillment-resolver)",
+        "line": 94,
+        "matcher": "/processing/{processingId}/hold/resume",
+        "method": "POST"
+      },
+      {
+        "authorities": [
+          "SCOPE_fulfillment-resolver"
+        ],
+        "decision": "hasAuthority(SCOPE_fulfillment-resolver)",
+        "line": 108,
+        "matcher": "/issues",
+        "method": "GET"
+      },
+      {
+        "authorities": [
+          "SCOPE_fulfillment-employee"
+        ],
+        "decision": "hasAuthority(SCOPE_fulfillment-employee)",
+        "line": 110,
+        "matcher": "/processing/{processingId}/pick-list",
+        "method": "GET"
+      },
+      {
+        "authorities": [
+          "SCOPE_fulfillment-employee"
+        ],
+        "decision": "hasAuthority(SCOPE_fulfillment-employee)",
+        "line": 112,
+        "matcher": "/processing/{processingId}/pick-workstation",
+        "method": "GET"
+      },
+      {
+        "authorities": [
+          "SCOPE_fulfillment-employee"
+        ],
+        "decision": "hasAuthority(SCOPE_fulfillment-employee)",
+        "line": 114,
+        "matcher": "/processing/{processingId}/documents/label",
+        "method": "GET"
+      },
+      {
+        "authorities": [
+          "SCOPE_fulfillment-customer"
+        ],
+        "decision": "hasAuthority(SCOPE_fulfillment-customer)",
+        "line": 116,
+        "matcher": "/processing/{processingId}/state",
+        "method": "GET"
+      },
+      {
+        "authorities": [
+          "SCOPE_fulfillment-employee",
+          "SCOPE_fulfillment-resolver"
+        ],
+        "decision": "hasAnyAuthority(SCOPE_fulfillment-employee, SCOPE_fulfillment-resolver)",
+        "line": 118,
+        "matcher": "/processing/{processingId}",
+        "method": "GET"
+      }
+    ]
+  },
+  "method_level_authorization": {
+    "annotations": [],
+    "evidence": [],
+    "present": false
+  }
+}

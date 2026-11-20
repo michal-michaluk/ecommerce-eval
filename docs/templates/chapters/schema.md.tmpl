@@ -1,0 +1,22 @@
+{% import "partials/macros.md.tmpl" as m -%}
+{% include "partials/banner.md.tmpl" %}
+{{ m.evidence(tables | map(attribute="evidence") | sum(start=[]) | unique | list) }}
+
+| Table | Columns | ChangeSet |
+|---|---|---|
+{% for table in tables -%}
+| {{ m.code(table.name) }} | {{ table.columns | length }} | {{ m.code(table.changeset) }} |
+{% endfor %}
+
+: Tables declared by the schema changelog. {% raw %}{#tbl-schema}{% endraw %}
+
+
+| Table | Column | Type | Constraints |
+|---|---|---|---|
+{% for table in tables -%}
+{% for column in table.columns -%}
+| {{ m.code(table.name) }} | {{ m.code(column.name) }} | {{ m.code(column.type) }} | {{ m.constraints(column) }} |
+{% endfor -%}
+{% endfor %}
+
+: Column definitions of every table, in declaration order. {% raw %}{#tbl-columns}{% endraw %}

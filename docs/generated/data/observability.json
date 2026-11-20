@@ -1,0 +1,354 @@
+{
+  "actuator": {
+    "endpoint_options": [
+      {
+        "enabled": true,
+        "endpoint": "env",
+        "evidence": [
+          "services/fulfillment/src/main/resources/application.yml:54"
+        ]
+      }
+    ],
+    "evidence": [
+      "services/fulfillment/src/main/resources/application.yml:55"
+    ],
+    "exposure": [
+      "health",
+      "info",
+      "env",
+      "prometheus"
+    ]
+  },
+  "agent": {
+    "declared_by": [
+      "k3d"
+    ],
+    "environment": [
+      {
+        "evidence": [
+          "services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:32"
+        ],
+        "name": "JAVA_TOOL_OPTIONS",
+        "overlay": "k3d",
+        "value": "-javaagent:/app/opentelemetry-javaagent.jar"
+      },
+      {
+        "evidence": [
+          "services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:34"
+        ],
+        "name": "OTEL_SERVICE_NAME",
+        "overlay": "k3d",
+        "value": "fulfillment"
+      },
+      {
+        "evidence": [
+          "services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:36"
+        ],
+        "name": "OTEL_EXPORTER_OTLP_ENDPOINT",
+        "overlay": "k3d",
+        "value": "http://otel-collector:4317"
+      },
+      {
+        "evidence": [
+          "services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:38"
+        ],
+        "name": "OTEL_EXPORTER_OTLP_PROTOCOL",
+        "overlay": "k3d",
+        "value": "grpc"
+      },
+      {
+        "evidence": [
+          "services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:40"
+        ],
+        "name": "OTEL_TRACES_EXPORTER",
+        "overlay": "k3d",
+        "value": "otlp"
+      },
+      {
+        "evidence": [
+          "services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:42"
+        ],
+        "name": "OTEL_LOGS_EXPORTER",
+        "overlay": "k3d",
+        "value": "otlp"
+      },
+      {
+        "evidence": [
+          "services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:44"
+        ],
+        "name": "OTEL_METRICS_EXPORTER",
+        "overlay": "k3d",
+        "value": "none"
+      },
+      {
+        "evidence": [
+          "services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:46"
+        ],
+        "name": "OTEL_TRACES_SAMPLER",
+        "overlay": "k3d",
+        "value": "parentbased_traceidratio"
+      },
+      {
+        "evidence": [
+          "services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:48"
+        ],
+        "name": "OTEL_TRACES_SAMPLER_ARG",
+        "overlay": "k3d",
+        "value": "1.0"
+      }
+    ],
+    "evidence": [
+      "services/fulfillment/build.gradle:226",
+      "services/fulfillment/build.gradle:228",
+      "services/fulfillment/build.gradle:232",
+      "services/fulfillment/build.gradle:243",
+      "services/fulfillment/build.gradle:244",
+      "services/fulfillment/build.gradle:245",
+      "services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:32",
+      "services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:34",
+      "services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:36",
+      "services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:38",
+      "services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:40",
+      "services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:42",
+      "services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:44",
+      "services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:46",
+      "services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:48"
+    ],
+    "image_environment": [
+      {
+        "evidence": [
+          "services/fulfillment/build.gradle:247"
+        ],
+        "name": "SPRING_OUTPUT_ANSI_ENABLED",
+        "value": "never"
+      },
+      {
+        "evidence": [
+          "services/fulfillment/build.gradle:248"
+        ],
+        "name": "JAVA_TOOL_OPTIONS",
+        "value": "-javaagent:/app/opentelemetry-javaagent.jar"
+      }
+    ],
+    "jar": "opentelemetry-javaagent.jar",
+    "version": "2.17.0"
+  },
+  "collector": {
+    "config_map": "otel-collector-config",
+    "deployment": {
+      "image": "otel/opentelemetry-collector-contrib:0.127.0",
+      "mounts": [
+        "/etc/otel",
+        "/var/lib/otel"
+      ],
+      "name": "otel-collector",
+      "replicas": 1,
+      "volumes": [
+        {
+          "kind": "configMap",
+          "name": "otel-config"
+        },
+        {
+          "kind": "emptyDir",
+          "name": "otel-data"
+        }
+      ]
+    },
+    "evidence": [
+      "services/fulfillment/k8s/infra/otel-collector.yaml:15",
+      "services/fulfillment/k8s/infra/otel-collector.yaml:27",
+      "services/fulfillment/k8s/infra/otel-collector.yaml:118",
+      "services/fulfillment/k8s/infra/otel-collector.yaml:82"
+    ],
+    "exporters": [
+      {
+        "max_days": 7,
+        "max_megabytes": 50,
+        "name": "file/traces",
+        "path": "/var/lib/otel/traces.jsonl"
+      },
+      {
+        "max_days": 7,
+        "max_megabytes": 50,
+        "name": "file/logs",
+        "path": "/var/lib/otel/logs.jsonl"
+      }
+    ],
+    "pipelines": [
+      {
+        "exporters": [
+          "file/traces"
+        ],
+        "name": "traces",
+        "receivers": [
+          "otlp"
+        ]
+      },
+      {
+        "exporters": [
+          "file/logs"
+        ],
+        "name": "logs",
+        "receivers": [
+          "otlp"
+        ]
+      }
+    ],
+    "present": true,
+    "receivers": [
+      {
+        "endpoint": "0.0.0.0:4317",
+        "name": "otlp",
+        "protocol": "grpc"
+      },
+      {
+        "endpoint": "0.0.0.0:4318",
+        "name": "otlp",
+        "protocol": "http"
+      }
+    ],
+    "service": {
+      "name": "otel-collector",
+      "ports": [
+        4317,
+        4318
+      ]
+    }
+  },
+  "documentation": {
+    "evidence": [],
+    "show_actuator": null
+  },
+  "evidence": [
+    "services/fulfillment/src/main/resources/application.yml:52"
+  ],
+  "log_levels": [
+    {
+      "evidence": [
+        "services/fulfillment/src/main/resources/application.yml:58"
+      ],
+      "level": "ERROR",
+      "logger": "org.apache.catalina.startup.DigesterFactory"
+    },
+    {
+      "evidence": [
+        "services/fulfillment/src/main/resources/application.yml:59"
+      ],
+      "level": "ERROR",
+      "logger": "org.apache.catalina.util.LifecycleBase"
+    },
+    {
+      "evidence": [
+        "services/fulfillment/src/main/resources/application.yml:60"
+      ],
+      "level": "WARN",
+      "logger": "org.apache.coyote.http11.Http11NioProtocol"
+    },
+    {
+      "evidence": [
+        "services/fulfillment/src/main/resources/application.yml:61"
+      ],
+      "level": "WARN",
+      "logger": "org.apache.sshd.common.util.SecurityUtils"
+    },
+    {
+      "evidence": [
+        "services/fulfillment/src/main/resources/application.yml:62"
+      ],
+      "level": "WARN",
+      "logger": "org.apache.tomcat.util.net.NioSelectorPool"
+    },
+    {
+      "evidence": [
+        "services/fulfillment/src/main/resources/application.yml:63"
+      ],
+      "level": "ERROR",
+      "logger": "org.eclipse.jetty.util.component.AbstractLifeCycle"
+    },
+    {
+      "evidence": [
+        "services/fulfillment/src/main/resources/application.yml:64"
+      ],
+      "level": "WARN",
+      "logger": "org.hibernate.validator.internal.util.Version"
+    },
+    {
+      "evidence": [
+        "services/fulfillment/src/main/resources/application.yml:65"
+      ],
+      "level": "WARN",
+      "logger": "org.springframework.boot.actuate.endpoint.jmx"
+    },
+    {
+      "evidence": [
+        "services/fulfillment/src/main/resources/application.yml:66"
+      ],
+      "level": "INFO",
+      "logger": "org.springframework.web"
+    },
+    {
+      "evidence": [
+        "services/fulfillment/src/main/resources/application.yml:67"
+      ],
+      "level": "WARN",
+      "logger": "org.apache.kafka"
+    },
+    {
+      "evidence": [
+        "services/fulfillment/src/main/resources/application.yml:68"
+      ],
+      "level": "INFO",
+      "logger": "org.apache.kafka.clients.consumer.ConsumerConfig"
+    },
+    {
+      "evidence": [
+        "services/fulfillment/src/main/resources/application.yml:69"
+      ],
+      "level": "INFO",
+      "logger": "org.apache.kafka.clients.producer.ProducerConfig"
+    },
+    {
+      "evidence": [
+        "services/fulfillment/src/main/resources/application.yml:70"
+      ],
+      "level": "INFO",
+      "logger": "org.apache.kafka.clients.admin.AdminClientConfig"
+    },
+    {
+      "evidence": [
+        "services/fulfillment/src/main/resources/application.yml:71"
+      ],
+      "level": "INFO",
+      "logger": "org.apache.kafka.common.utils.AppInfoParser"
+    },
+    {
+      "evidence": [
+        "services/fulfillment/src/main/resources/application.yml:72"
+      ],
+      "level": "INFO",
+      "logger": "org.apache.kafka.streams.StreamsConfig"
+    }
+  ],
+  "metrics": {
+    "evidence": [
+      "services/fulfillment/src/main/resources/application.yml:53"
+    ],
+    "prometheus_enabled": true
+  },
+  "profiles": [
+    {
+      "evidence": [
+        "services/fulfillment/k8s/base/deployment.yaml:46"
+      ],
+      "name": "prod",
+      "overlay": null
+    },
+    {
+      "evidence": [
+        "services/fulfillment/k8s/overlays/k3d/deployment-patch.yaml:30"
+      ],
+      "name": "dev",
+      "overlay": "k3d"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+% Extracted from docs/business/01-domain-overview.md section "Where fulfillment sits";
+% rendered to SVG by docs/scripts/render-diagrams.py.
+flowchart LR
+  CHECKOUT["Checkout / shopping<br/>finished, unchangeable order"] -->|"POST /orders"| FUL["Fulfillment<br/>processing, parcel, documents"]
+  EMP["Warehouse employee"] -->|"claim, scan, pack, mark ready, report issue"| FUL
+  RES["Issue resolver"] -->|"reads issues, resumes a hold"| FUL
+  FUL -->|"processing and delivery states"| CUS["Customer"]
+  FUL -->|"stockAt, reserve, issue"| WH["Warehouse system"]
+  WH -->|"stock changes, read by watermark"| FUL
+  FUL -->|"register, label, request collection, status"| CAR["Carrier"]
+  CAR -->|"delivery legs, polled"| FUL

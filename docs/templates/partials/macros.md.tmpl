@@ -1,0 +1,56 @@
+{%- macro evidence(refs) -%}
+<!-- evidence: {{ refs | join(', ') }} -->
+{%- endmacro -%}
+
+{%- macro code(value) -%}
+`{{ value }}`
+{%- endmacro -%}
+
+{%- macro codes(values) -%}
+{% for value in values %}{{ code(value) }}{% if not loop.last %}, {% endif %}{% endfor %}
+{%- endmacro -%}
+
+{%- macro definition(term, value) -%}
+{{ term }}
+: {{ value }}
+{%- endmacro -%}
+
+{%- macro fence(language, body) -%}
+```{{ language }}
+{{ body }}
+```
+{%- endmacro -%}
+
+{%- macro filename(path) -%}
+{{ path.rsplit('/', 1)[-1] }}
+{%- endmacro -%}
+
+{%- macro cell(value) -%}
+{{ (value | string | replace('|', '\\|') | replace('@', '\\@') | replace('\n', ' ') | trim) if value is not none and value != '' else '—' }}
+{%- endmacro -%}
+
+{%- macro yes_no(value) -%}
+{{ 'yes' if value else 'no' }}
+{%- endmacro -%}
+
+{%- macro resources(resources, key) -%}
+{%- set values = (resources or {}).get(key) or {} -%}
+{%- if values -%}
+{%- for name in values | sort -%}{{ name }} {{ values[name] }}{% if not loop.last %}, {% endif %}{%- endfor -%}
+{%- else -%}—{%- endif -%}
+{%- endmacro -%}
+
+{%- macro default_value(default) -%}
+{%- if default -%}default {{ default.value | lower if default.kind == 'boolean' else default.value }}{%- endif -%}
+{%- endmacro -%}
+
+{%- macro constraints(column) -%}
+{% set flags = [
+  default_value(column.default),
+  'not null' if column.nullable is sameas false else '',
+  'PK' if column.primary_key else '',
+  'unique' if column.unique else '',
+  ('FK ' ~ column.foreign_key.name ~ ' -> ' ~ column.foreign_key.references) if column.foreign_key else ''
+] -%}
+{{ flags | select | join('; ') or '—' }}
+{%- endmacro -%}

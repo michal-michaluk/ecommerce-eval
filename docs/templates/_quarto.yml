@@ -1,0 +1,28 @@
+project:
+  type: default
+  output-dir: _build
+  render:
+    - system-documentation.qmd
+    - integrator-guide.qmd
+    - operations-manual.qmd
+
+# Evidence and generator markers are provenance for reviewers of the sources. They stay in the
+# authored directories and in generated/ and never reach a rendered deliverable.
+filters:
+  - scripts/strip-evidence.lua
+
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    number-sections: false
+    include-after-body: templates/html-footer.html
+  typst:
+    toc: true
+    toc-depth: 3
+    number-sections: false
+    # Title page, front matter, running header and footer live in templates/; see the README
+    # there before copying them into another document.
+    template-partials:
+      - templates/page.typ
+      - templates/typst-show.typ
