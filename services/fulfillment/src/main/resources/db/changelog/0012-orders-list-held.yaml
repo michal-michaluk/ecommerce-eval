@@ -1,0 +1,17 @@
+databaseChangeLog:
+
+  # The hold as a fact of the orders list's own row (element 15's hold marker, element 09 RULE-2): the list is fed by the events,
+  # so a hold and its lift reach it through the two events the processing slice already publishes.
+  - changeSet:
+      id: 0012-orders-list-held
+      author: michal.michaluk
+      changes:
+        - addColumn:
+            tableName: orders_list
+            columns:
+              - column:
+                  name: held
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false

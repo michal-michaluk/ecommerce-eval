@@ -1,0 +1,14 @@
+{% import "partials/macros.md.tmpl" as m -%}
+{% include "partials/banner.md.tmpl" %}
+{% for example in examples %}
+### A.{{ example.index }} {{ labels.payload_examples[example.index - 1] if labels.payload_examples and labels.payload_examples | length >= example.index else "Payload" }}
+
+{{ m.evidence(example.evidence) }}
+
+{{ m.fence("json", example.content) }}
+{% if example.placeholder %}
+
+The identifier is written as `%s` in the source text block and is quoted here unchanged.
+{% endif %}
+
+{% endfor %}

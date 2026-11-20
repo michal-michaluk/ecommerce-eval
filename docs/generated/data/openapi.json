@@ -1,0 +1,3337 @@
+{
+  "components": {
+    "schemas": {},
+    "securitySchemes": {}
+  },
+  "contract": {
+    "base_url": {
+      "declaration": "services/fulfillment/e2e/fulfillment-api.hurl:5",
+      "declared": "http://localhost:8081",
+      "first_request": "services/fulfillment/e2e/fulfillment-api.hurl:19",
+      "kind": "base_url",
+      "name": "BASE_URL",
+      "requests": 48
+    },
+    "evidence": [
+      "services/fulfillment/e2e/fulfillment-api.hurl:19"
+    ],
+    "exercised_operations": 13,
+    "lines": 478,
+    "operations": 14,
+    "path": "services/fulfillment/e2e/fulfillment-api.hurl",
+    "requests": 48,
+    "variables": [
+      {
+        "declaration": "services/fulfillment/e2e/fulfillment-api.hurl:5",
+        "declared": "http://localhost:8081",
+        "first_request": "services/fulfillment/e2e/fulfillment-api.hurl:19",
+        "kind": "base_url",
+        "name": "BASE_URL",
+        "requests": 48
+      },
+      {
+        "declaration": "services/fulfillment/e2e/fulfillment-api.hurl:7",
+        "declared": "$CUS",
+        "first_request": "services/fulfillment/e2e/fulfillment-api.hurl:451",
+        "kind": "harness",
+        "name": "customerToken",
+        "requests": 1
+      },
+      {
+        "declaration": "services/fulfillment/e2e/fulfillment-api.hurl:6",
+        "declared": "$EMP",
+        "first_request": "services/fulfillment/e2e/fulfillment-api.hurl:109",
+        "kind": "harness",
+        "name": "employeeToken",
+        "requests": 31
+      },
+      {
+        "declaration": "services/fulfillment/e2e/fulfillment-api.hurl:410",
+        "declared": null,
+        "first_request": "services/fulfillment/e2e/fulfillment-api.hurl:414",
+        "kind": "captured",
+        "name": "heldProcessingId",
+        "requests": 4
+      },
+      {
+        "declaration": "services/fulfillment/e2e/fulfillment-api.hurl:293",
+        "declared": null,
+        "first_request": "services/fulfillment/e2e/fulfillment-api.hurl:348",
+        "kind": "captured",
+        "name": "issueId",
+        "requests": 2
+      },
+      {
+        "declaration": "services/fulfillment/e2e/fulfillment-api.hurl:252",
+        "declared": null,
+        "first_request": "services/fulfillment/e2e/fulfillment-api.hurl:256",
+        "kind": "captured",
+        "name": "openProcessingId",
+        "requests": 12
+      },
+      {
+        "declaration": "services/fulfillment/e2e/fulfillment-api.hurl:6",
+        "declared": "$EMP2",
+        "first_request": "services/fulfillment/e2e/fulfillment-api.hurl:127",
+        "kind": "harness",
+        "name": "otherEmployeeToken",
+        "requests": 1
+      },
+      {
+        "declaration": "services/fulfillment/e2e/fulfillment-api.hurl:40",
+        "declared": null,
+        "first_request": "services/fulfillment/e2e/fulfillment-api.hurl:119",
+        "kind": "captured",
+        "name": "processingId",
+        "requests": 13
+      },
+      {
+        "declaration": "services/fulfillment/e2e/fulfillment-api.hurl:7",
+        "declared": "$RES",
+        "first_request": "services/fulfillment/e2e/fulfillment-api.hurl:167",
+        "kind": "harness",
+        "name": "resolverToken",
+        "requests": 6
+      },
+      {
+        "declaration": "services/fulfillment/e2e/fulfillment-api.hurl:308",
+        "declared": null,
+        "first_request": "services/fulfillment/e2e/fulfillment-api.hurl:367",
+        "kind": "captured",
+        "name": "secondIssueId",
+        "requests": 1
+      },
+      {
+        "declaration": "services/fulfillment/e2e/fulfillment-api.hurl:6",
+        "declared": "$SHOP",
+        "first_request": "services/fulfillment/e2e/fulfillment-api.hurl:26",
+        "kind": "harness",
+        "name": "shoppingToken",
+        "requests": 7
+      }
+    ]
+  },
+  "info": {},
+  "not_exercised": [
+    {
+      "evidence": [
+        "services/fulfillment/src/main/java/shop/fulfillment/processing/PickWorkstationController.java:24"
+      ],
+      "method": "GET",
+      "path": "/processing/{processingId}/pick-workstation"
+    }
+  ],
+  "openapi": null,
+  "paths": {
+    "/issues": {
+      "get": {
+        "captures": [],
+        "declared": {
+          "consumes": [],
+          "produces": [
+            "application/json"
+          ]
+        },
+        "description": "It is the resolver's screen and it has no other verb — no resolve, no close, no dismiss, no acknowledge. Closing an issue is a fact of the resume command on the processing resource (registers D7, D8), so this class holds the projection and no write model at all, and a route that would close one cannot be added here without adding a command no source names. The collection is unpaginated like the orders list: one items envelope, no parameter (element 11 D-11-5).",
+        "description_evidence": [
+          "services/fulfillment/src/main/java/shop/fulfillment/issues/IssueDashboardController.java:14"
+        ],
+        "evidence": [
+          "services/fulfillment/src/main/java/shop/fulfillment/issues/IssueDashboardController.java:26",
+          "services/fulfillment/e2e/fulfillment-api.hurl:331",
+          "services/fulfillment/e2e/fulfillment-api.hurl:343",
+          "services/fulfillment/e2e/fulfillment-api.hurl:379"
+        ],
+        "exercised": true,
+        "handler": {
+          "name": "list",
+          "return_type": "IssuesPage",
+          "source": "services/fulfillment/src/main/java/shop/fulfillment/issues/IssueDashboardController.java:27"
+        },
+        "method": "GET",
+        "not_exercised": false,
+        "operationId": "get-issues",
+        "parameters": [],
+        "path": "/issues",
+        "request_count": 3,
+        "request_type": null,
+        "requests": [
+          {
+            "body": false,
+            "line": 331,
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:331",
+            "status": "200"
+          },
+          {
+            "body": false,
+            "line": 343,
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:343",
+            "status": "403"
+          },
+          {
+            "body": false,
+            "line": 379,
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:379",
+            "status": "200"
+          }
+        ],
+        "responses": {
+          "200": {
+            "assertions": [
+              {
+                "expression": "$.items[0].issueId",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "isString",
+                "raw": "jsonpath \"$.items[0].issueId\" isString",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:335",
+                "target": "jsonpath",
+                "value": ""
+              },
+              {
+                "expression": "$.items[0].issueId",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "!=",
+                "raw": "jsonpath \"$.items[0].issueId\" != \"\"",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:336",
+                "target": "jsonpath",
+                "value": "\"\""
+              },
+              {
+                "expression": "$.items[0].kind",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "exists",
+                "raw": "jsonpath \"$.items[0].kind\" exists",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:337",
+                "target": "jsonpath",
+                "value": ""
+              },
+              {
+                "expression": "$.items[0].issueId",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "==",
+                "raw": "jsonpath \"$.items[0].issueId\" == \"{{issueId}}\"",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:338",
+                "target": "jsonpath",
+                "value": "\"{{issueId}}\""
+              },
+              {
+                "expression": "$.items[0].orderState",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "==",
+                "raw": "jsonpath \"$.items[0].orderState\" == \"onHold\"",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:339",
+                "target": "jsonpath",
+                "value": "\"onHold\""
+              },
+              {
+                "expression": "$.items[0].product.productNumber",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "==",
+                "raw": "jsonpath \"$.items[0].product.productNumber\" == \"99881\"",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:340",
+                "target": "jsonpath",
+                "value": "\"99881\""
+              },
+              {
+                "expression": "$.items[0]",
+                "kind": "predicate",
+                "negated": true,
+                "operator": "exists",
+                "raw": "jsonpath \"$.items[0]\" not exists",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:383",
+                "target": "jsonpath",
+                "value": ""
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "items": {
+                      "items": {
+                        "evidence": [
+                          "services/fulfillment/e2e/fulfillment-api.hurl:383"
+                        ],
+                        "properties": {
+                          "issueId": {
+                            "evidence": [
+                              "services/fulfillment/e2e/fulfillment-api.hurl:335",
+                              "services/fulfillment/e2e/fulfillment-api.hurl:336",
+                              "services/fulfillment/e2e/fulfillment-api.hurl:338"
+                            ],
+                            "type": "string"
+                          },
+                          "kind": {
+                            "evidence": [
+                              "services/fulfillment/e2e/fulfillment-api.hurl:337"
+                            ]
+                          },
+                          "orderState": {
+                            "evidence": [
+                              "services/fulfillment/e2e/fulfillment-api.hurl:339"
+                            ],
+                            "type": "string"
+                          },
+                          "product": {
+                            "properties": {
+                              "productNumber": {
+                                "evidence": [
+                                  "services/fulfillment/e2e/fulfillment-api.hurl:340"
+                                ],
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "",
+            "evidence": [
+              "services/fulfillment/e2e/fulfillment-api.hurl:333",
+              "services/fulfillment/e2e/fulfillment-api.hurl:335",
+              "services/fulfillment/e2e/fulfillment-api.hurl:336",
+              "services/fulfillment/e2e/fulfillment-api.hurl:337",
+              "services/fulfillment/e2e/fulfillment-api.hurl:338",
+              "services/fulfillment/e2e/fulfillment-api.hurl:339",
+              "services/fulfillment/e2e/fulfillment-api.hurl:340",
+              "services/fulfillment/e2e/fulfillment-api.hurl:381",
+              "services/fulfillment/e2e/fulfillment-api.hurl:383"
+            ]
+          },
+          "403": {
+            "assertions": [],
+            "content": {},
+            "description": "",
+            "evidence": [
+              "services/fulfillment/e2e/fulfillment-api.hurl:345"
+            ]
+          }
+        },
+        "source": "services/fulfillment/src/main/java/shop/fulfillment/issues/IssueDashboardController.java:26",
+        "summary": "Element 17's one route: the open warehouse-reality gaps, served from the read model and from nothing else.",
+        "summary_evidence": [
+          "services/fulfillment/src/main/java/shop/fulfillment/issues/IssueDashboardController.java:12"
+        ],
+        "summary_source": "javadoc"
+      }
+    },
+    "/orders": {
+      "get": {
+        "captures": [],
+        "declared": {
+          "consumes": [],
+          "produces": [
+            "application/json"
+          ]
+        },
+        "description": "The handler holds the projection and no write model, so the read path cannot drift into the aggregate (http.no-write-model-in-read). The contract of element 11 asserts no page on this collection and element 15 says the list has no pagination, so the route takes no paging parameters and answers items alone; a page would be a bound no source names (element 11 Q-11-1).",
+        "description_evidence": [
+          "services/fulfillment/src/main/java/shop/fulfillment/orders/OrdersListController.java:14"
+        ],
+        "evidence": [
+          "services/fulfillment/src/main/java/shop/fulfillment/orders/OrdersListController.java:25",
+          "services/fulfillment/e2e/fulfillment-api.hurl:109",
+          "services/fulfillment/e2e/fulfillment-api.hurl:141",
+          "services/fulfillment/e2e/fulfillment-api.hurl:19",
+          "services/fulfillment/e2e/fulfillment-api.hurl:228"
+        ],
+        "exercised": true,
+        "handler": {
+          "name": "list",
+          "return_type": "OrdersPage",
+          "source": "services/fulfillment/src/main/java/shop/fulfillment/orders/OrdersListController.java:26"
+        },
+        "method": "GET",
+        "not_exercised": false,
+        "operationId": "get-orders",
+        "parameters": [],
+        "path": "/orders",
+        "request_count": 4,
+        "request_type": null,
+        "requests": [
+          {
+            "body": false,
+            "line": 19,
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:19",
+            "status": "401"
+          },
+          {
+            "body": false,
+            "line": 109,
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:109",
+            "status": "200"
+          },
+          {
+            "body": false,
+            "line": 141,
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:141",
+            "status": "200"
+          },
+          {
+            "body": false,
+            "line": 228,
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:228",
+            "status": "200"
+          }
+        ],
+        "responses": {
+          "200": {
+            "assertions": [
+              {
+                "expression": "$.items",
+                "kind": "count",
+                "negated": false,
+                "operator": ">",
+                "raw": "jsonpath \"$.items\" count > 0",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:113",
+                "target": "jsonpath",
+                "value": "0"
+              },
+              {
+                "expression": "$.items[0].processingId",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "==",
+                "raw": "jsonpath \"$.items[0].processingId\" == \"{{processingId}}\"",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:114",
+                "target": "jsonpath",
+                "value": "\"{{processingId}}\""
+              },
+              {
+                "expression": "$.items[0].state",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "==",
+                "raw": "jsonpath \"$.items[0].state\" == \"pending\"",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:115",
+                "target": "jsonpath",
+                "value": "\"pending\""
+              },
+              {
+                "expression": "$.items[0].assignee",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "exists",
+                "raw": "jsonpath \"$.items[0].assignee\" exists",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:116",
+                "target": "jsonpath",
+                "value": ""
+              },
+              {
+                "expression": "$.items[0].state",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "==",
+                "raw": "jsonpath \"$.items[0].state\" == \"assigned\"",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:145",
+                "target": "jsonpath",
+                "value": "\"assigned\""
+              },
+              {
+                "expression": "$.items[0].state",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "==",
+                "raw": "jsonpath \"$.items[0].state\" == \"readyForDelivery\"",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:233",
+                "target": "jsonpath",
+                "value": "\"readyForDelivery\""
+              },
+              {
+                "expression": "$.items[0].positionProgress",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "==",
+                "raw": "jsonpath \"$.items[0].positionProgress\" == \"1/1 packed\"",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:234",
+                "target": "jsonpath",
+                "value": "\"1/1 packed\""
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "items": {
+                      "evidence": [
+                        "services/fulfillment/e2e/fulfillment-api.hurl:113"
+                      ],
+                      "items": {
+                        "properties": {
+                          "assignee": {
+                            "evidence": [
+                              "services/fulfillment/e2e/fulfillment-api.hurl:116",
+                              "services/fulfillment/e2e/fulfillment-api.hurl:146"
+                            ]
+                          },
+                          "positionProgress": {
+                            "evidence": [
+                              "services/fulfillment/e2e/fulfillment-api.hurl:234"
+                            ],
+                            "type": "string"
+                          },
+                          "processingId": {
+                            "evidence": [
+                              "services/fulfillment/e2e/fulfillment-api.hurl:114",
+                              "services/fulfillment/e2e/fulfillment-api.hurl:232"
+                            ],
+                            "type": "string"
+                          },
+                          "state": {
+                            "evidence": [
+                              "services/fulfillment/e2e/fulfillment-api.hurl:115",
+                              "services/fulfillment/e2e/fulfillment-api.hurl:145",
+                              "services/fulfillment/e2e/fulfillment-api.hurl:233"
+                            ],
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "",
+            "evidence": [
+              "services/fulfillment/e2e/fulfillment-api.hurl:111",
+              "services/fulfillment/e2e/fulfillment-api.hurl:113",
+              "services/fulfillment/e2e/fulfillment-api.hurl:114",
+              "services/fulfillment/e2e/fulfillment-api.hurl:115",
+              "services/fulfillment/e2e/fulfillment-api.hurl:116",
+              "services/fulfillment/e2e/fulfillment-api.hurl:143",
+              "services/fulfillment/e2e/fulfillment-api.hurl:145",
+              "services/fulfillment/e2e/fulfillment-api.hurl:146",
+              "services/fulfillment/e2e/fulfillment-api.hurl:230",
+              "services/fulfillment/e2e/fulfillment-api.hurl:232",
+              "services/fulfillment/e2e/fulfillment-api.hurl:233",
+              "services/fulfillment/e2e/fulfillment-api.hurl:234"
+            ]
+          },
+          "401": {
+            "assertions": [],
+            "content": {},
+            "description": "",
+            "evidence": [
+              "services/fulfillment/e2e/fulfillment-api.hurl:20"
+            ]
+          }
+        },
+        "source": "services/fulfillment/src/main/java/shop/fulfillment/orders/OrdersListController.java:25",
+        "summary": "Element 15's one route: the employee's current orders, served from the read model and from nothing else.",
+        "summary_evidence": [
+          "services/fulfillment/src/main/java/shop/fulfillment/orders/OrdersListController.java:12"
+        ],
+        "summary_source": "javadoc"
+      },
+      "post": {
+        "captures": [
+          {
+            "expression": "$.processingId",
+            "name": "processingId",
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:40",
+            "target": "jsonpath"
+          },
+          {
+            "expression": "$.processingId",
+            "name": "openProcessingId",
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:252",
+            "target": "jsonpath"
+          },
+          {
+            "expression": "$.processingId",
+            "name": "heldProcessingId",
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:410",
+            "target": "jsonpath"
+          }
+        ],
+        "declared": {
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ]
+        },
+        "description": "The handler validates the command, calls OrderIntakeService once and maps the answer back — 201 for the delivery that opened the processing, 200 for a repeated orderHash, because idempotency is stated in the answer rather than as a second resource or a second error (element 11 D-11-2). A refused order never reaches this adapter: Order raises the refusal and the one advice answers 422 ORDER_INCOMPLETE.",
+        "description_evidence": [
+          "services/fulfillment/src/main/java/shop/fulfillment/processing/OrderIntakeController.java:17"
+        ],
+        "evidence": [
+          "services/fulfillment/src/main/java/shop/fulfillment/processing/OrderIntakeController.java:28",
+          "services/fulfillment/e2e/fulfillment-api.hurl:149",
+          "services/fulfillment/e2e/fulfillment-api.hurl:237",
+          "services/fulfillment/e2e/fulfillment-api.hurl:26",
+          "services/fulfillment/e2e/fulfillment-api.hurl:396",
+          "services/fulfillment/e2e/fulfillment-api.hurl:47",
+          "services/fulfillment/e2e/fulfillment-api.hurl:65",
+          "services/fulfillment/e2e/fulfillment-api.hurl:82",
+          "services/fulfillment/e2e/fulfillment-api.hurl:92"
+        ],
+        "exercised": true,
+        "handler": {
+          "name": "accept",
+          "return_type": "OrderIntakeView",
+          "source": "services/fulfillment/src/main/java/shop/fulfillment/processing/OrderIntakeController.java:29"
+        },
+        "method": "POST",
+        "not_exercised": false,
+        "operationId": "post-orders",
+        "parameters": [],
+        "path": "/orders",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "delivery": {
+                    "evidence": [
+                      "services/fulfillment/e2e/fulfillment-api.hurl:33"
+                    ],
+                    "properties": {
+                      "location": {
+                        "evidence": [
+                          "services/fulfillment/e2e/fulfillment-api.hurl:33"
+                        ],
+                        "properties": {
+                          "kind": {
+                            "evidence": [
+                              "services/fulfillment/e2e/fulfillment-api.hurl:33"
+                            ],
+                            "type": "string"
+                          },
+                          "pointId": {
+                            "evidence": [
+                              "services/fulfillment/e2e/fulfillment-api.hurl:33"
+                            ],
+                            "nullable": true,
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "pointId"
+                        ],
+                        "type": "object"
+                      },
+                      "methodCode": {
+                        "evidence": [
+                          "services/fulfillment/e2e/fulfillment-api.hurl:33"
+                        ],
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "location",
+                      "methodCode"
+                    ],
+                    "type": "object"
+                  },
+                  "invoicing": {
+                    "evidence": [
+                      "services/fulfillment/e2e/fulfillment-api.hurl:35"
+                    ],
+                    "properties": {
+                      "address": {
+                        "evidence": [
+                          "services/fulfillment/e2e/fulfillment-api.hurl:36"
+                        ],
+                        "properties": {
+                          "city": {
+                            "evidence": [
+                              "services/fulfillment/e2e/fulfillment-api.hurl:36"
+                            ],
+                            "type": "string"
+                          },
+                          "country": {
+                            "evidence": [
+                              "services/fulfillment/e2e/fulfillment-api.hurl:36"
+                            ],
+                            "type": "string"
+                          },
+                          "postalCode": {
+                            "evidence": [
+                              "services/fulfillment/e2e/fulfillment-api.hurl:36"
+                            ],
+                            "type": "string"
+                          },
+                          "street": {
+                            "evidence": [
+                              "services/fulfillment/e2e/fulfillment-api.hurl:36"
+                            ],
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "city",
+                          "country",
+                          "postalCode",
+                          "street"
+                        ],
+                        "type": "object"
+                      },
+                      "buyerName": {
+                        "evidence": [
+                          "services/fulfillment/e2e/fulfillment-api.hurl:35"
+                        ],
+                        "type": "string"
+                      },
+                      "nip": {
+                        "evidence": [
+                          "services/fulfillment/e2e/fulfillment-api.hurl:35"
+                        ],
+                        "nullable": true
+                      }
+                    },
+                    "required": [
+                      "address",
+                      "buyerName",
+                      "nip"
+                    ],
+                    "type": "object"
+                  },
+                  "lines": {
+                    "evidence": [
+                      "services/fulfillment/e2e/fulfillment-api.hurl:32"
+                    ],
+                    "items": {
+                      "properties": {
+                        "name": {
+                          "evidence": [
+                            "services/fulfillment/e2e/fulfillment-api.hurl:32"
+                          ],
+                          "type": "string"
+                        },
+                        "productNumber": {
+                          "evidence": [
+                            "services/fulfillment/e2e/fulfillment-api.hurl:32"
+                          ],
+                          "type": "string"
+                        },
+                        "quantity": {
+                          "evidence": [
+                            "services/fulfillment/e2e/fulfillment-api.hurl:32"
+                          ],
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "productNumber",
+                        "quantity"
+                      ],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  "orderHash": {
+                    "evidence": [
+                      "services/fulfillment/e2e/fulfillment-api.hurl:30"
+                    ],
+                    "type": "string"
+                  },
+                  "payment": {
+                    "evidence": [
+                      "services/fulfillment/e2e/fulfillment-api.hurl:34"
+                    ],
+                    "properties": {
+                      "methodCode": {
+                        "evidence": [
+                          "services/fulfillment/e2e/fulfillment-api.hurl:33"
+                        ],
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "methodCode"
+                    ],
+                    "type": "object"
+                  },
+                  "placedAt": {
+                    "evidence": [
+                      "services/fulfillment/e2e/fulfillment-api.hurl:31"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "lines",
+                  "orderHash",
+                  "placedAt"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "evidence": [
+            "services/fulfillment/e2e/fulfillment-api.hurl:29",
+            "services/fulfillment/e2e/fulfillment-api.hurl:50",
+            "services/fulfillment/e2e/fulfillment-api.hurl:68",
+            "services/fulfillment/e2e/fulfillment-api.hurl:85",
+            "services/fulfillment/e2e/fulfillment-api.hurl:95",
+            "services/fulfillment/e2e/fulfillment-api.hurl:152",
+            "services/fulfillment/e2e/fulfillment-api.hurl:240",
+            "services/fulfillment/e2e/fulfillment-api.hurl:399"
+          ],
+          "observed_bodies": 7,
+          "required": true
+        },
+        "request_count": 8,
+        "request_type": "OrderHandover",
+        "requests": [
+          {
+            "body": true,
+            "line": 26,
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:26",
+            "status": "201"
+          },
+          {
+            "body": true,
+            "line": 47,
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:47",
+            "status": "200"
+          },
+          {
+            "body": true,
+            "line": 65,
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:65",
+            "status": "409"
+          },
+          {
+            "body": true,
+            "line": 82,
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:82",
+            "status": "422"
+          },
+          {
+            "body": true,
+            "line": 92,
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:92",
+            "status": "422"
+          },
+          {
+            "body": true,
+            "line": 149,
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:149",
+            "status": "403"
+          },
+          {
+            "body": true,
+            "line": 237,
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:237",
+            "status": "201"
+          },
+          {
+            "body": true,
+            "line": 396,
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:396",
+            "status": "201"
+          }
+        ],
+        "responses": {
+          "200": {
+            "assertions": [
+              {
+                "expression": "$.processingId",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "==",
+                "raw": "jsonpath \"$.processingId\" == \"{{processingId}}\"",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:61",
+                "target": "jsonpath",
+                "value": "\"{{processingId}}\""
+              },
+              {
+                "expression": "$.duplicate",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "==",
+                "raw": "jsonpath \"$.duplicate\" == true",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:62",
+                "target": "jsonpath",
+                "value": "true"
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "duplicate": {
+                      "evidence": [
+                        "services/fulfillment/e2e/fulfillment-api.hurl:62"
+                      ],
+                      "type": "boolean"
+                    },
+                    "processingId": {
+                      "evidence": [
+                        "services/fulfillment/e2e/fulfillment-api.hurl:61"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "",
+            "evidence": [
+              "services/fulfillment/e2e/fulfillment-api.hurl:59",
+              "services/fulfillment/e2e/fulfillment-api.hurl:61",
+              "services/fulfillment/e2e/fulfillment-api.hurl:62"
+            ]
+          },
+          "201": {
+            "assertions": [
+              {
+                "expression": "$.processingId",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "isString",
+                "raw": "jsonpath \"$.processingId\" isString",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:42",
+                "target": "jsonpath",
+                "value": ""
+              },
+              {
+                "expression": "$.processingId",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "!=",
+                "raw": "jsonpath \"$.processingId\" != \"\"",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:43",
+                "target": "jsonpath",
+                "value": "\"\""
+              },
+              {
+                "expression": "$.state",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "==",
+                "raw": "jsonpath \"$.state\" == \"pending\"",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:44",
+                "target": "jsonpath",
+                "value": "\"pending\""
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "processingId": {
+                      "evidence": [
+                        "services/fulfillment/e2e/fulfillment-api.hurl:42",
+                        "services/fulfillment/e2e/fulfillment-api.hurl:43"
+                      ],
+                      "type": "string"
+                    },
+                    "state": {
+                      "evidence": [
+                        "services/fulfillment/e2e/fulfillment-api.hurl:254",
+                        "services/fulfillment/e2e/fulfillment-api.hurl:412",
+                        "services/fulfillment/e2e/fulfillment-api.hurl:44"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "",
+            "evidence": [
+              "services/fulfillment/e2e/fulfillment-api.hurl:250",
+              "services/fulfillment/e2e/fulfillment-api.hurl:254",
+              "services/fulfillment/e2e/fulfillment-api.hurl:38",
+              "services/fulfillment/e2e/fulfillment-api.hurl:408",
+              "services/fulfillment/e2e/fulfillment-api.hurl:412",
+              "services/fulfillment/e2e/fulfillment-api.hurl:42",
+              "services/fulfillment/e2e/fulfillment-api.hurl:43",
+              "services/fulfillment/e2e/fulfillment-api.hurl:44"
+            ]
+          },
+          "403": {
+            "assertions": [],
+            "content": {},
+            "description": "",
+            "evidence": [
+              "services/fulfillment/e2e/fulfillment-api.hurl:153"
+            ]
+          },
+          "409": {
+            "assertions": [
+              {
+                "expression": "$.error",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "==",
+                "raw": "jsonpath \"$.error\" == \"ORDER_HASH_CONFLICT\"",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:79",
+                "target": "jsonpath",
+                "value": "\"ORDER_HASH_CONFLICT\""
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "error": {
+                      "evidence": [
+                        "services/fulfillment/e2e/fulfillment-api.hurl:79"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "",
+            "evidence": [
+              "services/fulfillment/e2e/fulfillment-api.hurl:77",
+              "services/fulfillment/e2e/fulfillment-api.hurl:79"
+            ]
+          },
+          "422": {
+            "assertions": [
+              {
+                "expression": "$.error",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "==",
+                "raw": "jsonpath \"$.error\" == \"ORDER_INCOMPLETE\"",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:88",
+                "target": "jsonpath",
+                "value": "\"ORDER_INCOMPLETE\""
+              },
+              {
+                "expression": "$.missing",
+                "kind": "count",
+                "negated": false,
+                "operator": ">",
+                "raw": "jsonpath \"$.missing\" count > 0",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:89",
+                "target": "jsonpath",
+                "value": "0"
+              },
+              {
+                "expression": "$.missing",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "includes",
+                "raw": "jsonpath \"$.missing\" includes \"delivery.location.pointId\"",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:106",
+                "target": "jsonpath",
+                "value": "\"delivery.location.pointId\""
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "error": {
+                      "evidence": [
+                        "services/fulfillment/e2e/fulfillment-api.hurl:105",
+                        "services/fulfillment/e2e/fulfillment-api.hurl:88"
+                      ],
+                      "type": "string"
+                    },
+                    "missing": {
+                      "evidence": [
+                        "services/fulfillment/e2e/fulfillment-api.hurl:106",
+                        "services/fulfillment/e2e/fulfillment-api.hurl:89"
+                      ],
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "",
+            "evidence": [
+              "services/fulfillment/e2e/fulfillment-api.hurl:103",
+              "services/fulfillment/e2e/fulfillment-api.hurl:105",
+              "services/fulfillment/e2e/fulfillment-api.hurl:106",
+              "services/fulfillment/e2e/fulfillment-api.hurl:86",
+              "services/fulfillment/e2e/fulfillment-api.hurl:88",
+              "services/fulfillment/e2e/fulfillment-api.hurl:89"
+            ]
+          }
+        },
+        "source": "services/fulfillment/src/main/java/shop/fulfillment/processing/OrderIntakeController.java:28",
+        "summary": "Element 12's one route: the finished order arrives from checkout and leaves as a processing.",
+        "summary_evidence": [
+          "services/fulfillment/src/main/java/shop/fulfillment/processing/OrderIntakeController.java:15"
+        ],
+        "summary_source": "javadoc"
+      }
+    },
+    "/processing/{processingId}": {
+      "get": {
+        "captures": [],
+        "declared": {
+          "consumes": [],
+          "produces": [
+            "application/json"
+          ]
+        },
+        "description": "Both the employee and the resolver scope reach it (element 11's auth matrix): a resolver deciding a resume has to see what is held, and the payload carries no customer-facing field the customer scope could not see — that scope has its own resource (element 18, D-11-4).",
+        "description_evidence": [
+          "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingSnapshotController.java:14"
+        ],
+        "evidence": [
+          "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingSnapshotController.java:24",
+          "services/fulfillment/e2e/fulfillment-api.hurl:156",
+          "services/fulfillment/e2e/fulfillment-api.hurl:167",
+          "services/fulfillment/e2e/fulfillment-api.hurl:22",
+          "services/fulfillment/e2e/fulfillment-api.hurl:467"
+        ],
+        "exercised": true,
+        "handler": {
+          "name": "processing",
+          "return_type": "ProcessingSnapshot",
+          "source": "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingSnapshotController.java:25"
+        },
+        "method": "GET",
+        "not_exercised": false,
+        "operationId": "get-processing-processingid",
+        "parameters": [
+          {
+            "evidence": [
+              "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingSnapshotController.java:24",
+              "services/fulfillment/e2e/fulfillment-api.hurl:156",
+              "services/fulfillment/e2e/fulfillment-api.hurl:167",
+              "services/fulfillment/e2e/fulfillment-api.hurl:22",
+              "services/fulfillment/e2e/fulfillment-api.hurl:467"
+            ],
+            "in": "path",
+            "name": "processingId",
+            "observed": [
+              "OP-2026-0001",
+              "OP-DOES-NOT-EXIST",
+              "{{processingId}}"
+            ],
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "path": "/processing/{processingId}",
+        "request_count": 4,
+        "request_type": null,
+        "requests": [
+          {
+            "body": false,
+            "line": 22,
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:22",
+            "status": "401"
+          },
+          {
+            "body": false,
+            "line": 156,
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:156",
+            "status": "200"
+          },
+          {
+            "body": false,
+            "line": 167,
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:167",
+            "status": "200"
+          },
+          {
+            "body": false,
+            "line": 467,
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:467",
+            "status": "404"
+          }
+        ],
+        "responses": {
+          "200": {
+            "assertions": [
+              {
+                "expression": "$.processingId",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "==",
+                "raw": "jsonpath \"$.processingId\" == \"{{processingId}}\"",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:160",
+                "target": "jsonpath",
+                "value": "\"{{processingId}}\""
+              },
+              {
+                "expression": "$.state",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "==",
+                "raw": "jsonpath \"$.state\" == \"assigned\"",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:161",
+                "target": "jsonpath",
+                "value": "\"assigned\""
+              },
+              {
+                "expression": "$.assignee",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "exists",
+                "raw": "jsonpath \"$.assignee\" exists",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:162",
+                "target": "jsonpath",
+                "value": ""
+              },
+              {
+                "expression": "$.positions[0].state",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "==",
+                "raw": "jsonpath \"$.positions[0].state\" == \"awaitingScan\"",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:163",
+                "target": "jsonpath",
+                "value": "\"awaitingScan\""
+              },
+              {
+                "expression": "$.openIssues",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "==",
+                "raw": "jsonpath \"$.openIssues\" == 0",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:164",
+                "target": "jsonpath",
+                "value": "0"
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "assignee": {
+                      "evidence": [
+                        "services/fulfillment/e2e/fulfillment-api.hurl:162"
+                      ]
+                    },
+                    "openIssues": {
+                      "evidence": [
+                        "services/fulfillment/e2e/fulfillment-api.hurl:164"
+                      ],
+                      "type": "integer"
+                    },
+                    "positions": {
+                      "items": {
+                        "properties": {
+                          "state": {
+                            "evidence": [
+                              "services/fulfillment/e2e/fulfillment-api.hurl:163"
+                            ],
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "processingId": {
+                      "evidence": [
+                        "services/fulfillment/e2e/fulfillment-api.hurl:160"
+                      ],
+                      "type": "string"
+                    },
+                    "state": {
+                      "evidence": [
+                        "services/fulfillment/e2e/fulfillment-api.hurl:161"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "",
+            "evidence": [
+              "services/fulfillment/e2e/fulfillment-api.hurl:158",
+              "services/fulfillment/e2e/fulfillment-api.hurl:160",
+              "services/fulfillment/e2e/fulfillment-api.hurl:161",
+              "services/fulfillment/e2e/fulfillment-api.hurl:162",
+              "services/fulfillment/e2e/fulfillment-api.hurl:163",
+              "services/fulfillment/e2e/fulfillment-api.hurl:164",
+              "services/fulfillment/e2e/fulfillment-api.hurl:169"
+            ]
+          },
+          "401": {
+            "assertions": [],
+            "content": {},
+            "description": "",
+            "evidence": [
+              "services/fulfillment/e2e/fulfillment-api.hurl:23"
+            ]
+          },
+          "404": {
+            "assertions": [
+              {
+                "expression": "$.error",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "==",
+                "raw": "jsonpath \"$.error\" == \"PROCESSING_NOT_FOUND\"",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:471",
+                "target": "jsonpath",
+                "value": "\"PROCESSING_NOT_FOUND\""
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "error": {
+                      "evidence": [
+                        "services/fulfillment/e2e/fulfillment-api.hurl:471"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "",
+            "evidence": [
+              "services/fulfillment/e2e/fulfillment-api.hurl:469",
+              "services/fulfillment/e2e/fulfillment-api.hurl:471"
+            ]
+          }
+        },
+        "source": "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingSnapshotController.java:24",
+        "summary": "The state read of element 11's processing resource: the one payload every command of the resource answers, served for whoever opens the order.",
+        "summary_evidence": [
+          "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingSnapshotController.java:11"
+        ],
+        "summary_source": "javadoc"
+      }
+    },
+    "/processing/{processingId}/assignment": {
+      "post": {
+        "captures": [],
+        "declared": {
+          "consumes": [],
+          "produces": [
+            "application/json"
+          ]
+        },
+        "description": "A granted claim is 201 — a claim is a fact that did not exist before, and one claim emits one event (RULE-8). A repeated claim by the same employee answers 200 with the same state (element 11 D-11-2). The refusal is not built here: the aggregate raises it and the one advice answers 409 with the guard's own reason. The request takes no body on purpose — the claimer is the assignee, so the assignee is the caller's own identity read from the token (RULE-5). The empty command record keeps the route a command and keeps the body optional.",
+        "description_evidence": [
+          "services/fulfillment/src/main/java/shop/fulfillment/processing/AssignmentController.java:18"
+        ],
+        "evidence": [
+          "services/fulfillment/src/main/java/shop/fulfillment/processing/AssignmentController.java:31",
+          "services/fulfillment/e2e/fulfillment-api.hurl:119",
+          "services/fulfillment/e2e/fulfillment-api.hurl:127",
+          "services/fulfillment/e2e/fulfillment-api.hurl:134",
+          "services/fulfillment/e2e/fulfillment-api.hurl:256",
+          "services/fulfillment/e2e/fulfillment-api.hurl:414",
+          "services/fulfillment/e2e/fulfillment-api.hurl:461"
+        ],
+        "exercised": true,
+        "handler": {
+          "name": "claim",
+          "return_type": "OrderAssignmentView",
+          "source": "services/fulfillment/src/main/java/shop/fulfillment/processing/AssignmentController.java:32"
+        },
+        "method": "POST",
+        "not_exercised": false,
+        "operationId": "post-processing-processingid-assignment",
+        "parameters": [
+          {
+            "evidence": [
+              "services/fulfillment/src/main/java/shop/fulfillment/processing/AssignmentController.java:31",
+              "services/fulfillment/e2e/fulfillment-api.hurl:119",
+              "services/fulfillment/e2e/fulfillment-api.hurl:127",
+              "services/fulfillment/e2e/fulfillment-api.hurl:134",
+              "services/fulfillment/e2e/fulfillment-api.hurl:256",
+              "services/fulfillment/e2e/fulfillment-api.hurl:414",
+              "services/fulfillment/e2e/fulfillment-api.hurl:461"
+            ],
+            "in": "path",
+            "name": "processingId",
+            "observed": [
+              "OP-DOES-NOT-EXIST",
+              "{{heldProcessingId}}",
+              "{{openProcessingId}}",
+              "{{processingId}}"
+            ],
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "path": "/processing/{processingId}/assignment",
+        "request_count": 6,
+        "request_type": "AssignOrder",
+        "requests": [
+          {
+            "body": false,
+            "line": 119,
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:119",
+            "status": "201"
+          },
+          {
+            "body": false,
+            "line": 127,
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:127",
+            "status": "409"
+          },
+          {
+            "body": false,
+            "line": 134,
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:134",
+            "status": "200"
+          },
+          {
+            "body": false,
+            "line": 256,
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:256",
+            "status": "201"
+          },
+          {
+            "body": false,
+            "line": 414,
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:414",
+            "status": "201"
+          },
+          {
+            "body": false,
+            "line": 461,
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:461",
+            "status": "404"
+          }
+        ],
+        "responses": {
+          "200": {
+            "assertions": [
+              {
+                "expression": "$.state",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "==",
+                "raw": "jsonpath \"$.state\" == \"assigned\"",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:138",
+                "target": "jsonpath",
+                "value": "\"assigned\""
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "state": {
+                      "evidence": [
+                        "services/fulfillment/e2e/fulfillment-api.hurl:138"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "",
+            "evidence": [
+              "services/fulfillment/e2e/fulfillment-api.hurl:136",
+              "services/fulfillment/e2e/fulfillment-api.hurl:138"
+            ]
+          },
+          "201": {
+            "assertions": [
+              {
+                "expression": "$.state",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "==",
+                "raw": "jsonpath \"$.state\" == \"assigned\"",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:123",
+                "target": "jsonpath",
+                "value": "\"assigned\""
+              },
+              {
+                "expression": "$.assignee",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "exists",
+                "raw": "jsonpath \"$.assignee\" exists",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:124",
+                "target": "jsonpath",
+                "value": ""
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "assignee": {
+                      "evidence": [
+                        "services/fulfillment/e2e/fulfillment-api.hurl:124"
+                      ]
+                    },
+                    "state": {
+                      "evidence": [
+                        "services/fulfillment/e2e/fulfillment-api.hurl:123"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "",
+            "evidence": [
+              "services/fulfillment/e2e/fulfillment-api.hurl:121",
+              "services/fulfillment/e2e/fulfillment-api.hurl:123",
+              "services/fulfillment/e2e/fulfillment-api.hurl:124",
+              "services/fulfillment/e2e/fulfillment-api.hurl:258",
+              "services/fulfillment/e2e/fulfillment-api.hurl:416"
+            ]
+          },
+          "404": {
+            "assertions": [
+              {
+                "expression": "$.error",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "==",
+                "raw": "jsonpath \"$.error\" == \"PROCESSING_NOT_FOUND\"",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:465",
+                "target": "jsonpath",
+                "value": "\"PROCESSING_NOT_FOUND\""
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "error": {
+                      "evidence": [
+                        "services/fulfillment/e2e/fulfillment-api.hurl:465"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "",
+            "evidence": [
+              "services/fulfillment/e2e/fulfillment-api.hurl:463",
+              "services/fulfillment/e2e/fulfillment-api.hurl:465"
+            ]
+          },
+          "409": {
+            "assertions": [
+              {
+                "expression": "$.error",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "==",
+                "raw": "jsonpath \"$.error\" == \"ALREADY_ASSIGNED\"",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:131",
+                "target": "jsonpath",
+                "value": "\"ALREADY_ASSIGNED\""
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "error": {
+                      "evidence": [
+                        "services/fulfillment/e2e/fulfillment-api.hurl:131"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "",
+            "evidence": [
+              "services/fulfillment/e2e/fulfillment-api.hurl:129",
+              "services/fulfillment/e2e/fulfillment-api.hurl:131"
+            ]
+          }
+        },
+        "source": "services/fulfillment/src/main/java/shop/fulfillment/processing/AssignmentController.java:31",
+        "summary": "Element 07's one route: an employee claims one order, and leaves with the claim or with the refusal.",
+        "summary_evidence": [
+          "services/fulfillment/src/main/java/shop/fulfillment/processing/AssignmentController.java:16"
+        ],
+        "summary_source": "javadoc"
+      }
+    },
+    "/processing/{processingId}/documents/label": {
+      "get": {
+        "captures": [],
+        "declared": {
+          "consumes": [],
+          "produces": [
+            "application/pdf"
+          ]
+        },
+        "description": "Nothing is rendered here. The bytes come from ParcelLabelProjection, which stores them on the first print and serves the stored document afterwards, so a reprint never registers a parcel and never consumes a number (element 06 RULE-9). A parcel that does not exist yet answers a refusal through the one advice rather than an empty document.",
+        "description_evidence": [
+          "services/fulfillment/src/main/java/shop/fulfillment/parcel/ParcelLabelController.java:14"
+        ],
+        "evidence": [
+          "services/fulfillment/src/main/java/shop/fulfillment/parcel/ParcelLabelController.java:24",
+          "services/fulfillment/e2e/fulfillment-api.hurl:444",
+          "services/fulfillment/e2e/fulfillment-api.hurl:474"
+        ],
+        "exercised": true,
+        "handler": {
+          "name": "label",
+          "return_type": "byte[]",
+          "source": "services/fulfillment/src/main/java/shop/fulfillment/parcel/ParcelLabelController.java:25"
+        },
+        "method": "GET",
+        "not_exercised": false,
+        "operationId": "get-processing-processingid-documents-label",
+        "parameters": [
+          {
+            "evidence": [
+              "services/fulfillment/src/main/java/shop/fulfillment/parcel/ParcelLabelController.java:24",
+              "services/fulfillment/e2e/fulfillment-api.hurl:444",
+              "services/fulfillment/e2e/fulfillment-api.hurl:474"
+            ],
+            "in": "path",
+            "name": "processingId",
+            "observed": [
+              "OP-DOES-NOT-EXIST",
+              "{{processingId}}"
+            ],
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "path": "/processing/{processingId}/documents/label",
+        "request_count": 2,
+        "request_type": null,
+        "requests": [
+          {
+            "body": false,
+            "line": 444,
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:444",
+            "status": "200"
+          },
+          {
+            "body": false,
+            "line": 474,
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:474",
+            "status": "404"
+          }
+        ],
+        "responses": {
+          "200": {
+            "assertions": [
+              {
+                "expression": "Content-Type",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "contains",
+                "raw": "header \"Content-Type\" contains \"application/pdf\"",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:448",
+                "target": "header",
+                "value": "\"application/pdf\""
+              }
+            ],
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "evidence": [
+                    "services/fulfillment/e2e/fulfillment-api.hurl:448"
+                  ],
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "",
+            "evidence": [
+              "services/fulfillment/e2e/fulfillment-api.hurl:446",
+              "services/fulfillment/e2e/fulfillment-api.hurl:448"
+            ]
+          },
+          "404": {
+            "assertions": [
+              {
+                "expression": "$.error",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "==",
+                "raw": "jsonpath \"$.error\" == \"PROCESSING_NOT_FOUND\"",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:478",
+                "target": "jsonpath",
+                "value": "\"PROCESSING_NOT_FOUND\""
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "error": {
+                      "evidence": [
+                        "services/fulfillment/e2e/fulfillment-api.hurl:478"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "",
+            "evidence": [
+              "services/fulfillment/e2e/fulfillment-api.hurl:476",
+              "services/fulfillment/e2e/fulfillment-api.hurl:478"
+            ]
+          }
+        },
+        "source": "services/fulfillment/src/main/java/shop/fulfillment/parcel/ParcelLabelController.java:24",
+        "summary": "The consignment note of element 06 on the wire: GET …/documents/label answers the carrier's document as application/pdf, byte for byte what the carrier printed.",
+        "summary_evidence": [
+          "services/fulfillment/src/main/java/shop/fulfillment/parcel/ParcelLabelController.java:11"
+        ],
+        "summary_source": "javadoc"
+      }
+    },
+    "/processing/{processingId}/hold/resume": {
+      "post": {
+        "captures": [],
+        "declared": {
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ]
+        },
+        "description": "",
+        "description_evidence": [],
+        "evidence": [
+          "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingCommandController.java:68",
+          "services/fulfillment/e2e/fulfillment-api.hurl:348",
+          "services/fulfillment/e2e/fulfillment-api.hurl:358",
+          "services/fulfillment/e2e/fulfillment-api.hurl:367",
+          "services/fulfillment/e2e/fulfillment-api.hurl:386",
+          "services/fulfillment/e2e/fulfillment-api.hurl:434"
+        ],
+        "exercised": true,
+        "handler": {
+          "name": "resume",
+          "return_type": "ProcessingSnapshot",
+          "source": "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingCommandController.java:70"
+        },
+        "method": "POST",
+        "not_exercised": false,
+        "operationId": "post-processing-processingid-hold-resume",
+        "parameters": [
+          {
+            "evidence": [
+              "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingCommandController.java:68",
+              "services/fulfillment/e2e/fulfillment-api.hurl:348",
+              "services/fulfillment/e2e/fulfillment-api.hurl:358",
+              "services/fulfillment/e2e/fulfillment-api.hurl:367",
+              "services/fulfillment/e2e/fulfillment-api.hurl:386",
+              "services/fulfillment/e2e/fulfillment-api.hurl:434"
+            ],
+            "in": "path",
+            "name": "processingId",
+            "observed": [
+              "{{heldProcessingId}}",
+              "{{openProcessingId}}"
+            ],
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "path": "/processing/{processingId}/hold/resume",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "closedIssueIds": {
+                    "evidence": [
+                      "services/fulfillment/e2e/fulfillment-api.hurl:351"
+                    ],
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "closedIssueIds"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "evidence": [
+            "services/fulfillment/e2e/fulfillment-api.hurl:351",
+            "services/fulfillment/e2e/fulfillment-api.hurl:361",
+            "services/fulfillment/e2e/fulfillment-api.hurl:370",
+            "services/fulfillment/e2e/fulfillment-api.hurl:389",
+            "services/fulfillment/e2e/fulfillment-api.hurl:437"
+          ],
+          "observed_bodies": 4,
+          "required": true
+        },
+        "request_count": 5,
+        "request_type": "ResumeHold",
+        "requests": [
+          {
+            "body": true,
+            "line": 348,
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:348",
+            "status": "409"
+          },
+          {
+            "body": true,
+            "line": 358,
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:358",
+            "status": "404"
+          },
+          {
+            "body": true,
+            "line": 367,
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:367",
+            "status": "200"
+          },
+          {
+            "body": true,
+            "line": 386,
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:386",
+            "status": "200"
+          },
+          {
+            "body": true,
+            "line": 434,
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:434",
+            "status": "409"
+          }
+        ],
+        "responses": {
+          "200": {
+            "assertions": [
+              {
+                "expression": "$.state",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "==",
+                "raw": "jsonpath \"$.state\" == \"picking\"",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:373",
+                "target": "jsonpath",
+                "value": "\"picking\""
+              },
+              {
+                "expression": "$.openIssues",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "==",
+                "raw": "jsonpath \"$.openIssues\" == 0",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:374",
+                "target": "jsonpath",
+                "value": "0"
+              },
+              {
+                "expression": "$.issue",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "==",
+                "raw": "jsonpath \"$.issue\" == null",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:375",
+                "target": "jsonpath",
+                "value": "null"
+              },
+              {
+                "expression": "$.closedIssueIds[0]",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "==",
+                "raw": "jsonpath \"$.closedIssueIds[0]\" == \"{{issueId}}\"",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:376",
+                "target": "jsonpath",
+                "value": "\"{{issueId}}\""
+              },
+              {
+                "expression": "$.closedIssueIds",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "isEmpty",
+                "raw": "jsonpath \"$.closedIssueIds\" isEmpty",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:393",
+                "target": "jsonpath",
+                "value": ""
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "closedIssueIds": {
+                      "evidence": [
+                        "services/fulfillment/e2e/fulfillment-api.hurl:393"
+                      ],
+                      "items": {
+                        "evidence": [
+                          "services/fulfillment/e2e/fulfillment-api.hurl:376"
+                        ],
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "issue": {
+                      "evidence": [
+                        "services/fulfillment/e2e/fulfillment-api.hurl:375"
+                      ]
+                    },
+                    "openIssues": {
+                      "evidence": [
+                        "services/fulfillment/e2e/fulfillment-api.hurl:374"
+                      ],
+                      "type": "integer"
+                    },
+                    "state": {
+                      "evidence": [
+                        "services/fulfillment/e2e/fulfillment-api.hurl:373",
+                        "services/fulfillment/e2e/fulfillment-api.hurl:392"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "",
+            "evidence": [
+              "services/fulfillment/e2e/fulfillment-api.hurl:371",
+              "services/fulfillment/e2e/fulfillment-api.hurl:373",
+              "services/fulfillment/e2e/fulfillment-api.hurl:374",
+              "services/fulfillment/e2e/fulfillment-api.hurl:375",
+              "services/fulfillment/e2e/fulfillment-api.hurl:376",
+              "services/fulfillment/e2e/fulfillment-api.hurl:390",
+              "services/fulfillment/e2e/fulfillment-api.hurl:392",
+              "services/fulfillment/e2e/fulfillment-api.hurl:393"
+            ]
+          },
+          "404": {
+            "assertions": [
+              {
+                "expression": "$.error",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "==",
+                "raw": "jsonpath \"$.error\" == \"ISSUE_UNKNOWN\"",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:364",
+                "target": "jsonpath",
+                "value": "\"ISSUE_UNKNOWN\""
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "error": {
+                      "evidence": [
+                        "services/fulfillment/e2e/fulfillment-api.hurl:364"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "",
+            "evidence": [
+              "services/fulfillment/e2e/fulfillment-api.hurl:362",
+              "services/fulfillment/e2e/fulfillment-api.hurl:364"
+            ]
+          },
+          "409": {
+            "assertions": [
+              {
+                "expression": "$.error",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "==",
+                "raw": "jsonpath \"$.error\" == \"ISSUES_REMAIN\"",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:354",
+                "target": "jsonpath",
+                "value": "\"ISSUES_REMAIN\""
+              },
+              {
+                "expression": "$.openIssues",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "==",
+                "raw": "jsonpath \"$.openIssues\" == 1",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:355",
+                "target": "jsonpath",
+                "value": "1"
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "error": {
+                      "evidence": [
+                        "services/fulfillment/e2e/fulfillment-api.hurl:354",
+                        "services/fulfillment/e2e/fulfillment-api.hurl:440"
+                      ],
+                      "type": "string"
+                    },
+                    "openIssues": {
+                      "evidence": [
+                        "services/fulfillment/e2e/fulfillment-api.hurl:355",
+                        "services/fulfillment/e2e/fulfillment-api.hurl:441"
+                      ],
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "",
+            "evidence": [
+              "services/fulfillment/e2e/fulfillment-api.hurl:352",
+              "services/fulfillment/e2e/fulfillment-api.hurl:354",
+              "services/fulfillment/e2e/fulfillment-api.hurl:355",
+              "services/fulfillment/e2e/fulfillment-api.hurl:438",
+              "services/fulfillment/e2e/fulfillment-api.hurl:440",
+              "services/fulfillment/e2e/fulfillment-api.hurl:441"
+            ]
+          }
+        },
+        "source": "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingCommandController.java:68",
+        "summary": "Resume",
+        "summary_evidence": [
+          "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingCommandController.java:70"
+        ],
+        "summary_source": "handler"
+      }
+    },
+    "/processing/{processingId}/issues": {
+      "post": {
+        "captures": [
+          {
+            "expression": "$.issueId",
+            "name": "issueId",
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:293",
+            "target": "jsonpath"
+          },
+          {
+            "expression": "$.issueId",
+            "name": "secondIssueId",
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:308",
+            "target": "jsonpath"
+          }
+        ],
+        "declared": {
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ]
+        },
+        "description": "",
+        "description_evidence": [],
+        "evidence": [
+          "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingCommandController.java:60",
+          "services/fulfillment/e2e/fulfillment-api.hurl:287",
+          "services/fulfillment/e2e/fulfillment-api.hurl:302",
+          "services/fulfillment/e2e/fulfillment-api.hurl:426"
+        ],
+        "exercised": true,
+        "handler": {
+          "name": "reportIssue",
+          "return_type": "ProcessingSnapshot",
+          "source": "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingCommandController.java:62"
+        },
+        "method": "POST",
+        "not_exercised": false,
+        "operationId": "post-processing-processingid-issues",
+        "parameters": [
+          {
+            "evidence": [
+              "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingCommandController.java:60",
+              "services/fulfillment/e2e/fulfillment-api.hurl:287",
+              "services/fulfillment/e2e/fulfillment-api.hurl:302",
+              "services/fulfillment/e2e/fulfillment-api.hurl:426"
+            ],
+            "in": "path",
+            "name": "processingId",
+            "observed": [
+              "{{heldProcessingId}}",
+              "{{openProcessingId}}"
+            ],
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "path": "/processing/{processingId}/issues",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "kind": {
+                    "evidence": [
+                      "services/fulfillment/e2e/fulfillment-api.hurl:290"
+                    ],
+                    "type": "string"
+                  },
+                  "productNumber": {
+                    "evidence": [
+                      "services/fulfillment/e2e/fulfillment-api.hurl:290"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "productNumber"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "evidence": [
+            "services/fulfillment/e2e/fulfillment-api.hurl:290",
+            "services/fulfillment/e2e/fulfillment-api.hurl:305",
+            "services/fulfillment/e2e/fulfillment-api.hurl:429"
+          ],
+          "observed_bodies": 3,
+          "required": true
+        },
+        "request_count": 3,
+        "request_type": "ReportIssue",
+        "requests": [
+          {
+            "body": true,
+            "line": 287,
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:287",
+            "status": "201"
+          },
+          {
+            "body": true,
+            "line": 302,
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:302",
+            "status": "201"
+          },
+          {
+            "body": true,
+            "line": 426,
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:426",
+            "status": "201"
+          }
+        ],
+        "responses": {
+          "201": {
+            "assertions": [
+              {
+                "expression": "$.issueId",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "isString",
+                "raw": "jsonpath \"$.issueId\" isString",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:295",
+                "target": "jsonpath",
+                "value": ""
+              },
+              {
+                "expression": "$.issueId",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "!=",
+                "raw": "jsonpath \"$.issueId\" != \"\"",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:296",
+                "target": "jsonpath",
+                "value": "\"\""
+              },
+              {
+                "expression": "$.orderState",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "==",
+                "raw": "jsonpath \"$.orderState\" == \"onHold\"",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:297",
+                "target": "jsonpath",
+                "value": "\"onHold\""
+              },
+              {
+                "expression": "$.state",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "==",
+                "raw": "jsonpath \"$.state\" == \"onHold\"",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:298",
+                "target": "jsonpath",
+                "value": "\"onHold\""
+              },
+              {
+                "expression": "$.openIssues",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "==",
+                "raw": "jsonpath \"$.openIssues\" == 1",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:299",
+                "target": "jsonpath",
+                "value": "1"
+              },
+              {
+                "expression": "$.openIssues",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "==",
+                "raw": "jsonpath \"$.openIssues\" == 2",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:311",
+                "target": "jsonpath",
+                "value": "2"
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "issueId": {
+                      "evidence": [
+                        "services/fulfillment/e2e/fulfillment-api.hurl:295",
+                        "services/fulfillment/e2e/fulfillment-api.hurl:296"
+                      ],
+                      "type": "string"
+                    },
+                    "openIssues": {
+                      "evidence": [
+                        "services/fulfillment/e2e/fulfillment-api.hurl:299",
+                        "services/fulfillment/e2e/fulfillment-api.hurl:311"
+                      ],
+                      "type": "integer"
+                    },
+                    "orderState": {
+                      "evidence": [
+                        "services/fulfillment/e2e/fulfillment-api.hurl:297",
+                        "services/fulfillment/e2e/fulfillment-api.hurl:310",
+                        "services/fulfillment/e2e/fulfillment-api.hurl:432"
+                      ],
+                      "type": "string"
+                    },
+                    "state": {
+                      "evidence": [
+                        "services/fulfillment/e2e/fulfillment-api.hurl:298"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "",
+            "evidence": [
+              "services/fulfillment/e2e/fulfillment-api.hurl:291",
+              "services/fulfillment/e2e/fulfillment-api.hurl:295",
+              "services/fulfillment/e2e/fulfillment-api.hurl:296",
+              "services/fulfillment/e2e/fulfillment-api.hurl:297",
+              "services/fulfillment/e2e/fulfillment-api.hurl:298",
+              "services/fulfillment/e2e/fulfillment-api.hurl:299",
+              "services/fulfillment/e2e/fulfillment-api.hurl:306",
+              "services/fulfillment/e2e/fulfillment-api.hurl:310",
+              "services/fulfillment/e2e/fulfillment-api.hurl:311",
+              "services/fulfillment/e2e/fulfillment-api.hurl:430",
+              "services/fulfillment/e2e/fulfillment-api.hurl:432"
+            ]
+          }
+        },
+        "source": "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingCommandController.java:60",
+        "summary": "Report issue",
+        "summary_evidence": [
+          "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingCommandController.java:62"
+        ],
+        "summary_source": "handler"
+      }
+    },
+    "/processing/{processingId}/packing": {
+      "post": {
+        "captures": [],
+        "declared": {
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ]
+        },
+        "description": "",
+        "description_evidence": [],
+        "evidence": [
+          "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingCommandController.java:48",
+          "services/fulfillment/e2e/fulfillment-api.hurl:209",
+          "services/fulfillment/e2e/fulfillment-api.hurl:268"
+        ],
+        "exercised": true,
+        "handler": {
+          "name": "pack",
+          "return_type": "ProcessingSnapshot",
+          "source": "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingCommandController.java:50"
+        },
+        "method": "POST",
+        "not_exercised": false,
+        "operationId": "post-processing-processingid-packing",
+        "parameters": [
+          {
+            "evidence": [
+              "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingCommandController.java:48",
+              "services/fulfillment/e2e/fulfillment-api.hurl:209",
+              "services/fulfillment/e2e/fulfillment-api.hurl:268"
+            ],
+            "in": "path",
+            "name": "processingId",
+            "observed": [
+              "{{openProcessingId}}",
+              "{{processingId}}"
+            ],
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "path": "/processing/{processingId}/packing",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "productNumbers": {
+                    "evidence": [
+                      "services/fulfillment/e2e/fulfillment-api.hurl:212"
+                    ],
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "productNumbers"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "evidence": [
+            "services/fulfillment/e2e/fulfillment-api.hurl:212",
+            "services/fulfillment/e2e/fulfillment-api.hurl:271"
+          ],
+          "observed_bodies": 1,
+          "required": true
+        },
+        "request_count": 2,
+        "request_type": "PackPositions",
+        "requests": [
+          {
+            "body": true,
+            "line": 209,
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:209",
+            "status": "200"
+          },
+          {
+            "body": true,
+            "line": 268,
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:268",
+            "status": "200"
+          }
+        ],
+        "responses": {
+          "200": {
+            "assertions": [
+              {
+                "expression": "$.positions[0].state",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "==",
+                "raw": "jsonpath \"$.positions[0].state\" == \"packed\"",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:215",
+                "target": "jsonpath",
+                "value": "\"packed\""
+              },
+              {
+                "expression": "$.state",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "==",
+                "raw": "jsonpath \"$.state\" == \"packed\"",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:216",
+                "target": "jsonpath",
+                "value": "\"packed\""
+              },
+              {
+                "expression": "$.state",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "==",
+                "raw": "jsonpath \"$.state\" == \"picking\"",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:274",
+                "target": "jsonpath",
+                "value": "\"picking\""
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "positions": {
+                      "items": {
+                        "properties": {
+                          "state": {
+                            "evidence": [
+                              "services/fulfillment/e2e/fulfillment-api.hurl:215"
+                            ],
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "state": {
+                      "evidence": [
+                        "services/fulfillment/e2e/fulfillment-api.hurl:216",
+                        "services/fulfillment/e2e/fulfillment-api.hurl:274"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "",
+            "evidence": [
+              "services/fulfillment/e2e/fulfillment-api.hurl:213",
+              "services/fulfillment/e2e/fulfillment-api.hurl:215",
+              "services/fulfillment/e2e/fulfillment-api.hurl:216",
+              "services/fulfillment/e2e/fulfillment-api.hurl:272",
+              "services/fulfillment/e2e/fulfillment-api.hurl:274"
+            ]
+          }
+        },
+        "source": "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingCommandController.java:48",
+        "summary": "Pack",
+        "summary_evidence": [
+          "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingCommandController.java:50"
+        ],
+        "summary_source": "handler"
+      }
+    },
+    "/processing/{processingId}/pick-list": {
+      "get": {
+        "captures": [],
+        "declared": {
+          "consumes": [],
+          "produces": [
+            "application/json"
+          ]
+        },
+        "description": "The handler holds the projection and no write model, so the read path cannot drift into the aggregate (http.no-write-model-in-read). The list is generated per request — it is a snapshot, and no source says it is regenerated under a walking employee (element 10 DEFAULT-3).",
+        "description_evidence": [
+          "services/fulfillment/src/main/java/shop/fulfillment/processing/PickListController.java:13"
+        ],
+        "evidence": [
+          "services/fulfillment/src/main/java/shop/fulfillment/processing/PickListController.java:23",
+          "services/fulfillment/e2e/fulfillment-api.hurl:172"
+        ],
+        "exercised": true,
+        "handler": {
+          "name": "pickList",
+          "return_type": "PickList",
+          "source": "services/fulfillment/src/main/java/shop/fulfillment/processing/PickListController.java:24"
+        },
+        "method": "GET",
+        "not_exercised": false,
+        "operationId": "get-processing-processingid-pick-list",
+        "parameters": [
+          {
+            "evidence": [
+              "services/fulfillment/src/main/java/shop/fulfillment/processing/PickListController.java:23",
+              "services/fulfillment/e2e/fulfillment-api.hurl:172"
+            ],
+            "in": "path",
+            "name": "processingId",
+            "observed": [
+              "{{processingId}}"
+            ],
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "path": "/processing/{processingId}/pick-list",
+        "request_count": 1,
+        "request_type": null,
+        "requests": [
+          {
+            "body": false,
+            "line": 172,
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:172",
+            "status": "200"
+          }
+        ],
+        "responses": {
+          "200": {
+            "assertions": [
+              {
+                "expression": "$.lines[0].productNumber",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "==",
+                "raw": "jsonpath \"$.lines[0].productNumber\" == \"75423\"",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:176",
+                "target": "jsonpath",
+                "value": "\"75423\""
+              },
+              {
+                "expression": "$.lines[0].quantity",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "==",
+                "raw": "jsonpath \"$.lines[0].quantity\" == 1",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:177",
+                "target": "jsonpath",
+                "value": "1"
+              },
+              {
+                "expression": "$.lines[0].locations",
+                "kind": "count",
+                "negated": false,
+                "operator": ">",
+                "raw": "jsonpath \"$.lines[0].locations\" count > 0",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:178",
+                "target": "jsonpath",
+                "value": "0"
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "lines": {
+                      "items": {
+                        "properties": {
+                          "locations": {
+                            "evidence": [
+                              "services/fulfillment/e2e/fulfillment-api.hurl:178"
+                            ],
+                            "type": "array"
+                          },
+                          "productNumber": {
+                            "evidence": [
+                              "services/fulfillment/e2e/fulfillment-api.hurl:176"
+                            ],
+                            "type": "string"
+                          },
+                          "quantity": {
+                            "evidence": [
+                              "services/fulfillment/e2e/fulfillment-api.hurl:177"
+                            ],
+                            "type": "integer"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "",
+            "evidence": [
+              "services/fulfillment/e2e/fulfillment-api.hurl:174",
+              "services/fulfillment/e2e/fulfillment-api.hurl:176",
+              "services/fulfillment/e2e/fulfillment-api.hurl:177",
+              "services/fulfillment/e2e/fulfillment-api.hurl:178"
+            ]
+          }
+        },
+        "source": "services/fulfillment/src/main/java/shop/fulfillment/processing/PickListController.java:23",
+        "summary": "Element 10's one route: the walk an assigned employee performs, served from the query handler and from nothing else.",
+        "summary_evidence": [
+          "services/fulfillment/src/main/java/shop/fulfillment/processing/PickListController.java:11"
+        ],
+        "summary_source": "javadoc"
+      }
+    },
+    "/processing/{processingId}/pick-workstation": {
+      "get": {
+        "captures": [],
+        "declared": {
+          "consumes": [],
+          "produces": [
+            "application/json"
+          ]
+        },
+        "description": "The route is this service's own — element 11 fixes the paths of the processing resource, the pick list and the snapshot, and names none for the workstation, whose payload is the two regions of W1 composed (recorded in docs/phase-1-decisions.md). It is a read: nothing on this screen writes, and the actions of the other views' actors — readiness, issues, resume — are not reachable from it.",
+        "description_evidence": [
+          "services/fulfillment/src/main/java/shop/fulfillment/processing/PickWorkstationController.java:13"
+        ],
+        "evidence": [
+          "services/fulfillment/src/main/java/shop/fulfillment/processing/PickWorkstationController.java:24"
+        ],
+        "exercised": false,
+        "handler": {
+          "name": "workstation",
+          "return_type": "PickWorkstation",
+          "source": "services/fulfillment/src/main/java/shop/fulfillment/processing/PickWorkstationController.java:25"
+        },
+        "method": "GET",
+        "not_exercised": true,
+        "operationId": "get-processing-processingid-pick-workstation",
+        "parameters": [
+          {
+            "evidence": [
+              "services/fulfillment/src/main/java/shop/fulfillment/processing/PickWorkstationController.java:24"
+            ],
+            "in": "path",
+            "name": "processingId",
+            "observed": [],
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "path": "/processing/{processingId}/pick-workstation",
+        "request_count": 0,
+        "request_type": null,
+        "requests": [],
+        "responses": {},
+        "source": "services/fulfillment/src/main/java/shop/fulfillment/processing/PickWorkstationController.java:24",
+        "summary": "Element 16's read surface: the one screen an assigned employee works from.",
+        "summary_evidence": [
+          "services/fulfillment/src/main/java/shop/fulfillment/processing/PickWorkstationController.java:11"
+        ],
+        "summary_source": "javadoc"
+      }
+    },
+    "/processing/{processingId}/positions/{productNumber}": {
+      "post": {
+        "captures": [],
+        "declared": {
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ]
+        },
+        "description": "",
+        "description_evidence": [],
+        "evidence": [
+          "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingCommandController.java:41",
+          "services/fulfillment/e2e/fulfillment-api.hurl:181",
+          "services/fulfillment/e2e/fulfillment-api.hurl:191",
+          "services/fulfillment/e2e/fulfillment-api.hurl:200",
+          "services/fulfillment/e2e/fulfillment-api.hurl:260",
+          "services/fulfillment/e2e/fulfillment-api.hurl:314",
+          "services/fulfillment/e2e/fulfillment-api.hurl:418"
+        ],
+        "exercised": true,
+        "handler": {
+          "name": "scan",
+          "return_type": "ProcessingSnapshot",
+          "source": "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingCommandController.java:43"
+        },
+        "method": "POST",
+        "not_exercised": false,
+        "operationId": "post-processing-processingid-positions-productnumber",
+        "parameters": [
+          {
+            "evidence": [
+              "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingCommandController.java:41",
+              "services/fulfillment/e2e/fulfillment-api.hurl:181",
+              "services/fulfillment/e2e/fulfillment-api.hurl:191",
+              "services/fulfillment/e2e/fulfillment-api.hurl:200",
+              "services/fulfillment/e2e/fulfillment-api.hurl:260",
+              "services/fulfillment/e2e/fulfillment-api.hurl:314",
+              "services/fulfillment/e2e/fulfillment-api.hurl:418"
+            ],
+            "in": "path",
+            "name": "processingId",
+            "observed": [
+              "{{heldProcessingId}}",
+              "{{openProcessingId}}",
+              "{{processingId}}"
+            ],
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "evidence": [
+              "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingCommandController.java:41",
+              "services/fulfillment/e2e/fulfillment-api.hurl:181",
+              "services/fulfillment/e2e/fulfillment-api.hurl:191",
+              "services/fulfillment/e2e/fulfillment-api.hurl:200",
+              "services/fulfillment/e2e/fulfillment-api.hurl:260",
+              "services/fulfillment/e2e/fulfillment-api.hurl:314",
+              "services/fulfillment/e2e/fulfillment-api.hurl:418"
+            ],
+            "in": "path",
+            "name": "productNumber",
+            "observed": [
+              "40404",
+              "75423",
+              "99881"
+            ],
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "path": "/processing/{processingId}/positions/{productNumber}",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "confirmation": {
+                    "evidence": [
+                      "services/fulfillment/e2e/fulfillment-api.hurl:184"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "confirmation"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "evidence": [
+            "services/fulfillment/e2e/fulfillment-api.hurl:184",
+            "services/fulfillment/e2e/fulfillment-api.hurl:194",
+            "services/fulfillment/e2e/fulfillment-api.hurl:203",
+            "services/fulfillment/e2e/fulfillment-api.hurl:263",
+            "services/fulfillment/e2e/fulfillment-api.hurl:317",
+            "services/fulfillment/e2e/fulfillment-api.hurl:421"
+          ],
+          "observed_bodies": 1,
+          "required": true
+        },
+        "request_count": 6,
+        "request_type": "ScanPosition",
+        "requests": [
+          {
+            "body": true,
+            "line": 181,
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:181",
+            "status": "200"
+          },
+          {
+            "body": true,
+            "line": 191,
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:191",
+            "status": "200"
+          },
+          {
+            "body": true,
+            "line": 200,
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:200",
+            "status": "404"
+          },
+          {
+            "body": true,
+            "line": 260,
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:260",
+            "status": "200"
+          },
+          {
+            "body": true,
+            "line": 314,
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:314",
+            "status": "409"
+          },
+          {
+            "body": true,
+            "line": 418,
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:418",
+            "status": "200"
+          }
+        ],
+        "responses": {
+          "200": {
+            "assertions": [
+              {
+                "expression": "$.positions[0].state",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "==",
+                "raw": "jsonpath \"$.positions[0].state\" == \"picked\"",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:187",
+                "target": "jsonpath",
+                "value": "\"picked\""
+              },
+              {
+                "expression": "$.state",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "==",
+                "raw": "jsonpath \"$.state\" == \"picking\"",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:188",
+                "target": "jsonpath",
+                "value": "\"picking\""
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "positions": {
+                      "items": {
+                        "properties": {
+                          "state": {
+                            "evidence": [
+                              "services/fulfillment/e2e/fulfillment-api.hurl:187",
+                              "services/fulfillment/e2e/fulfillment-api.hurl:197"
+                            ],
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "state": {
+                      "evidence": [
+                        "services/fulfillment/e2e/fulfillment-api.hurl:188",
+                        "services/fulfillment/e2e/fulfillment-api.hurl:266",
+                        "services/fulfillment/e2e/fulfillment-api.hurl:424"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "",
+            "evidence": [
+              "services/fulfillment/e2e/fulfillment-api.hurl:185",
+              "services/fulfillment/e2e/fulfillment-api.hurl:187",
+              "services/fulfillment/e2e/fulfillment-api.hurl:188",
+              "services/fulfillment/e2e/fulfillment-api.hurl:195",
+              "services/fulfillment/e2e/fulfillment-api.hurl:197",
+              "services/fulfillment/e2e/fulfillment-api.hurl:264",
+              "services/fulfillment/e2e/fulfillment-api.hurl:266",
+              "services/fulfillment/e2e/fulfillment-api.hurl:422",
+              "services/fulfillment/e2e/fulfillment-api.hurl:424"
+            ]
+          },
+          "404": {
+            "assertions": [
+              {
+                "expression": "$.error",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "==",
+                "raw": "jsonpath \"$.error\" == \"POSITION_NOT_FOUND\"",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:206",
+                "target": "jsonpath",
+                "value": "\"POSITION_NOT_FOUND\""
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "error": {
+                      "evidence": [
+                        "services/fulfillment/e2e/fulfillment-api.hurl:206"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "",
+            "evidence": [
+              "services/fulfillment/e2e/fulfillment-api.hurl:204",
+              "services/fulfillment/e2e/fulfillment-api.hurl:206"
+            ]
+          },
+          "409": {
+            "assertions": [
+              {
+                "expression": "$.error",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "==",
+                "raw": "jsonpath \"$.error\" == \"ON_HOLD\"",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:320",
+                "target": "jsonpath",
+                "value": "\"ON_HOLD\""
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "error": {
+                      "evidence": [
+                        "services/fulfillment/e2e/fulfillment-api.hurl:320"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "",
+            "evidence": [
+              "services/fulfillment/e2e/fulfillment-api.hurl:318",
+              "services/fulfillment/e2e/fulfillment-api.hurl:320"
+            ]
+          }
+        },
+        "source": "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingCommandController.java:41",
+        "summary": "Scan",
+        "summary_evidence": [
+          "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingCommandController.java:43"
+        ],
+        "summary_source": "handler"
+      }
+    },
+    "/processing/{processingId}/readiness": {
+      "post": {
+        "captures": [],
+        "declared": {
+          "consumes": [],
+          "produces": [
+            "application/json"
+          ]
+        },
+        "description": "",
+        "description_evidence": [],
+        "evidence": [
+          "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingCommandController.java:54",
+          "services/fulfillment/e2e/fulfillment-api.hurl:219",
+          "services/fulfillment/e2e/fulfillment-api.hurl:277",
+          "services/fulfillment/e2e/fulfillment-api.hurl:323"
+        ],
+        "exercised": true,
+        "handler": {
+          "name": "markReady",
+          "return_type": "ProcessingSnapshot",
+          "source": "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingCommandController.java:55"
+        },
+        "method": "POST",
+        "not_exercised": false,
+        "operationId": "post-processing-processingid-readiness",
+        "parameters": [
+          {
+            "evidence": [
+              "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingCommandController.java:54",
+              "services/fulfillment/e2e/fulfillment-api.hurl:219",
+              "services/fulfillment/e2e/fulfillment-api.hurl:277",
+              "services/fulfillment/e2e/fulfillment-api.hurl:323"
+            ],
+            "in": "path",
+            "name": "processingId",
+            "observed": [
+              "{{openProcessingId}}",
+              "{{processingId}}"
+            ],
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "path": "/processing/{processingId}/readiness",
+        "request_count": 3,
+        "request_type": "MarkOrderReady",
+        "requests": [
+          {
+            "body": false,
+            "line": 219,
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:219",
+            "status": "200"
+          },
+          {
+            "body": false,
+            "line": 277,
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:277",
+            "status": "409"
+          },
+          {
+            "body": false,
+            "line": 323,
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:323",
+            "status": "409"
+          }
+        ],
+        "responses": {
+          "200": {
+            "assertions": [
+              {
+                "expression": "$.state",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "==",
+                "raw": "jsonpath \"$.state\" == \"readyForDelivery\"",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:223",
+                "target": "jsonpath",
+                "value": "\"readyForDelivery\""
+              },
+              {
+                "expression": "$.parcel.waybill",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "isString",
+                "raw": "jsonpath \"$.parcel.waybill\" isString",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:224",
+                "target": "jsonpath",
+                "value": ""
+              },
+              {
+                "expression": "$.parcel.waybill",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "!=",
+                "raw": "jsonpath \"$.parcel.waybill\" != \"\"",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:225",
+                "target": "jsonpath",
+                "value": "\"\""
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "parcel": {
+                      "properties": {
+                        "waybill": {
+                          "evidence": [
+                            "services/fulfillment/e2e/fulfillment-api.hurl:224",
+                            "services/fulfillment/e2e/fulfillment-api.hurl:225"
+                          ],
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "state": {
+                      "evidence": [
+                        "services/fulfillment/e2e/fulfillment-api.hurl:223"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "",
+            "evidence": [
+              "services/fulfillment/e2e/fulfillment-api.hurl:221",
+              "services/fulfillment/e2e/fulfillment-api.hurl:223",
+              "services/fulfillment/e2e/fulfillment-api.hurl:224",
+              "services/fulfillment/e2e/fulfillment-api.hurl:225"
+            ]
+          },
+          "409": {
+            "assertions": [
+              {
+                "expression": "$.error",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "==",
+                "raw": "jsonpath \"$.error\" == \"NOT_READY\"",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:281",
+                "target": "jsonpath",
+                "value": "\"NOT_READY\""
+              },
+              {
+                "expression": "$.reasons",
+                "kind": "count",
+                "negated": false,
+                "operator": ">",
+                "raw": "jsonpath \"$.reasons\" count > 0",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:282",
+                "target": "jsonpath",
+                "value": "0"
+              },
+              {
+                "expression": "$.reasons[0]",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "==",
+                "raw": "jsonpath \"$.reasons[0]\" == \"notPacked\"",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:283",
+                "target": "jsonpath",
+                "value": "\"notPacked\""
+              },
+              {
+                "expression": "$.reasons[0]",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "==",
+                "raw": "jsonpath \"$.reasons[0]\" == \"onHold\"",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:328",
+                "target": "jsonpath",
+                "value": "\"onHold\""
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "error": {
+                      "evidence": [
+                        "services/fulfillment/e2e/fulfillment-api.hurl:281",
+                        "services/fulfillment/e2e/fulfillment-api.hurl:327"
+                      ],
+                      "type": "string"
+                    },
+                    "reasons": {
+                      "evidence": [
+                        "services/fulfillment/e2e/fulfillment-api.hurl:282"
+                      ],
+                      "items": {
+                        "evidence": [
+                          "services/fulfillment/e2e/fulfillment-api.hurl:283",
+                          "services/fulfillment/e2e/fulfillment-api.hurl:328"
+                        ],
+                        "type": "string"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "",
+            "evidence": [
+              "services/fulfillment/e2e/fulfillment-api.hurl:279",
+              "services/fulfillment/e2e/fulfillment-api.hurl:281",
+              "services/fulfillment/e2e/fulfillment-api.hurl:282",
+              "services/fulfillment/e2e/fulfillment-api.hurl:283",
+              "services/fulfillment/e2e/fulfillment-api.hurl:325",
+              "services/fulfillment/e2e/fulfillment-api.hurl:327",
+              "services/fulfillment/e2e/fulfillment-api.hurl:328"
+            ]
+          }
+        },
+        "source": "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingCommandController.java:54",
+        "summary": "Mark ready",
+        "summary_evidence": [
+          "services/fulfillment/src/main/java/shop/fulfillment/processing/ProcessingCommandController.java:55"
+        ],
+        "summary_source": "handler"
+      }
+    },
+    "/processing/{processingId}/state": {
+      "get": {
+        "captures": [],
+        "declared": {
+          "consumes": [],
+          "produces": [
+            "application/json"
+          ]
+        },
+        "description": "It is a resource of its own and not a filtered projection of the employee's snapshot (D-11-4): the scope that reaches it is fulfillment-customer, the payload carries no assignee and no issue, and the handler holds no write model, so the read path cannot drift into the aggregate (http.no-write-model-in-read). No ownership check is made — the order carries no customer identity to compare against, and the mapping is out of scope (register D13, element 18 Q-18-2). The scope alone decides who may ask.",
+        "description_evidence": [
+          "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateController.java:13"
+        ],
+        "evidence": [
+          "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateController.java:26",
+          "services/fulfillment/e2e/fulfillment-api.hurl:451"
+        ],
+        "exercised": true,
+        "handler": {
+          "name": "state",
+          "return_type": "CustomerState",
+          "source": "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateController.java:27"
+        },
+        "method": "GET",
+        "not_exercised": false,
+        "operationId": "get-processing-processingid-state",
+        "parameters": [
+          {
+            "evidence": [
+              "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateController.java:26",
+              "services/fulfillment/e2e/fulfillment-api.hurl:451"
+            ],
+            "in": "path",
+            "name": "processingId",
+            "observed": [
+              "{{processingId}}"
+            ],
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "path": "/processing/{processingId}/state",
+        "request_count": 1,
+        "request_type": null,
+        "requests": [
+          {
+            "body": false,
+            "line": 451,
+            "source": "services/fulfillment/e2e/fulfillment-api.hurl:451",
+            "status": "200"
+          }
+        ],
+        "responses": {
+          "200": {
+            "assertions": [
+              {
+                "expression": "$.state",
+                "kind": "predicate",
+                "negated": false,
+                "operator": "==",
+                "raw": "jsonpath \"$.state\" == \"readyForDelivery\"",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:455",
+                "target": "jsonpath",
+                "value": "\"readyForDelivery\""
+              },
+              {
+                "expression": "$.legs",
+                "kind": "count",
+                "negated": false,
+                "operator": ">",
+                "raw": "jsonpath \"$.legs\" count > 0",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:456",
+                "target": "jsonpath",
+                "value": "0"
+              },
+              {
+                "expression": "$.assignee",
+                "kind": "predicate",
+                "negated": true,
+                "operator": "exists",
+                "raw": "jsonpath \"$.assignee\" not exists",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:457",
+                "target": "jsonpath",
+                "value": ""
+              },
+              {
+                "expression": "$.issue",
+                "kind": "predicate",
+                "negated": true,
+                "operator": "exists",
+                "raw": "jsonpath \"$.issue\" not exists",
+                "source": "services/fulfillment/e2e/fulfillment-api.hurl:458",
+                "target": "jsonpath",
+                "value": ""
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "assignee": {
+                      "evidence": [
+                        "services/fulfillment/e2e/fulfillment-api.hurl:457"
+                      ]
+                    },
+                    "issue": {
+                      "evidence": [
+                        "services/fulfillment/e2e/fulfillment-api.hurl:458"
+                      ]
+                    },
+                    "legs": {
+                      "evidence": [
+                        "services/fulfillment/e2e/fulfillment-api.hurl:456"
+                      ],
+                      "type": "array"
+                    },
+                    "state": {
+                      "evidence": [
+                        "services/fulfillment/e2e/fulfillment-api.hurl:455"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "",
+            "evidence": [
+              "services/fulfillment/e2e/fulfillment-api.hurl:453",
+              "services/fulfillment/e2e/fulfillment-api.hurl:455",
+              "services/fulfillment/e2e/fulfillment-api.hurl:456",
+              "services/fulfillment/e2e/fulfillment-api.hurl:457",
+              "services/fulfillment/e2e/fulfillment-api.hurl:458"
+            ]
+          }
+        },
+        "source": "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateController.java:26",
+        "summary": "Element 18's one route: the customer's view of one processing, served from the read model and from nothing else.",
+        "summary_evidence": [
+          "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateController.java:11"
+        ],
+        "summary_source": "javadoc"
+      }
+    }
+  },
+  "servers": [],
+  "tags": [],
+  "unresolved": {
+    "placeholders": [],
+    "unmatched_requests": [],
+    "unparsed_sections": []
+  }
+}

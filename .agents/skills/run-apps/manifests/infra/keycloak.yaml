@@ -1,0 +1,119 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: catalog-keycloak
+  namespace: catalog
+  labels:
+    app: keycloak
+spec:
+  selector:
+    app: keycloak
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+  namespace: catalog
+  labels:
+    app: keycloak
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keycloak
+  template:
+    metadata:
+      labels:
+        app: keycloak
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 0
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: keycloak
+          image: quay.io/keycloak/keycloak:26.6.1
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 0
+            allowPrivilegeEscalation: false
+            # `start-dev` re-augments Quarkus into /opt/keycloak/lib/quarkus, overwriting the jars
+            # shipped there, so the root filesystem cannot be read-only. An emptyDir over that
+            # directory is not the answer either — it hides quarkus-application.dat and Keycloak
+            # dies with NoSuchFileException.
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          args:
+            - start-dev
+            - --import-realm
+          ports:
+            - containerPort: 8080
+          env:
+            - name: KC_BOOTSTRAP_ADMIN_USERNAME
+              value: admin
+            - name: KC_BOOTSTRAP_ADMIN_PASSWORD
+              value: admin
+            # Fixed issuer: an app inside the cluster discovers the realm over the Service DNS
+            # name, a token minted through the host port-forward must carry the same `iss`, so the
+            # host name of the request that asked for it must not leak into the token.
+            - name: KC_HOSTNAME
+              value: http://catalog-keycloak:8080
+            - name: KC_HOSTNAME_STRICT
+              value: "false"
+            - name: KC_HTTP_ENABLED
+              value: "true"
+            - name: KC_HEALTH_ENABLED
+              value: "true"
+          startupProbe:
+            httpGet:
+              path: /realms/catalog/.well-known/openid-configuration
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: /realms/catalog/.well-known/openid-configuration
+              port: 8080
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /realms/catalog/.well-known/openid-configuration
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 5
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+              cpu: "2"
+          volumeMounts:
+            - name: keycloak-data
+              mountPath: /opt/keycloak/data
+            - name: realm
+              mountPath: /opt/keycloak/data/import/catalog-realm.json
+              subPath: catalog-realm.json
+      volumes:
+        - name: keycloak-data
+          emptyDir: {}
+        - name: realm
+          configMap:
+            name: keycloak-realm

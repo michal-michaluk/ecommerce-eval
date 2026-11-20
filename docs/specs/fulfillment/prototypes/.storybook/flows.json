@@ -1,0 +1,41 @@
+{
+  "flows": [
+    {
+      "name": "15 pending -> claim -> 16 scan -> pack -> ready -> 18 in transit",
+      "start": "fulfillment-orders-list--pending",
+      "steps": [
+        { "click": "#claim", "expect": "fulfillment-orders-list--picking" },
+        { "click": "#open", "expect": "fulfillment-pick-workstation--scan-idle" },
+        { "click": "#scan", "expect": "fulfillment-pick-workstation--position-picked" },
+        { "click": "#pack", "expect": "fulfillment-pick-workstation--all-packed" },
+        { "click": "#ready", "expect": "fulfillment-customer-state--ready-for-delivery" },
+        { "click": "#simulate-leg", "expect": "fulfillment-customer-state--in-transit" }
+      ]
+    },
+    {
+      "name": "16 report a problem -> order on hold",
+      "start": "fulfillment-pick-workstation--position-picked",
+      "steps": [{ "click": "#report", "expect": "fulfillment-pick-workstation--blocked-on-hold" }]
+    },
+    {
+      "name": "15 on hold -> 16 blocked on hold",
+      "start": "fulfillment-orders-list--on-hold",
+      "steps": [{ "click": "#open", "expect": "fulfillment-pick-workstation--blocked-on-hold" }]
+    },
+    {
+      "name": "15 picking -> 16 mixed (W2: picked and packed at once)",
+      "start": "fulfillment-orders-list--picking",
+      "steps": [{ "click": "#open-mixed", "expect": "fulfillment-pick-workstation--mixed" }]
+    },
+    {
+      "name": "17 issues -> read-only processing state (17's own default action)",
+      "start": "fulfillment-issue-dashboard--open-issues",
+      "steps": [{ "click": "#open-state", "expect": "fulfillment-pick-workstation--blocked-on-hold" }]
+    },
+    {
+      "name": "prototype surface switch, not an app action: employee -> resolver",
+      "start": "fulfillment-pick-workstation--blocked-on-hold",
+      "steps": [{ "click": "#proto-issues", "expect": "fulfillment-issue-dashboard--open-issues" }]
+    }
+  ]
+}

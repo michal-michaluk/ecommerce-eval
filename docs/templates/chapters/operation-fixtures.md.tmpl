@@ -1,0 +1,11 @@
+{% import "partials/macros.md.tmpl" as m -%}
+{% include "partials/banner.md.tmpl" %}
+{% for block in fixtures %}
+{{ m.evidence(block.evidence) }}
+
+{{ m.fence("http", block.raw) }}
+{% endfor %}
+{% set mismatched = fixtures | selectattr("path_matches_template", "equalto", false) | map(attribute="path") | unique | list %}
+{% if mismatched %}
+The requests above address {{ m.codes(mismatched) }}; the operation is registered at {{ m.code(operation.path) }} (GAP-2).
+{% endif %}

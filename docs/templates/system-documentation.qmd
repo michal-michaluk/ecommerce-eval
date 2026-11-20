@@ -1,0 +1,41 @@
+---
+title: "<Service name> — System Documentation"
+subtitle: "<one line: the question this document answers>"
+version: "1.0"
+date: "<YYYY-MM-DD>"
+status: "Draft for review"
+audience: "<who reads it>"
+owner: "<owning team>"
+---
+
+<!-- Skeleton. Replace every angle-bracketed value and every include with the chapters this
+     service has. One part per subject area, one chapter per operation, appendices last. The
+     numbering lives in the heading text, never in `number-sections`; see README.md here. -->
+
+# Part I — External interface
+
+{{< include system/<overview-chapter>.md >}}
+
+{{< include system/endpoint-<operation>.md >}}
+
+{{< include system/crosscutting.md >}}
+
+# Part II — Persistence
+
+{{< include system/persistence-overview.md >}}
+
+{{< include system/persistence-schema.md >}}
+
+{{< include system/persistence-payloads.md >}}
+
+{{< include system/appendix-payloads.md >}}
+
+{{< include system/appendix-gaps.md >}}
+
+{{< include system/appendix-terminology.md >}}
+
+# Part III — Rationale and decisions
+
+{{< include system/goals.md >}}
+
+{{< include system/appendix-decisions.md >}}

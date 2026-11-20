@@ -1,0 +1,42 @@
+databaseChangeLog:
+
+  # The orders list learns the facts its own progression needs (element 15's state chip and `n/m packed`): which products are
+  # in the box, whether picking started, whether the carrier was asked to collect the order and whether the last leg closed it.
+  # `positions_packed` goes: the packed products are a set, so a repeated `position packed` cannot advance the counter, and the
+  # served `n/m` is the set's size. `restored_state` stays beside them as the fallback a lift lands on. `0014`'s own note still
+  # says packing facts had not landed — it was true when that changeset was written, and an applied changeset keeps its text and
+  # its checksum; this file is where the drop is explained.
+  - changeSet:
+      id: 0015-orders-list-progress
+      author: michal.michaluk
+      changes:
+        - addColumn:
+            tableName: orders_list
+            columns:
+              - column:
+                  name: packed_products
+                  type: jsonb
+                  defaultValueComputed: "'[]'::jsonb"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: picked
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: ready_for_delivery
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: delivered
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+        - dropColumn:
+            tableName: orders_list
+            columnName: positions_packed

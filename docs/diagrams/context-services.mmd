@@ -1,0 +1,47 @@
+%% System context of the two services. Every node and edge is a fact of the repository:
+%% services/fulfillment/src/main/resources/application.yml:2                          spring.application.name = fulfillment
+%% .worktrees/catalog-service/services/catalog/src/main/resources/application.yml:2    spring.application.name = catalog
+%% services/fulfillment/src/main/resources/application.yml:21                         OIDC issuer-uri, keycloak realm iot
+%% .worktrees/catalog-service/services/catalog/src/main/resources/application.yml:26   OIDC issuer-uri, keycloak realm iot
+%% services/fulfillment/src/main/resources/application.yml:4,9                         org.postgresql.Driver, PostgreSQLDialect
+%% .worktrees/catalog-service/services/catalog/src/main/resources/application.yml:9,14 org.postgresql.Driver, PostgreSQLDialect
+%% services/fulfillment/src/main/resources/application.yml:28-31                       warehouse boundary, url and token from the deployment
+%% services/fulfillment/src/main/java/shop/fulfillment/processing/InvenTreeWarehouseClient.java:38  InvenTree's HTTP surface
+%% services/fulfillment/src/main/resources/application.yml:33-37                       carrier boundary, url and token from the deployment
+%% services/fulfillment/src/main/java/shop/fulfillment/parcel/CarrierHttpClient.java:33  one carrier's HTTP surface
+%% docs/specs/fulfillment/spec.md:55                                                    customer master (CRM) is out of scope
+%% .worktrees/catalog-service/services/catalog/src/main/resources/application.yml:30   topic catalog.offer.events.v1
+%% docs/specs/catalog/17-contexts-inside.md:32,59,81,101,120                            the five contexts of catalog
+%% docs/specs/catalog/17-contexts-inside.md:28-29                                       snapshot events to Shopping
+%% docs/specs/fulfillment/src/main/java/shop/fulfillment/{processing,parcel,orders,customer,issues}/package-info.java:2  the slices of fulfillment
+flowchart LR
+  author(["Content author, content reviewer"])
+  warehouse(["Warehouse employee"])
+
+  subgraph repo["E-commerce platform"]
+    fulfillment["fulfillment<br/>order intake, processing,<br/>parcels and read models"]
+    catalog["catalog<br/>offers, pricing, review"]
+  end
+
+  subgraph external["External systems"]
+    keycloak["Keycloak<br/>OIDC issuer, realm iot"]
+    postgres["PostgreSQL<br/>Liquibase schema"]
+    kafka["Kafka<br/>catalog.offer.events.v1"]
+    inventree["InvenTree<br/>warehouse stock"]
+    carrier["Carrier<br/>registration and label"]
+    crm["CRM<br/>customer master"]
+  end
+
+  shopping["Shopping<br/>other service"]
+
+  author --> catalog
+  warehouse --> fulfillment
+  catalog --> keycloak
+  fulfillment --> keycloak
+  catalog --> postgres
+  fulfillment --> postgres
+  catalog --> kafka
+  kafka -- "OfferPublished, PricesChanged, ProductRemoved" --> shopping
+  fulfillment --> inventree
+  fulfillment --> carrier
+  fulfillment -. "not integrated, out of scope" .- crm

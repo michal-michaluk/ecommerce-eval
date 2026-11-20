@@ -1,0 +1,22 @@
+%% The five slice packages inside the fulfillment service and the two edges between them.
+%% services/fulfillment/src/main/java/shop/fulfillment/processing/package-info.java:2  processing slice, OrderFulfillmentProcess
+%% services/fulfillment/src/main/java/shop/fulfillment/parcel/package-info.java:2      parcel slice, ParcelEditor
+%% services/fulfillment/src/main/java/shop/fulfillment/orders/package-info.java:2      orders read slice, fed by the domain events
+%% services/fulfillment/src/main/java/shop/fulfillment/customer/package-info.java:2    customer read slice, fed by the domain events
+%% services/fulfillment/src/main/java/shop/fulfillment/issues/package-info.java:2      issues read slice, fed by the domain events
+%% services/fulfillment/AGENTS.md:15                                   Parcels, the contract port processing holds and parcel implements
+%% services/fulfillment/AGENTS.md:20-22                                every slice may import the shared kernel; a read slice imports neither write slice
+%% Note: AGENTS.md:8 still counts four slices; the issues slice landed with element 17 and has its own package.
+flowchart TB
+  subgraph service["shop.fulfillment"]
+    processing["processing, write<br/>OrderFulfillmentProcess<br/>intake, assignment, pick list,<br/>packing, readiness, hold"]
+    parcel["parcel, write<br/>ParcelEditor<br/>registration, delivery legs, label"]
+    orders["orders, read<br/>orders list"]
+    customer["customer, read<br/>customer state"]
+    issues["issues, read<br/>issue dashboard"]
+  end
+
+  processing -- "Parcels, contract port" --> parcel
+  processing -- "domain events" --> orders
+  processing -- "domain events" --> customer
+  processing -- "domain events" --> issues

@@ -1,0 +1,10 @@
+<FindBugsFilter>
+  <!--
+    A false positive, not a weakened gate: `details()` hands out `Collections.unmodifiableList`, so no caller can change the
+    values the error was built from. SpotBugs does not model the wrapper on a `List<Object>` field and reports the field type.
+  -->
+  <Match>
+    <Class name="shop.fulfillment.kernel.FulfillmentException"/>
+    <Bug pattern="EI_EXPOSE_REP"/>
+  </Match>
+</FindBugsFilter>

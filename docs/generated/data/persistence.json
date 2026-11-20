@@ -1,0 +1,1642 @@
+{
+  "adapter_tables": [
+    "customer_delivery_leg",
+    "customer_processing_state",
+    "features_configuration",
+    "issue_dashboard",
+    "issue_dashboard_order",
+    "order_processing",
+    "orders_list",
+    "parcel",
+    "parcel_label",
+    "processing_reservation",
+    "warehouse_reservation",
+    "warehouse_stock_cursor"
+  ],
+  "adapters": [
+    {
+      "line": 178,
+      "path": "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java",
+      "table": "customer_processing_state"
+    },
+    {
+      "line": 308,
+      "path": "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java",
+      "table": "customer_delivery_leg"
+    },
+    {
+      "line": 149,
+      "path": "services/fulfillment/src/main/java/shop/fulfillment/issues/IssueDashboardProjection.java",
+      "table": "issue_dashboard"
+    },
+    {
+      "line": 223,
+      "path": "services/fulfillment/src/main/java/shop/fulfillment/issues/IssueDashboardProjection.java",
+      "table": "issue_dashboard_order"
+    },
+    {
+      "line": 125,
+      "path": "services/fulfillment/src/main/java/shop/fulfillment/orders/OrdersListProjection.java",
+      "table": "orders_list"
+    },
+    {
+      "line": 137,
+      "path": "services/fulfillment/src/main/java/shop/fulfillment/parcel/DocumentParcelRepository.java",
+      "table": "parcel"
+    },
+    {
+      "line": 172,
+      "path": "services/fulfillment/src/main/java/shop/fulfillment/parcel/DocumentParcelRepository.java",
+      "table": "parcel_label"
+    },
+    {
+      "line": 131,
+      "path": "services/fulfillment/src/main/java/shop/fulfillment/processing/DocumentOrderProcessingRepository.java",
+      "table": "order_processing"
+    },
+    {
+      "line": 55,
+      "path": "services/fulfillment/src/main/java/shop/fulfillment/processing/DocumentProcessingReservationRepository.java",
+      "table": "processing_reservation"
+    },
+    {
+      "line": 48,
+      "path": "services/fulfillment/src/main/java/shop/fulfillment/processing/DocumentStockCursorRepository.java",
+      "table": "warehouse_stock_cursor"
+    },
+    {
+      "line": 61,
+      "path": "services/fulfillment/src/main/java/shop/fulfillment/processing/DocumentWarehouseReservationRepository.java",
+      "table": "warehouse_reservation"
+    },
+    {
+      "line": 63,
+      "path": "services/fulfillment/src/main/java/shop/fulfillment/tools/FeatureConfiguration.java",
+      "table": "features_configuration"
+    }
+  ],
+  "changelog": {
+    "path": "services/fulfillment/src/main/resources/db/db.changelog.yaml"
+  },
+  "changesets": [
+    {
+      "author": "michal.michaluk",
+      "column_count": 2,
+      "evidence": [
+        "services/fulfillment/src/main/resources/db/db.changelog.yaml:4"
+      ],
+      "id": "0001-features-configuration",
+      "line": 4,
+      "path": "services/fulfillment/src/main/resources/db/db.changelog.yaml",
+      "tables": [
+        "features_configuration"
+      ]
+    },
+    {
+      "author": "template",
+      "column_count": 0,
+      "evidence": [
+        "services/fulfillment/src/main/resources/db/db.changelog.yaml:23"
+      ],
+      "id": "0002-template-placeholder",
+      "line": 23,
+      "path": "services/fulfillment/src/main/resources/db/db.changelog.yaml",
+      "tables": []
+    },
+    {
+      "author": "michal.michaluk",
+      "column_count": 0,
+      "evidence": [
+        "services/fulfillment/src/main/resources/db/changelog/0003-order-processing.yaml:6"
+      ],
+      "id": "0003-order-processing-identity",
+      "line": 6,
+      "path": "services/fulfillment/src/main/resources/db/changelog/0003-order-processing.yaml",
+      "tables": []
+    },
+    {
+      "author": "michal.michaluk",
+      "column_count": 4,
+      "evidence": [
+        "services/fulfillment/src/main/resources/db/changelog/0003-order-processing.yaml:17"
+      ],
+      "id": "0003-order-processing",
+      "line": 17,
+      "path": "services/fulfillment/src/main/resources/db/changelog/0003-order-processing.yaml",
+      "tables": [
+        "order_processing"
+      ]
+    },
+    {
+      "author": "michal.michaluk",
+      "column_count": 8,
+      "evidence": [
+        "services/fulfillment/src/main/resources/db/changelog/0004-orders-list.yaml:7"
+      ],
+      "id": "0004-orders-list",
+      "line": 7,
+      "path": "services/fulfillment/src/main/resources/db/changelog/0004-orders-list.yaml",
+      "tables": [
+        "orders_list"
+      ]
+    },
+    {
+      "author": "michal.michaluk",
+      "column_count": 5,
+      "evidence": [
+        "services/fulfillment/src/main/resources/db/changelog/0005-warehouse-state.yaml:7"
+      ],
+      "id": "0005-warehouse-reservation",
+      "line": 7,
+      "path": "services/fulfillment/src/main/resources/db/changelog/0005-warehouse-state.yaml",
+      "tables": [
+        "warehouse_reservation"
+      ]
+    },
+    {
+      "author": "michal.michaluk",
+      "column_count": 2,
+      "evidence": [
+        "services/fulfillment/src/main/resources/db/changelog/0005-warehouse-state.yaml:38"
+      ],
+      "id": "0005-warehouse-stock-cursor",
+      "line": 38,
+      "path": "services/fulfillment/src/main/resources/db/changelog/0005-warehouse-state.yaml",
+      "tables": [
+        "warehouse_stock_cursor"
+      ]
+    },
+    {
+      "author": "michal.michaluk",
+      "column_count": 0,
+      "evidence": [
+        "services/fulfillment/src/main/resources/db/changelog/0006-parcel.yaml:6"
+      ],
+      "id": "0006-parcel-identity",
+      "line": 6,
+      "path": "services/fulfillment/src/main/resources/db/changelog/0006-parcel.yaml",
+      "tables": []
+    },
+    {
+      "author": "michal.michaluk",
+      "column_count": 5,
+      "evidence": [
+        "services/fulfillment/src/main/resources/db/changelog/0006-parcel.yaml:18"
+      ],
+      "id": "0006-parcel",
+      "line": 18,
+      "path": "services/fulfillment/src/main/resources/db/changelog/0006-parcel.yaml",
+      "tables": [
+        "parcel"
+      ]
+    },
+    {
+      "author": "michal.michaluk",
+      "column_count": 3,
+      "evidence": [
+        "services/fulfillment/src/main/resources/db/changelog/0006-parcel.yaml:63"
+      ],
+      "id": "0006-parcel-label",
+      "line": 63,
+      "path": "services/fulfillment/src/main/resources/db/changelog/0006-parcel.yaml",
+      "tables": [
+        "parcel_label"
+      ]
+    },
+    {
+      "author": "michal.michaluk",
+      "column_count": 11,
+      "evidence": [
+        "services/fulfillment/src/main/resources/db/changelog/0007-customer-state.yaml:7"
+      ],
+      "id": "0007-customer-processing-state",
+      "line": 7,
+      "path": "services/fulfillment/src/main/resources/db/changelog/0007-customer-state.yaml",
+      "tables": [
+        "customer_processing_state"
+      ]
+    },
+    {
+      "author": "michal.michaluk",
+      "column_count": 5,
+      "evidence": [
+        "services/fulfillment/src/main/resources/db/changelog/0007-customer-state.yaml:75"
+      ],
+      "id": "0007-customer-delivery-leg",
+      "line": 75,
+      "path": "services/fulfillment/src/main/resources/db/changelog/0007-customer-state.yaml",
+      "tables": [
+        "customer_delivery_leg"
+      ]
+    },
+    {
+      "author": "michal.michaluk",
+      "column_count": 0,
+      "evidence": [
+        "services/fulfillment/src/main/resources/db/changelog/0008-order-processing-parcel.yaml:7"
+      ],
+      "id": "0008-order-processing-parcel",
+      "line": 7,
+      "path": "services/fulfillment/src/main/resources/db/changelog/0008-order-processing-parcel.yaml",
+      "tables": []
+    },
+    {
+      "author": "michal.michaluk",
+      "column_count": 0,
+      "evidence": [
+        "services/fulfillment/src/main/resources/db/changelog/0009-processing-issues.yaml:6"
+      ],
+      "id": "0009-issue-identity",
+      "line": 6,
+      "path": "services/fulfillment/src/main/resources/db/changelog/0009-processing-issues.yaml",
+      "tables": []
+    },
+    {
+      "author": "michal.michaluk",
+      "column_count": 7,
+      "evidence": [
+        "services/fulfillment/src/main/resources/db/changelog/0010-processing-reservation.yaml:7"
+      ],
+      "id": "0010-processing-reservation",
+      "line": 7,
+      "path": "services/fulfillment/src/main/resources/db/changelog/0010-processing-reservation.yaml",
+      "tables": [
+        "processing_reservation"
+      ]
+    },
+    {
+      "author": "michal.michaluk",
+      "column_count": 7,
+      "evidence": [
+        "services/fulfillment/src/main/resources/db/changelog/0011-issue-dashboard.yaml:6"
+      ],
+      "id": "0011-issue-dashboard",
+      "line": 6,
+      "path": "services/fulfillment/src/main/resources/db/changelog/0011-issue-dashboard.yaml",
+      "tables": [
+        "issue_dashboard"
+      ]
+    },
+    {
+      "author": "michal.michaluk",
+      "column_count": 5,
+      "evidence": [
+        "services/fulfillment/src/main/resources/db/changelog/0011-issue-dashboard.yaml:56"
+      ],
+      "id": "0011-issue-dashboard-order",
+      "line": 56,
+      "path": "services/fulfillment/src/main/resources/db/changelog/0011-issue-dashboard.yaml",
+      "tables": [
+        "issue_dashboard_order"
+      ]
+    },
+    {
+      "author": "michal.michaluk",
+      "column_count": 0,
+      "evidence": [
+        "services/fulfillment/src/main/resources/db/changelog/0012-orders-list-held.yaml:6"
+      ],
+      "id": "0012-orders-list-held",
+      "line": 6,
+      "path": "services/fulfillment/src/main/resources/db/changelog/0012-orders-list-held.yaml",
+      "tables": []
+    },
+    {
+      "author": "michal.michaluk",
+      "column_count": 0,
+      "evidence": [
+        "services/fulfillment/src/main/resources/db/changelog/0013-issue-dashboard-corrections.yaml:9"
+      ],
+      "id": "0013-issue-dashboard-version",
+      "line": 9,
+      "path": "services/fulfillment/src/main/resources/db/changelog/0013-issue-dashboard-corrections.yaml",
+      "tables": []
+    },
+    {
+      "author": "michal.michaluk",
+      "column_count": 0,
+      "evidence": [
+        "services/fulfillment/src/main/resources/db/changelog/0013-issue-dashboard-corrections.yaml:23"
+      ],
+      "id": "0013-issue-dashboard-order-lines",
+      "line": 23,
+      "path": "services/fulfillment/src/main/resources/db/changelog/0013-issue-dashboard-corrections.yaml",
+      "tables": []
+    },
+    {
+      "author": "michal.michaluk",
+      "column_count": 0,
+      "evidence": [
+        "services/fulfillment/src/main/resources/db/changelog/0014-orders-list-restored-state.yaml:8"
+      ],
+      "id": "0014-orders-list-restored-state",
+      "line": 8,
+      "path": "services/fulfillment/src/main/resources/db/changelog/0014-orders-list-restored-state.yaml",
+      "tables": []
+    },
+    {
+      "author": "michal.michaluk",
+      "column_count": 0,
+      "evidence": [
+        "services/fulfillment/src/main/resources/db/changelog/0015-orders-list-progress.yaml:10"
+      ],
+      "id": "0015-orders-list-progress",
+      "line": 10,
+      "path": "services/fulfillment/src/main/resources/db/changelog/0015-orders-list-progress.yaml",
+      "tables": []
+    }
+  ],
+  "dropped_columns": [
+    {
+      "changeset": "0015-orders-list-progress",
+      "column": "positions_packed",
+      "evidence": [
+        "services/fulfillment/src/main/resources/db/changelog/0015-orders-list-progress.yaml:42"
+      ],
+      "line": 42,
+      "path": "services/fulfillment/src/main/resources/db/changelog/0015-orders-list-progress.yaml",
+      "table": "orders_list"
+    }
+  ],
+  "json_columns": [
+    {
+      "changelog_line": 17,
+      "changelog_path": "services/fulfillment/src/main/resources/db/db.changelog.yaml",
+      "changeset": "0001-features-configuration",
+      "column": "configuration",
+      "column_source": "field",
+      "entity_paths": [
+        {
+          "line": 68,
+          "path": "services/fulfillment/src/main/java/shop/fulfillment/tools/FeatureConfiguration.java"
+        }
+      ],
+      "evidence": [
+        "services/fulfillment/src/main/resources/db/db.changelog.yaml:17",
+        "services/fulfillment/src/main/java/shop/fulfillment/tools/FeatureConfiguration.java:68"
+      ],
+      "field": "configuration",
+      "field_type": "JsonNode",
+      "line": 17,
+      "path": "services/fulfillment/src/main/resources/db/db.changelog.yaml",
+      "table": "features_configuration",
+      "type": "jsonb"
+    },
+    {
+      "changelog_line": 42,
+      "changelog_path": "services/fulfillment/src/main/resources/db/changelog/0003-order-processing.yaml",
+      "changeset": "0003-order-processing",
+      "column": "snapshot",
+      "column_source": "field",
+      "entity_paths": [
+        {
+          "line": 144,
+          "path": "services/fulfillment/src/main/java/shop/fulfillment/processing/DocumentOrderProcessingRepository.java"
+        }
+      ],
+      "evidence": [
+        "services/fulfillment/src/main/resources/db/changelog/0003-order-processing.yaml:42",
+        "services/fulfillment/src/main/java/shop/fulfillment/processing/DocumentOrderProcessingRepository.java:144"
+      ],
+      "field": "snapshot",
+      "field_type": "OrderProcessing",
+      "line": 42,
+      "path": "services/fulfillment/src/main/resources/db/changelog/0003-order-processing.yaml",
+      "table": "order_processing",
+      "type": "jsonb"
+    },
+    {
+      "changelog_line": 17,
+      "changelog_path": "services/fulfillment/src/main/resources/db/changelog/0015-orders-list-progress.yaml",
+      "changeset": "0015-orders-list-progress",
+      "column": "packed_products",
+      "column_source": "annotation",
+      "entity_paths": [
+        {
+          "line": 147,
+          "path": "services/fulfillment/src/main/java/shop/fulfillment/orders/OrdersListProjection.java"
+        }
+      ],
+      "evidence": [
+        "services/fulfillment/src/main/resources/db/changelog/0015-orders-list-progress.yaml:17",
+        "services/fulfillment/src/main/java/shop/fulfillment/orders/OrdersListProjection.java:147"
+      ],
+      "field": "packedProducts",
+      "field_type": "List<String>",
+      "line": 17,
+      "path": "services/fulfillment/src/main/resources/db/changelog/0015-orders-list-progress.yaml",
+      "table": "orders_list",
+      "type": "jsonb"
+    },
+    {
+      "changelog_line": 48,
+      "changelog_path": "services/fulfillment/src/main/resources/db/changelog/0006-parcel.yaml",
+      "changeset": "0006-parcel",
+      "column": "snapshot",
+      "column_source": "field",
+      "entity_paths": [
+        {
+          "line": 150,
+          "path": "services/fulfillment/src/main/java/shop/fulfillment/parcel/DocumentParcelRepository.java"
+        }
+      ],
+      "evidence": [
+        "services/fulfillment/src/main/resources/db/changelog/0006-parcel.yaml:48",
+        "services/fulfillment/src/main/java/shop/fulfillment/parcel/DocumentParcelRepository.java:150"
+      ],
+      "field": "snapshot",
+      "field_type": "Parcel",
+      "line": 48,
+      "path": "services/fulfillment/src/main/resources/db/changelog/0006-parcel.yaml",
+      "table": "parcel",
+      "type": "jsonb"
+    },
+    {
+      "changelog_line": 33,
+      "changelog_path": "services/fulfillment/src/main/resources/db/changelog/0007-customer-state.yaml",
+      "changeset": "0007-customer-processing-state",
+      "column": "order_document",
+      "column_source": "annotation",
+      "entity_paths": [
+        {
+          "line": 192,
+          "path": "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java"
+        }
+      ],
+      "evidence": [
+        "services/fulfillment/src/main/resources/db/changelog/0007-customer-state.yaml:33",
+        "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java:192"
+      ],
+      "field": "order",
+      "field_type": "Order",
+      "line": 33,
+      "path": "services/fulfillment/src/main/resources/db/changelog/0007-customer-state.yaml",
+      "table": "customer_processing_state",
+      "type": "jsonb"
+    },
+    {
+      "changelog_line": 36,
+      "changelog_path": "services/fulfillment/src/main/resources/db/changelog/0007-customer-state.yaml",
+      "changeset": "0007-customer-processing-state",
+      "column": "packed_products",
+      "column_source": "field",
+      "entity_paths": [
+        {
+          "line": 194,
+          "path": "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java"
+        }
+      ],
+      "evidence": [
+        "services/fulfillment/src/main/resources/db/changelog/0007-customer-state.yaml:36",
+        "services/fulfillment/src/main/java/shop/fulfillment/customer/CustomerStateProjection.java:194"
+      ],
+      "field": "packedProducts",
+      "field_type": "List<String>",
+      "line": 36,
+      "path": "services/fulfillment/src/main/resources/db/changelog/0007-customer-state.yaml",
+      "table": "customer_processing_state",
+      "type": "jsonb"
+    },
+    {
+      "changelog_line": 29,
+      "changelog_path": "services/fulfillment/src/main/resources/db/changelog/0013-issue-dashboard-corrections.yaml",
+      "changeset": "0013-issue-dashboard-order-lines",
+      "column": "lines",
+      "column_source": "annotation",
+      "entity_paths": [
+        {
+          "line": 237,
+          "path": "services/fulfillment/src/main/java/shop/fulfillment/issues/IssueDashboardProjection.java"
+        }
+      ],
+      "evidence": [
+        "services/fulfillment/src/main/resources/db/changelog/0013-issue-dashboard-corrections.yaml:29",
+        "services/fulfillment/src/main/java/shop/fulfillment/issues/IssueDashboardProjection.java:237"
+      ],
+      "field": "lines",
+      "field_type": "List<OrderLine>",
+      "line": 29,
+      "path": "services/fulfillment/src/main/resources/db/changelog/0013-issue-dashboard-corrections.yaml",
+      "table": "issue_dashboard_order",
+      "type": "jsonb"
+    }
+  ],
+  "renamed_columns": [
+    {
+      "changeset": "0013-issue-dashboard-order-lines",
+      "evidence": [
+        "services/fulfillment/src/main/resources/db/changelog/0013-issue-dashboard-corrections.yaml:29"
+      ],
+      "from": "order_document",
+      "line": 29,
+      "path": "services/fulfillment/src/main/resources/db/changelog/0013-issue-dashboard-corrections.yaml",
+      "table": "issue_dashboard_order",
+      "to": "lines"
+    }
+  ],
+  "tables": [
+    {
+      "changeset": "0001-features-configuration",
+      "columns": [
+        {
+          "changeset": "0001-features-configuration",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 11,
+          "name": "name",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/db.changelog.yaml",
+          "primary_key": true,
+          "type": "varchar(255)",
+          "unique": false
+        },
+        {
+          "changeset": "0001-features-configuration",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": true,
+          "line": 17,
+          "name": "configuration",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/db.changelog.yaml",
+          "primary_key": false,
+          "type": "jsonb",
+          "unique": false
+        }
+      ],
+      "evidence": [
+        "services/fulfillment/src/main/resources/db/db.changelog.yaml:8"
+      ],
+      "line": 8,
+      "name": "features_configuration",
+      "path": "services/fulfillment/src/main/resources/db/db.changelog.yaml"
+    },
+    {
+      "changeset": "0003-order-processing",
+      "columns": [
+        {
+          "changeset": "0003-order-processing",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 24,
+          "name": "processing_id",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0003-order-processing.yaml",
+          "primary_key": true,
+          "type": "varchar(32)",
+          "unique": false
+        },
+        {
+          "changeset": "0003-order-processing",
+          "default": {
+            "kind": "numeric",
+            "value": "1"
+          },
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 31,
+          "name": "version",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0003-order-processing.yaml",
+          "primary_key": false,
+          "type": "bigint",
+          "unique": false
+        },
+        {
+          "changeset": "0003-order-processing",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 37,
+          "name": "order_hash",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0003-order-processing.yaml",
+          "primary_key": false,
+          "type": "varchar(128)",
+          "unique": false
+        },
+        {
+          "changeset": "0003-order-processing",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": true,
+          "line": 42,
+          "name": "snapshot",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0003-order-processing.yaml",
+          "primary_key": false,
+          "type": "jsonb",
+          "unique": false
+        },
+        {
+          "changeset": "0008-order-processing-parcel",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 14,
+          "name": "parcel_id",
+          "nullable": null,
+          "path": "services/fulfillment/src/main/resources/db/changelog/0008-order-processing-parcel.yaml",
+          "primary_key": false,
+          "type": "varchar(32)",
+          "unique": false
+        }
+      ],
+      "evidence": [
+        "services/fulfillment/src/main/resources/db/changelog/0003-order-processing.yaml:21"
+      ],
+      "line": 21,
+      "name": "order_processing",
+      "path": "services/fulfillment/src/main/resources/db/changelog/0003-order-processing.yaml"
+    },
+    {
+      "changeset": "0004-orders-list",
+      "columns": [
+        {
+          "changeset": "0004-orders-list",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 14,
+          "name": "processing_id",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0004-orders-list.yaml",
+          "primary_key": true,
+          "type": "varchar(32)",
+          "unique": false
+        },
+        {
+          "changeset": "0004-orders-list",
+          "default": {
+            "kind": "numeric",
+            "value": "1"
+          },
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 21,
+          "name": "version",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0004-orders-list.yaml",
+          "primary_key": false,
+          "type": "bigint",
+          "unique": false
+        },
+        {
+          "changeset": "0004-orders-list",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 27,
+          "name": "state",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0004-orders-list.yaml",
+          "primary_key": false,
+          "type": "varchar(32)",
+          "unique": false
+        },
+        {
+          "changeset": "0004-orders-list",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 32,
+          "name": "assignee",
+          "nullable": null,
+          "path": "services/fulfillment/src/main/resources/db/changelog/0004-orders-list.yaml",
+          "primary_key": false,
+          "type": "varchar(255)",
+          "unique": false
+        },
+        {
+          "changeset": "0004-orders-list",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 35,
+          "name": "recipient",
+          "nullable": null,
+          "path": "services/fulfillment/src/main/resources/db/changelog/0004-orders-list.yaml",
+          "primary_key": false,
+          "type": "varchar(255)",
+          "unique": false
+        },
+        {
+          "changeset": "0004-orders-list",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 38,
+          "name": "placed_at",
+          "nullable": null,
+          "path": "services/fulfillment/src/main/resources/db/changelog/0004-orders-list.yaml",
+          "primary_key": false,
+          "type": "timestamptz",
+          "unique": false
+        },
+        {
+          "changeset": "0004-orders-list",
+          "default": {
+            "kind": "numeric",
+            "value": "0"
+          },
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 41,
+          "name": "positions_total",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0004-orders-list.yaml",
+          "primary_key": false,
+          "type": "int",
+          "unique": false
+        },
+        {
+          "changeset": "0012-orders-list-held",
+          "default": {
+            "kind": "boolean",
+            "value": "false"
+          },
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 13,
+          "name": "held",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0012-orders-list-held.yaml",
+          "primary_key": false,
+          "type": "boolean",
+          "unique": false
+        },
+        {
+          "changeset": "0014-orders-list-restored-state",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 15,
+          "name": "restored_state",
+          "nullable": null,
+          "path": "services/fulfillment/src/main/resources/db/changelog/0014-orders-list-restored-state.yaml",
+          "primary_key": false,
+          "type": "varchar(255)",
+          "unique": false
+        },
+        {
+          "changeset": "0015-orders-list-progress",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": true,
+          "line": 17,
+          "name": "packed_products",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0015-orders-list-progress.yaml",
+          "primary_key": false,
+          "type": "jsonb",
+          "unique": false
+        },
+        {
+          "changeset": "0015-orders-list-progress",
+          "default": {
+            "kind": "boolean",
+            "value": "false"
+          },
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 23,
+          "name": "picked",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0015-orders-list-progress.yaml",
+          "primary_key": false,
+          "type": "boolean",
+          "unique": false
+        },
+        {
+          "changeset": "0015-orders-list-progress",
+          "default": {
+            "kind": "boolean",
+            "value": "false"
+          },
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 29,
+          "name": "ready_for_delivery",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0015-orders-list-progress.yaml",
+          "primary_key": false,
+          "type": "boolean",
+          "unique": false
+        },
+        {
+          "changeset": "0015-orders-list-progress",
+          "default": {
+            "kind": "boolean",
+            "value": "false"
+          },
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 35,
+          "name": "delivered",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0015-orders-list-progress.yaml",
+          "primary_key": false,
+          "type": "boolean",
+          "unique": false
+        }
+      ],
+      "evidence": [
+        "services/fulfillment/src/main/resources/db/changelog/0004-orders-list.yaml:11"
+      ],
+      "line": 11,
+      "name": "orders_list",
+      "path": "services/fulfillment/src/main/resources/db/changelog/0004-orders-list.yaml"
+    },
+    {
+      "changeset": "0005-warehouse-reservation",
+      "columns": [
+        {
+          "changeset": "0005-warehouse-reservation",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 14,
+          "name": "reservation_id",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0005-warehouse-state.yaml",
+          "primary_key": true,
+          "type": "varchar(64)",
+          "unique": false
+        },
+        {
+          "changeset": "0005-warehouse-reservation",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 21,
+          "name": "order_pk",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0005-warehouse-state.yaml",
+          "primary_key": false,
+          "type": "int",
+          "unique": false
+        },
+        {
+          "changeset": "0005-warehouse-reservation",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 26,
+          "name": "allocation_pks",
+          "nullable": null,
+          "path": "services/fulfillment/src/main/resources/db/changelog/0005-warehouse-state.yaml",
+          "primary_key": false,
+          "type": "varchar(512)",
+          "unique": false
+        },
+        {
+          "changeset": "0005-warehouse-reservation",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 29,
+          "name": "issue_document",
+          "nullable": null,
+          "path": "services/fulfillment/src/main/resources/db/changelog/0005-warehouse-state.yaml",
+          "primary_key": false,
+          "type": "varchar(64)",
+          "unique": false
+        },
+        {
+          "changeset": "0005-warehouse-reservation",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 32,
+          "name": "issue_date",
+          "nullable": null,
+          "path": "services/fulfillment/src/main/resources/db/changelog/0005-warehouse-state.yaml",
+          "primary_key": false,
+          "type": "date",
+          "unique": false
+        }
+      ],
+      "evidence": [
+        "services/fulfillment/src/main/resources/db/changelog/0005-warehouse-state.yaml:11"
+      ],
+      "line": 11,
+      "name": "warehouse_reservation",
+      "path": "services/fulfillment/src/main/resources/db/changelog/0005-warehouse-state.yaml"
+    },
+    {
+      "changeset": "0005-warehouse-stock-cursor",
+      "columns": [
+        {
+          "changeset": "0005-warehouse-stock-cursor",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 45,
+          "name": "name",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0005-warehouse-state.yaml",
+          "primary_key": true,
+          "type": "varchar(32)",
+          "unique": false
+        },
+        {
+          "changeset": "0005-warehouse-stock-cursor",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 52,
+          "name": "cursor",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0005-warehouse-state.yaml",
+          "primary_key": false,
+          "type": "varchar(64)",
+          "unique": false
+        }
+      ],
+      "evidence": [
+        "services/fulfillment/src/main/resources/db/changelog/0005-warehouse-state.yaml:42"
+      ],
+      "line": 42,
+      "name": "warehouse_stock_cursor",
+      "path": "services/fulfillment/src/main/resources/db/changelog/0005-warehouse-state.yaml"
+    },
+    {
+      "changeset": "0006-parcel",
+      "columns": [
+        {
+          "changeset": "0006-parcel",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 25,
+          "name": "parcel_id",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0006-parcel.yaml",
+          "primary_key": true,
+          "type": "varchar(32)",
+          "unique": false
+        },
+        {
+          "changeset": "0006-parcel",
+          "default": {
+            "kind": "numeric",
+            "value": "1"
+          },
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 32,
+          "name": "version",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0006-parcel.yaml",
+          "primary_key": false,
+          "type": "bigint",
+          "unique": false
+        },
+        {
+          "changeset": "0006-parcel",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 38,
+          "name": "processing_id",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0006-parcel.yaml",
+          "primary_key": false,
+          "type": "varchar(32)",
+          "unique": false
+        },
+        {
+          "changeset": "0006-parcel",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 43,
+          "name": "leg_state",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0006-parcel.yaml",
+          "primary_key": false,
+          "type": "varchar(32)",
+          "unique": false
+        },
+        {
+          "changeset": "0006-parcel",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": true,
+          "line": 48,
+          "name": "snapshot",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0006-parcel.yaml",
+          "primary_key": false,
+          "type": "jsonb",
+          "unique": false
+        }
+      ],
+      "evidence": [
+        "services/fulfillment/src/main/resources/db/changelog/0006-parcel.yaml:22"
+      ],
+      "line": 22,
+      "name": "parcel",
+      "path": "services/fulfillment/src/main/resources/db/changelog/0006-parcel.yaml"
+    },
+    {
+      "changeset": "0006-parcel-label",
+      "columns": [
+        {
+          "changeset": "0006-parcel-label",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 70,
+          "name": "parcel_id",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0006-parcel.yaml",
+          "primary_key": true,
+          "type": "varchar(32)",
+          "unique": false
+        },
+        {
+          "changeset": "0006-parcel-label",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 77,
+          "name": "format",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0006-parcel.yaml",
+          "primary_key": false,
+          "type": "varchar(16)",
+          "unique": false
+        },
+        {
+          "changeset": "0006-parcel-label",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 82,
+          "name": "document",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0006-parcel.yaml",
+          "primary_key": false,
+          "type": "bytea",
+          "unique": false
+        }
+      ],
+      "evidence": [
+        "services/fulfillment/src/main/resources/db/changelog/0006-parcel.yaml:67"
+      ],
+      "line": 67,
+      "name": "parcel_label",
+      "path": "services/fulfillment/src/main/resources/db/changelog/0006-parcel.yaml"
+    },
+    {
+      "changeset": "0007-customer-processing-state",
+      "columns": [
+        {
+          "changeset": "0007-customer-processing-state",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 14,
+          "name": "processing_id",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0007-customer-state.yaml",
+          "primary_key": true,
+          "type": "varchar(32)",
+          "unique": false
+        },
+        {
+          "changeset": "0007-customer-processing-state",
+          "default": {
+            "kind": "numeric",
+            "value": "1"
+          },
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 21,
+          "name": "version",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0007-customer-state.yaml",
+          "primary_key": false,
+          "type": "bigint",
+          "unique": false
+        },
+        {
+          "changeset": "0007-customer-processing-state",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 27,
+          "name": "state",
+          "nullable": null,
+          "path": "services/fulfillment/src/main/resources/db/changelog/0007-customer-state.yaml",
+          "primary_key": false,
+          "type": "varchar(32)",
+          "unique": false
+        },
+        {
+          "changeset": "0007-customer-processing-state",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 30,
+          "name": "parcel_id",
+          "nullable": null,
+          "path": "services/fulfillment/src/main/resources/db/changelog/0007-customer-state.yaml",
+          "primary_key": false,
+          "type": "varchar(32)",
+          "unique": false
+        },
+        {
+          "changeset": "0007-customer-processing-state",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": true,
+          "line": 33,
+          "name": "order_document",
+          "nullable": null,
+          "path": "services/fulfillment/src/main/resources/db/changelog/0007-customer-state.yaml",
+          "primary_key": false,
+          "type": "jsonb",
+          "unique": false
+        },
+        {
+          "changeset": "0007-customer-processing-state",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": true,
+          "line": 36,
+          "name": "packed_products",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0007-customer-state.yaml",
+          "primary_key": false,
+          "type": "jsonb",
+          "unique": false
+        },
+        {
+          "changeset": "0007-customer-processing-state",
+          "default": {
+            "kind": "boolean",
+            "value": "false"
+          },
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 42,
+          "name": "picked",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0007-customer-state.yaml",
+          "primary_key": false,
+          "type": "boolean",
+          "unique": false
+        },
+        {
+          "changeset": "0007-customer-processing-state",
+          "default": {
+            "kind": "boolean",
+            "value": "false"
+          },
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 48,
+          "name": "assigned",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0007-customer-state.yaml",
+          "primary_key": false,
+          "type": "boolean",
+          "unique": false
+        },
+        {
+          "changeset": "0007-customer-processing-state",
+          "default": {
+            "kind": "boolean",
+            "value": "false"
+          },
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 54,
+          "name": "held",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0007-customer-state.yaml",
+          "primary_key": false,
+          "type": "boolean",
+          "unique": false
+        },
+        {
+          "changeset": "0007-customer-processing-state",
+          "default": {
+            "kind": "boolean",
+            "value": "false"
+          },
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 60,
+          "name": "ready_for_delivery",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0007-customer-state.yaml",
+          "primary_key": false,
+          "type": "boolean",
+          "unique": false
+        },
+        {
+          "changeset": "0007-customer-processing-state",
+          "default": {
+            "kind": "boolean",
+            "value": "false"
+          },
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 66,
+          "name": "delivered",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0007-customer-state.yaml",
+          "primary_key": false,
+          "type": "boolean",
+          "unique": false
+        }
+      ],
+      "evidence": [
+        "services/fulfillment/src/main/resources/db/changelog/0007-customer-state.yaml:11"
+      ],
+      "line": 11,
+      "name": "customer_processing_state",
+      "path": "services/fulfillment/src/main/resources/db/changelog/0007-customer-state.yaml"
+    },
+    {
+      "changeset": "0007-customer-delivery-leg",
+      "columns": [
+        {
+          "changeset": "0007-customer-delivery-leg",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 82,
+          "name": "leg_id",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0007-customer-state.yaml",
+          "primary_key": true,
+          "type": "varchar(48)",
+          "unique": false
+        },
+        {
+          "changeset": "0007-customer-delivery-leg",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 89,
+          "name": "parcel_id",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0007-customer-state.yaml",
+          "primary_key": false,
+          "type": "varchar(32)",
+          "unique": false
+        },
+        {
+          "changeset": "0007-customer-delivery-leg",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 94,
+          "name": "leg",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0007-customer-state.yaml",
+          "primary_key": false,
+          "type": "varchar(8)",
+          "unique": false
+        },
+        {
+          "changeset": "0007-customer-delivery-leg",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 99,
+          "name": "leg_order",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0007-customer-state.yaml",
+          "primary_key": false,
+          "type": "int",
+          "unique": false
+        },
+        {
+          "changeset": "0007-customer-delivery-leg",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 104,
+          "name": "reached_at",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0007-customer-state.yaml",
+          "primary_key": false,
+          "type": "timestamp with time zone",
+          "unique": false
+        }
+      ],
+      "evidence": [
+        "services/fulfillment/src/main/resources/db/changelog/0007-customer-state.yaml:79"
+      ],
+      "line": 79,
+      "name": "customer_delivery_leg",
+      "path": "services/fulfillment/src/main/resources/db/changelog/0007-customer-state.yaml"
+    },
+    {
+      "changeset": "0010-processing-reservation",
+      "columns": [
+        {
+          "changeset": "0010-processing-reservation",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 14,
+          "name": "reservation_id",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0010-processing-reservation.yaml",
+          "primary_key": true,
+          "type": "varchar(64)",
+          "unique": false
+        },
+        {
+          "changeset": "0010-processing-reservation",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 21,
+          "name": "processing_id",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0010-processing-reservation.yaml",
+          "primary_key": false,
+          "type": "varchar(32)",
+          "unique": false
+        },
+        {
+          "changeset": "0010-processing-reservation",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 26,
+          "name": "product_number",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0010-processing-reservation.yaml",
+          "primary_key": false,
+          "type": "varchar(32)",
+          "unique": false
+        },
+        {
+          "changeset": "0010-processing-reservation",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 31,
+          "name": "location",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0010-processing-reservation.yaml",
+          "primary_key": false,
+          "type": "varchar(32)",
+          "unique": false
+        },
+        {
+          "changeset": "0010-processing-reservation",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 36,
+          "name": "quantity",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0010-processing-reservation.yaml",
+          "primary_key": false,
+          "type": "int",
+          "unique": false
+        },
+        {
+          "changeset": "0010-processing-reservation",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 41,
+          "name": "issue_document",
+          "nullable": null,
+          "path": "services/fulfillment/src/main/resources/db/changelog/0010-processing-reservation.yaml",
+          "primary_key": false,
+          "type": "varchar(64)",
+          "unique": false
+        },
+        {
+          "changeset": "0010-processing-reservation",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 44,
+          "name": "issue_date",
+          "nullable": null,
+          "path": "services/fulfillment/src/main/resources/db/changelog/0010-processing-reservation.yaml",
+          "primary_key": false,
+          "type": "date",
+          "unique": false
+        }
+      ],
+      "evidence": [
+        "services/fulfillment/src/main/resources/db/changelog/0010-processing-reservation.yaml:11"
+      ],
+      "line": 11,
+      "name": "processing_reservation",
+      "path": "services/fulfillment/src/main/resources/db/changelog/0010-processing-reservation.yaml"
+    },
+    {
+      "changeset": "0011-issue-dashboard",
+      "columns": [
+        {
+          "changeset": "0011-issue-dashboard",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 13,
+          "name": "issue_id",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0011-issue-dashboard.yaml",
+          "primary_key": true,
+          "type": "varchar(32)",
+          "unique": false
+        },
+        {
+          "changeset": "0011-issue-dashboard",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 20,
+          "name": "processing_id",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0011-issue-dashboard.yaml",
+          "primary_key": false,
+          "type": "varchar(32)",
+          "unique": false
+        },
+        {
+          "changeset": "0011-issue-dashboard",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 25,
+          "name": "kind",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0011-issue-dashboard.yaml",
+          "primary_key": false,
+          "type": "varchar(64)",
+          "unique": false
+        },
+        {
+          "changeset": "0011-issue-dashboard",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 30,
+          "name": "product_number",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0011-issue-dashboard.yaml",
+          "primary_key": false,
+          "type": "varchar(32)",
+          "unique": false
+        },
+        {
+          "changeset": "0011-issue-dashboard",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 35,
+          "name": "reported_by",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0011-issue-dashboard.yaml",
+          "primary_key": false,
+          "type": "varchar(64)",
+          "unique": false
+        },
+        {
+          "changeset": "0011-issue-dashboard",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 40,
+          "name": "reported_at",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0011-issue-dashboard.yaml",
+          "primary_key": false,
+          "type": "timestamptz",
+          "unique": false
+        },
+        {
+          "changeset": "0011-issue-dashboard",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 45,
+          "name": "closed_at",
+          "nullable": null,
+          "path": "services/fulfillment/src/main/resources/db/changelog/0011-issue-dashboard.yaml",
+          "primary_key": false,
+          "type": "timestamptz",
+          "unique": false
+        },
+        {
+          "changeset": "0013-issue-dashboard-version",
+          "default": {
+            "kind": "numeric",
+            "value": "1"
+          },
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 16,
+          "name": "version",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0013-issue-dashboard-corrections.yaml",
+          "primary_key": false,
+          "type": "bigint",
+          "unique": false
+        }
+      ],
+      "evidence": [
+        "services/fulfillment/src/main/resources/db/changelog/0011-issue-dashboard.yaml:10"
+      ],
+      "line": 10,
+      "name": "issue_dashboard",
+      "path": "services/fulfillment/src/main/resources/db/changelog/0011-issue-dashboard.yaml"
+    },
+    {
+      "changeset": "0011-issue-dashboard-order",
+      "columns": [
+        {
+          "changeset": "0011-issue-dashboard-order",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 63,
+          "name": "processing_id",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0011-issue-dashboard.yaml",
+          "primary_key": true,
+          "type": "varchar(32)",
+          "unique": false
+        },
+        {
+          "changeset": "0011-issue-dashboard-order",
+          "default": {
+            "kind": "numeric",
+            "value": "1"
+          },
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 70,
+          "name": "version",
+          "nullable": "false",
+          "path": "services/fulfillment/src/main/resources/db/changelog/0011-issue-dashboard.yaml",
+          "primary_key": false,
+          "type": "bigint",
+          "unique": false
+        },
+        {
+          "changeset": "0011-issue-dashboard-order",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 76,
+          "name": "state",
+          "nullable": null,
+          "path": "services/fulfillment/src/main/resources/db/changelog/0011-issue-dashboard.yaml",
+          "primary_key": false,
+          "type": "varchar(32)",
+          "unique": false
+        },
+        {
+          "changeset": "0011-issue-dashboard-order",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 79,
+          "name": "assignee",
+          "nullable": null,
+          "path": "services/fulfillment/src/main/resources/db/changelog/0011-issue-dashboard.yaml",
+          "primary_key": false,
+          "type": "varchar(64)",
+          "unique": false
+        },
+        {
+          "changeset": "0013-issue-dashboard-order-lines",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": true,
+          "line": 29,
+          "name": "lines",
+          "nullable": null,
+          "path": "services/fulfillment/src/main/resources/db/changelog/0013-issue-dashboard-corrections.yaml",
+          "primary_key": false,
+          "type": "jsonb",
+          "unique": false
+        }
+      ],
+      "evidence": [
+        "services/fulfillment/src/main/resources/db/changelog/0011-issue-dashboard.yaml:60"
+      ],
+      "line": 60,
+      "name": "issue_dashboard_order",
+      "path": "services/fulfillment/src/main/resources/db/changelog/0011-issue-dashboard.yaml"
+    }
+  ]
+}

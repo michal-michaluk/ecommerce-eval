@@ -1,0 +1,32 @@
+---
+title: "<Service name> — Operations Manual"
+subtitle: "<one line: deploying, running and recovering the service>"
+version: "1.0"
+date: "<YYYY-MM-DD>"
+status: "Draft for review"
+audience: "The people who run the service: on call, deploying and recovering it"
+owner: "<owning team>"
+skip-lists: true
+table-density: true
+---
+
+<!-- Skeleton. No part dividers: a manual is read start to finish under pressure, so every
+     chapter is a top-level chapter and the numbering stays continuous. Deployment, telemetry and
+     revision history are generated; the rest is authored. An absent capability is a gap entry,
+     never advice. -->
+
+{{< include runbook/overview.md >}}
+
+{{< include generated/chapters/deployment.md >}}
+
+{{< include runbook/health.md >}}
+
+{{< include runbook/configuration.md >}}
+
+{{< include generated/chapters/telemetry.md >}}
+
+{{< include runbook/<failure-mode>.md >}}
+
+{{< include runbook/gaps.md >}}
+
+{{< include generated/chapters/revision-history.md >}}

@@ -1,0 +1,29 @@
+---
+title: "fulfillment — Business Guide"
+subtitle: "The business capability this service serves, and the rules by which it decides"
+version: "1.0"
+date: "2026-11-19"
+status: "Draft for review"
+audience: "Business analysts, product owners and auditors; no code knowledge assumed"
+owner: "fulfillment context team"
+---
+
+# Part I — The domain
+
+{{< include business/01-domain-overview.md >}}
+
+# Part II — The language
+
+{{< include business/02-glossary.md >}}
+
+# Part III — The rules
+
+{{< include business/03-business-rules.md >}}
+
+# Part IV — The processes
+
+{{< include business/04-process-maps.md >}}
+
+# Part V — Business impact
+
+{{< include business/05-business-impact.md >}}

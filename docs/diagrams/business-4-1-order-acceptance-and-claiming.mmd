@@ -1,0 +1,15 @@
+%% Order acceptance and claiming.
+%% Extracted from docs/business/04-process-maps.md section 4.1; rendered to SVG by docs/scripts/render-diagrams.py.
+flowchart TD
+  A["Checkout finishes an order"] --> B["POST /orders"]
+  B --> C{"order hash already known?"}
+  C -->|"no"| D["OrderProcessingStarted<br/>state pending"]
+  C -->|"duplicate"| E["200 duplicate: true<br/>no second processing"]
+  C -->|"conflict"| F["409 ORDER_HASH_CONFLICT"]
+  D --> G["GET /orders<br/>the employee sees the pending order"]
+  G --> H["POST /processing/{processingId}/assignment"]
+  H --> I{"one employee holds it already?"}
+  I -->|"no"| J["EmployeeAssigned<br/>state assigned"]
+  J --> K["warehouse reserve<br/>one allocation per position product"]
+  I -->|"other employee"| L["409 ALREADY_ASSIGNED"]
+  I -->|"same employee"| M["200, unchanged"]

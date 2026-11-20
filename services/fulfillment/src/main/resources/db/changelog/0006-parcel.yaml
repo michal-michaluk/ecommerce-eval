@@ -1,0 +1,85 @@
+databaseChangeLog:
+
+  # The identity of one parcel, minted the same way the processing's is: two registrations may run at once, and only a
+  # sequence gives both of them a number that is theirs (element 03 example, register D10).
+  - changeSet:
+      id: 0006-parcel-identity
+      author: michal.michaluk
+      changes:
+        - createSequence:
+            sequenceName: parcel_id_seq
+            startValue: 1
+            incrementBy: 1
+
+  # The parcel as a document snapshot: the aggregate's own snapshot in one JSONB column, plus the two columns a query reads
+  # without opening it — the processing the parcel carries (unique: one parcel per processing, register D10) and the leg it
+  # reached, which the status poll walks (element 03 RULE-5).
+  - changeSet:
+      id: 0006-parcel
+      author: michal.michaluk
+      changes:
+        - createTable:
+            tableName: parcel
+            columns:
+              - column:
+                  name: parcel_id
+                  type: varchar(32)
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: parcel_pkey
+                    nullable: false
+              - column:
+                  name: version
+                  type: bigint
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+              - column:
+                  name: processing_id
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: leg_state
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: snapshot
+                  type: jsonb
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: parcel
+            indexName: parcel_processing_idx
+            unique: true
+            columns:
+              - column:
+                  name: processing_id
+
+  # The carrier's printed document, stored as it came back: one row per parcel, and the bytes are the document we serve on a
+  # reprint rather than a field of the aggregate (element 06 RULE-9).
+  - changeSet:
+      id: 0006-parcel-label
+      author: michal.michaluk
+      changes:
+        - createTable:
+            tableName: parcel_label
+            columns:
+              - column:
+                  name: parcel_id
+                  type: varchar(32)
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: parcel_label_pkey
+                    nullable: false
+              - column:
+                  name: format
+                  type: varchar(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: document
+                  type: bytea
+                  constraints:
+                    nullable: false

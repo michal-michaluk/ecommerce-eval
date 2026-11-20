@@ -1,0 +1,16 @@
+databaseChangeLog:
+
+  # A resume carries the state the order was held from (register D12, element 09 H5) and this row cannot derive it: the
+  # list's packing facts land with their own node, so `positions_packed` is not yet the source of picking versus packed.
+  # `state` stays the derived value the wire serves; the restored fact is kept beside it so a claim after a lift cannot
+  # shadow it and so the enum name never has to be parsed out of a wire label.
+  - changeSet:
+      id: 0014-orders-list-restored-state
+      author: michal.michaluk
+      changes:
+        - addColumn:
+            tableName: orders_list
+            columns:
+              - column:
+                  name: restored_state
+                  type: varchar(255)

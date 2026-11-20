@@ -1,0 +1,165 @@
+# The shop-wide Postgres instance: ONE server, ONE superuser secret, one logical database per service.
+#
+# A service does not add a Deployment here — it appends one line to `databases.txt` in the
+# postgresql-init ConfigMap below and keeps its own credentials in its own `<service>-db` secret
+# (catalog: `catalog-db` in the service overlay, overridden to point at this instance).
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgresql-superuser
+  namespace: catalog
+  labels:
+    app: postgresql
+type: Opaque
+stringData:
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: postgres
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgresql-init
+  namespace: catalog
+  labels:
+    app: postgresql
+data:
+  # One line per logical database: <database>:<role>:<password>
+  # Add a service here. The role and password must match that service's own `<service>-db` secret.
+  databases.txt: |
+    catalog:catalog:catalog
+    fulfillment:fulfillment:fulfillment
+  # Runs once, on an empty data directory. Postgres has no CREATE DATABASE IF NOT EXISTS, so both
+  # the role and the database are looked up in the catalogs first; re-running is a no-op.
+  10-databases.sh: |
+    #!/bin/sh
+    set -eu
+    superuser="${POSTGRES_USER:-postgres}"
+    exists() { psql -v ON_ERROR_STOP=1 -U "$superuser" -d postgres -tAc "$1" | grep -qx 1; }
+    while IFS=: read -r database role password; do
+      case "${database}" in ''|'#'*) continue ;; esac
+      exists "SELECT 1 FROM pg_roles WHERE rolname = '${role}'" ||
+        psql -v ON_ERROR_STOP=1 -U "$superuser" -d postgres -c "CREATE ROLE ${role} LOGIN PASSWORD '${password}'"
+      exists "SELECT 1 FROM pg_database WHERE datname = '${database}'" ||
+        createdb -U "$superuser" -O "${role}" "${database}"
+      echo "database ${database} ready (owner ${role})"
+    done < /docker-entrypoint-initdb.d/databases.txt
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgresql
+  namespace: catalog
+  labels:
+    app: postgresql
+spec:
+  selector:
+    app: postgresql
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgresql
+  namespace: catalog
+  labels:
+    app: postgresql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgresql
+  template:
+    metadata:
+      labels:
+        app: postgresql
+    spec:
+      securityContext:
+        # The postgres image ships the `postgres` user as 999:999.
+        runAsNonRoot: true
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: postgres
+          image: docker.io/library/postgres:16
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 999
+            runAsGroup: 999
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: postgres
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgresql-superuser
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgresql-superuser
+                  key: POSTGRES_PASSWORD
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          # TCP readiness, not socket readiness: during the initdb scripts the temporary server
+          # listens on the unix socket only, so this probe only turns green once every database in
+          # databases.txt exists and the real server accepts connections.
+          readinessProbe:
+            exec:
+              command: ["/bin/sh", "-c", "pg_isready -h 127.0.0.1 -U \"$POSTGRES_USER\" -d postgres"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 60
+          livenessProbe:
+            exec:
+              command: ["/bin/sh", "-c", "pg_isready -h 127.0.0.1 -U \"$POSTGRES_USER\" -d postgres"]
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            timeoutSeconds: 3
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "1"
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+            - name: run
+              mountPath: /var/run/postgresql
+            - name: tmp
+              mountPath: /tmp
+            - name: init
+              mountPath: /docker-entrypoint-initdb.d
+              readOnly: true
+      volumes:
+        - name: data
+          emptyDir: {}
+        - name: run
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
+        - name: init
+          configMap:
+            name: postgresql-init
+            # Executable, so the entrypoint runs the script in a subshell instead of sourcing it
+            # (a sourced script would leak `set -e` into the entrypoint).
+            defaultMode: 0755

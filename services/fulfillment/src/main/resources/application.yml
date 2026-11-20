@@ -1,0 +1,72 @@
+spring:
+  application.name: fulfillment
+  datasource:
+    driverClassName: org.postgresql.Driver
+    hikari:
+      maximumPoolSize: 15
+  jpa:
+    hibernate.ddl-auto: none
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    properties:
+      hibernate.type.json_format_mapper: shop.fulfillment.tools.Jackson3JsonFormatMapper
+  liquibase:
+    change-log: classpath:db/db.changelog.yaml
+  kafka.consumer:
+    group-id: fulfillment-default
+    auto-offset-reset: earliest
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${JWT_ISSUER_URI:https://keycloak.auth/realms/iot}
+
+server:
+  shutdown: graceful
+  error:
+    include-message: never
+
+# The warehouse boundary (element 13). `url` and `token` are deliberately absent from this file: they are the deployment's
+# secret and arrive as FULFILLMENT_WAREHOUSE_URL / FULFILLMENT_WAREHOUSE_TOKEN (or as the properties below). A deployment
+# that sets no token gets no warehouse adapter at all — the service boots and every claim answers WAREHOUSE_NOT_WIRED
+# rather than reserving nothing (element 13 RULE-7, spec D14).
+fulfillment:
+  # The carrier boundary (element 14). `url`, `token` and the sender block are deliberately absent from this file: they are
+  # the deployment's data and arrive as FULFILLMENT_CARRIER_URL / FULFILLMENT_CARRIER_TOKEN and the sender's own properties.
+  # A deployment that sets no token gets no carrier adapter at all — the service boots and the first command that needs the
+  # carrier is refused with CARRIER_NOT_WIRED rather than pretending it reached anybody (element 14, spec D14).
+  carrier:
+    # The weight of one parcel in grams, used until a measurement source exists (element 03 RULE-6, UND-06).
+    weight-grams: ${FULFILLMENT_CARRIER_WEIGHT_GRAMS:1000}
+    # How often the delivery legs are polled; the first carrier publishes no push (element 14).
+    poll-interval: ${FULFILLMENT_CARRIER_POLL_INTERVAL:60s}
+  # Element 10's two variants: the walk order and the quantity split. Both are defaults until a deployment selects
+  # otherwise, and an unknown value falls back to the default rather than failing a read.
+  picklist:
+    order: ${FULFILLMENT_PICKLIST_ORDER:location-code}
+    split: ${FULFILLMENT_PICKLIST_SPLIT:multi-location}
+  warehouse:
+    page-size: ${FULFILLMENT_WAREHOUSE_PAGE_SIZE:100}
+    # How often the stock-change read polls the warehouse; the warehouse cannot notify us (element 13 RULE-6).
+    poll-interval: ${FULFILLMENT_WAREHOUSE_POLL_INTERVAL:60s}
+
+management:
+  metrics.export.prometheus.enabled: true
+  endpoint.env.enabled: true
+  endpoints.web.exposure.include: "health,info,env,prometheus"
+
+logging.level:
+  org.apache.catalina.startup.DigesterFactory: ERROR
+  org.apache.catalina.util.LifecycleBase: ERROR
+  org.apache.coyote.http11.Http11NioProtocol: WARN
+  org.apache.sshd.common.util.SecurityUtils: WARN
+  org.apache.tomcat.util.net.NioSelectorPool: WARN
+  org.eclipse.jetty.util.component.AbstractLifeCycle: ERROR
+  org.hibernate.validator.internal.util.Version: WARN
+  org.springframework.boot.actuate.endpoint.jmx: WARN
+  org.springframework.web: INFO
+  org.apache.kafka: WARN
+  org.apache.kafka.clients.consumer.ConsumerConfig: INFO
+  org.apache.kafka.clients.producer.ProducerConfig: INFO
+  org.apache.kafka.clients.admin.AdminClientConfig: INFO
+  org.apache.kafka.common.utils.AppInfoParser: INFO
+  org.apache.kafka.streams.StreamsConfig: INFO

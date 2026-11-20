@@ -1,0 +1,22 @@
+databaseChangeLog:
+
+  # The parcel an order is carried by, lifted out of the JSONB snapshot into a column: the status poll raises a leg against the
+  # parcel's identity and the order that consumes the last leg is addressed by its processing id, so the column is what makes
+  # `findByParcelId` a query instead of a full scan (element 03's snapshot stays the storage shape).
+  - changeSet:
+      id: 0008-order-processing-parcel
+      author: michal.michaluk
+      changes:
+        - addColumn:
+            tableName: order_processing
+            columns:
+              - column:
+                  name: parcel_id
+                  type: varchar(32)
+        - createIndex:
+            tableName: order_processing
+            indexName: order_processing_parcel_idx
+            unique: true
+            columns:
+              - column:
+                  name: parcel_id

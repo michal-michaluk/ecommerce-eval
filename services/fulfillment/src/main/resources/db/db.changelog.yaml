@@ -1,0 +1,69 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: 0001-features-configuration
+      author: michal.michaluk
+      changes:
+        - createTable:
+            tableName: features_configuration
+            columns:
+              - column:
+                  name: name
+                  type: varchar(255)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: configuration
+                  type: jsonb
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 0002-template-placeholder
+      author: template
+      changes:
+        - tagDatabase:
+            tag: template-generated
+
+  # One fragment per bounded context: a context owns its own file, so two nodes
+  # never edit the same changelog.
+  - include:
+      file: db/changelog/0003-order-processing.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/0004-orders-list.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/0005-warehouse-state.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/0006-parcel.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/0007-customer-state.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/0008-order-processing-parcel.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/0009-processing-issues.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/0010-processing-reservation.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/0011-issue-dashboard.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/0012-orders-list-held.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/0013-issue-dashboard-corrections.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/0014-orders-list-restored-state.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/0015-orders-list-progress.yaml
+      relativeToChangelogFile: false

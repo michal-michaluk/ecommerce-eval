@@ -1,0 +1,83 @@
+databaseChangeLog:
+
+  # Element 17's read model: one row per issue and one row per held order. The dashboard is fed by the domain events and reads
+  # no write model, so the facts the resolver needs — the kind, the product, who reported it and when — are its own columns.
+  - changeSet:
+      id: 0011-issue-dashboard
+      author: michal.michaluk
+      changes:
+        - createTable:
+            tableName: issue_dashboard
+            columns:
+              - column:
+                  name: issue_id
+                  type: varchar(32)
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: issue_dashboard_pkey
+                    nullable: false
+              - column:
+                  name: processing_id
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: kind
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: product_number
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: reported_by
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: reported_at
+                  type: timestamptz
+                  constraints:
+                    nullable: false
+              - column:
+                  name: closed_at
+                  type: timestamptz
+        - createIndex:
+            tableName: issue_dashboard
+            indexName: issue_dashboard_processing_idx
+            columns:
+              - column:
+                  name: processing_id
+
+  # The order side of one group: its state, who holds it, and the handover payload the product name is read from.
+  - changeSet:
+      id: 0011-issue-dashboard-order
+      author: michal.michaluk
+      changes:
+        - createTable:
+            tableName: issue_dashboard_order
+            columns:
+              - column:
+                  name: processing_id
+                  type: varchar(32)
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: issue_dashboard_order_pkey
+                    nullable: false
+              - column:
+                  name: version
+                  type: bigint
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+              - column:
+                  name: state
+                  type: varchar(32)
+              - column:
+                  name: assignee
+                  type: varchar(64)
+              - column:
+                  name: order_document
+                  type: jsonb

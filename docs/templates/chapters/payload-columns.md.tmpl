@@ -1,0 +1,22 @@
+{% import "partials/macros.md.tmpl" as m -%}
+{% include "partials/banner.md.tmpl" %}
+{{ m.evidence(json_columns | map(attribute="evidence") | sum(start=[]) | unique | list) }}
+
+| Table | Column |
+|---|---|
+{% for column in json_columns -%}
+| {{ m.code(column.table) }} | {{ m.code(column.column) }} |
+{% endfor %}
+
+: Columns that hold a JSONB payload.
+
+
+{{ m.evidence(examples | map(attribute="evidence") | sum(start=[]) | unique | list) }}
+
+| Example | Field paths |
+|---|---|
+{% for example in examples -%}
+| Example {{ example.index }} | {{ m.codes(example.field_paths) if example.field_paths else 'not machine-parseable' }} |
+{% endfor %}
+
+: Field paths present in each example payload.

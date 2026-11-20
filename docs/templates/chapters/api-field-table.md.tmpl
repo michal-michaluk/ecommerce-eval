@@ -1,0 +1,6 @@
+{% import "partials/api.md.tmpl" as a -%}
+| Field | Type | Format | Required | Constraints | Description |
+|---|---|---|---|---|---|
+{% for row in field_rows -%}
+| {{ a.cell(row.path) }} | {{ a.type(row) }} | {{ a.cell(row.format) }} | {{ a.required(row.required) }} | {{ a.constraints(row) }} | {{ a.cell(row.description) }} |
+{% endfor %}

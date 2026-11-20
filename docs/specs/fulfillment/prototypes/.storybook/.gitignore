@@ -1,0 +1,3 @@
+# deps are symlinked from services/catalog/.storybook/node_modules — the root pattern `**/.storybook/node_modules/`
+# only matches a directory, so the symlink needs its own rule
+node_modules
