@@ -36,7 +36,7 @@ Estimate = { kind: estimate | unknown,
 
 | Key | Meaning | Default (D7 — no invented numbers) |
 |---|---|---|
-| `basket.estimate.defaultDays` | the estimate, in **calendar** days from `today` | **`{ from: 2, to: 4 }` — hardcoded by decision (D36)**: the estimate is `today + 2 days` … `today + 4 days` |
+| `basket.estimate.defaultDays` | the estimate, in **calendar** days from `today` | **`{ from: 2, to: 4 }` — fixed by decision (D36)** and shipped in `application.yml` as `basket.estimate.default-days`. The policy's `defaultEstimate()` states the same pair as an explicit `policy.explicit-default`, but **no default is applied when the deployment omits the key**: an absent key answers `unknown` (I5), never `2 … 4` (D58) |
 | `basket.estimate.zone` | the zone whose `today` the range counts from | **`Europe/Warsaw`** (D43) — the customer's calendar day, not UTC |
 | `basket.estimate.fallback` | what to return when configuration is missing | `unknown` |
 
@@ -56,12 +56,12 @@ Estimate = { kind: estimate | unknown,
 
 | ID | Question | Recommendation |
 |---|---|---|
-| Q21 **answered (D24/D36)** | Is the estimate a day range, a single date, or an hour window? | Answered: **inclusive day range**, hardcoded as `now + 2` … `now + 4` days — no algorithm is built in this increment |
+| Q21 **answered (D24/D36/D58)** | Is the estimate a day range, a single date, or an hour window? | Answered: **inclusive day range**, `now + 2` … `now + 4` days supplied as configuration — no algorithm is built in this increment |
 | Q22 **answered (D24)** | What is shown when the estimate is `unknown`? | Answered: **hide the information** — `kind: unknown` renders nothing; `Razem z dostawą` from element 04 stays |
 
 ## Recommendations
 
-1. **Ship the interface with `unknown` implemented and the 2–4 day range hardcoded behind it** (D36) — the constant satisfies D16 and lets the real algorithm (#71) drop in without touching the view or the API.
+1. **Ship the interface with `unknown` implemented and the 2–4 day range fixed by D36, supplied as configuration** (D58) — the constant satisfies D16 and lets the real algorithm (#71) drop in without touching the view or the API.
 2. **Do not let the estimate feed the price** — `Dostawa od 9,99 zł` comes from `DeliveryRate` (element 04); the estimate only says *when*.
-3. **The 2–4 day range is a decision, not a measurement** (D36): it is hardcoded so the shape is testable; issue #71 may replace the constant with the real policy.
+3. **The 2–4 day range is a decision, not a measurement** (D36/D58): it is configuration so the shape is testable; issue #71 may replace the constant with the real policy.
 4. **The staleness of `now`** — compute against a request-scoped clock, never a cached one, or a basket left open overnight will show yesterday's range.

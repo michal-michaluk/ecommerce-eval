@@ -14,7 +14,7 @@
 3. `ChangeBasketQuantity` — ± stepper; **not on the board**, required by transcript 63 and `basket.json` (R4).
 4. `BasketContent` — per-seller shipment groups; item = title, one picture, price, attributes.
 5. `BasketPriceCalculation` — "current price of basket including discounts" (board policy).
-6. `BasketDeliveryEstimate` — "delivery time calculation policy"; hardcoded `now + 2 … now + 4` days (D36), no out-of-stock range.
+6. `BasketDeliveryEstimate` — "delivery time calculation policy"; `now + 2 … now + 4` days fixed by D36 and supplied as configuration (D58), no out-of-stock range.
 7. `OfferAvailabilityDecision` — `available` / `outOfStock` / `unavailable`; every non-available status blocks handover (D33).
 8. `BasketSelection` — per item / per shipment / whole basket, used by remove and by checkout.
 9. `CheckoutHandover` — `go to checkout` passes the selected content to the checkout slice (D4).
