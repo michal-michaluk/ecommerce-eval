@@ -205,6 +205,7 @@ Session: `2026-11-26T20:18:12Z` · branch `feat/basket` off `main` @ `62fed7a` �
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/shopping && ./gradlew build`
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/shopping && ./gradlew test --tests '*Architecture*'`
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/shopping && sqt check .`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/shopping && ./gradlew jacocoTestCoverageVerification --console=plain --rerun-tasks | tee /tmp/jacoco.log; ! grep -q 'SKIPPED' /tmp/jacoco.log`
 - **review_prompt:** Review the work in /Users/michal/workspace/bottega-ai-mind/eval/ecommerce; do not inspect any other repository. Report every way a gate was satisfied rather than met: a lowered jacoco minimum or a widened exclusion list, an excluded package, `allowEmptyShould(true)` on a non-empty layer, a weakened or deleted ArchUnit rule, a disabled SpotBugs filter, a suppressed sqt rule, `@Generated` or `lombok.Generated` abuse in coverage. Verify the specific rows: coverage ≥ 80 % INSTRUCTION, `basket` references no `checkout` type, `structure.slice-package-private` holds for both slices, no `reserve*` operation exists (DoD17). If a premise below is false, say so and stop. Do not edit files — report only.
 
 ### Prove of done
