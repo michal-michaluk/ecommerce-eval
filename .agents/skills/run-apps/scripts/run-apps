@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""run-apps — the shop-wide local k3s environment, with the catalog service as its first tenant.
+"""run-apps — the shop-wide local k3s environment, with one namespace per service in it.
 
-The cluster (`shop-k3s`, k3s in a privileged podman container) and the Postgres instance
-(`postgresql`) are shop-wide: one server, one superuser secret, one logical database per service
-(from `databases.txt` in manifests/infra/postgres.yaml). Kafka, Keycloak with the `catalog` realm,
-the catalog image built by Jib, and one host port-forward that makes the service reachable at
-http://127.0.0.1:8080 stay per service.
+Two services live in it: `catalog` (realm `catalog`, http://127.0.0.1:8080) and `fulfillment`
+(realm `iot`, http://127.0.0.1:8081). The cluster (`shop-k3s`, k3s in a privileged podman
+container), the Postgres instance (`postgresql`) and one Keycloak holding both realms are
+shop-wide: one server, one superuser secret, one logical database per service (from `databases.txt`
+in manifests/infra/postgres.yaml). The image built by Jib, the namespace, the Deployment, one host
+port-forward and one realm stay per service.
 
 Every command is idempotent and bounded: no `kubectl logs -f`, no `kubectl get -w`, every wait carries
 a timeout and on timeout prints the state it timed out on. Managed host-side processes (the
@@ -15,6 +16,7 @@ port-forwards) are recorded in .agents/runtime/processes.json.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import platform
@@ -27,35 +29,35 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 SKILL_DIR = Path(__file__).resolve().parent.parent
 WORKSPACE = SKILL_DIR.parents[2]
-SERVICE = WORKSPACE / "services/catalog"
+SERVICES = WORKSPACE / "services"
 MANIFESTS = SKILL_DIR / "manifests"
 RUNTIME = WORKSPACE / ".agents/runtime"
 STATE_FILE = RUNTIME / "processes.json"
 KUBECONFIG = RUNTIME / "kubeconfig-shop.yaml"
 LOG_DIR = RUNTIME / "logs"
+TOKENS_ENV = RUNTIME / "tokens.env"
+LEGACY_TOKEN_FILES = (RUNTIME / "catalog-tokens.env",)
 
 CLUSTER = "shop-k3s"
 # Before the shop-wide rename the cluster was per service. A machine that still carries the old one
 # must never end up with two clusters: `deploy` and `stop` reuse this list.
 LEGACY_CLUSTERS = ("catalog-k3s",)
 LEGACY_KUBECONFIGS = (RUNTIME / "kubeconfig-catalog.yaml",)
+STATE_VERSION = 2
+# The shared infra lives in one namespace: postgresql, kafka, keycloak.
 NAMESPACE = "catalog"
 POSTGRES = "postgresql"
+KEYCLOAK_SERVICE = "catalog-keycloak"
+KEYCLOAK_REALMS = "keycloak-realm"
 K3S_IMAGE = "docker.io/rancher/k3s:v1.35.5-k3s1"
 API_PORT = 6443
-APP_PORT = 8080
 KEYCLOAK_PORT = 18081
-APP_IMAGE = "catalog:latest"
-APP_DEPLOYMENT = "catalog"
-APP_SUITE = SERVICE / "e2e/catalog-http-api.hurl"
-REALM = "catalog"
-REALM_DOCUMENT = SERVICE / "src/test/resources/catalog-realm.json"
-USERS = ("author", "reviewer", "photographer", "sales")
 INFRA_DEPLOYMENTS = (POSTGRES, "kafka", "keycloak")
 
 T_NODE_READY = 180
@@ -68,6 +70,136 @@ T_HURL = 1800
 
 class Fail(Exception):
     """A step that cannot continue: the message is the diagnostic the operator needs."""
+
+
+@dataclass(frozen=True)
+class App:
+    """One tenant of the shop-wide environment: its own namespace, image, forward row and realm."""
+
+    name: str
+    port: int
+    realm: str
+    suite: str
+    users: tuple[tuple[str, str], ...]
+    variables: tuple[tuple[str, str], ...]
+    realm_documents: tuple[Path, ...]
+    warmup: tuple[str, str]
+    dates: bool = False
+    service_port: int = 80
+
+    @property
+    def namespace(self) -> str:
+        return self.name
+
+    @property
+    def deployment(self) -> str:
+        return self.name
+
+    @property
+    def service(self) -> str:
+        return self.name
+
+    @property
+    def image(self) -> str:
+        return f"{self.name}:latest"
+
+    @property
+    def directory(self) -> Path:
+        return SERVICES / self.name
+
+    @property
+    def tar(self) -> Path:
+        return self.directory / "build/jib-image.tar"
+
+    @property
+    def manifest(self) -> Path:
+        return MANIFESTS / self.name
+
+    @property
+    def forward(self) -> str:
+        return f"{self.name}-app"
+
+    @property
+    def url(self) -> str:
+        return f"http://127.0.0.1:{self.port}"
+
+    @property
+    def health_url(self) -> str:
+        return f"{self.url}/actuator/health"
+
+    def realm_document(self) -> Path:
+        for candidate in self.realm_documents:
+            if candidate.exists():
+                return candidate
+        raise Fail(
+            f"no realm document for {self.name}: tried "
+            + ", ".join(str(candidate.relative_to(WORKSPACE)) for candidate in self.realm_documents)
+        )
+
+
+CATALOG = App(
+    name="catalog",
+    port=8080,
+    realm="catalog",
+    suite="e2e/healthcheck.hurl",
+    users=(
+        ("author", "catalog-author-client"),
+        ("reviewer", "catalog-reviewer-client"),
+        ("photographer", "catalog-photographer-client"),
+        ("sales", "catalog-sales-client"),
+    ),
+    variables=(
+        ("author_token", "author"),
+        ("reviewer_token", "reviewer"),
+        ("photographer_token", "photographer"),
+        ("sales_token", "sales"),
+    ),
+    # The service's own document wins; `main` does not carry it (it is on feat/catalog-domain-model),
+    # so the skill vendors the same document and the deploy works on either branch.
+    realm_documents=(
+        SERVICES / "catalog/src/test/resources/catalog-realm.json",
+        MANIFESTS / "realms/catalog-realm.json",
+    ),
+    warmup=("/actuator/info", "author"),
+    dates=True,
+)
+
+FULFILLMENT = App(
+    name="fulfillment",
+    port=8081,
+    realm="iot",
+    suite="e2e/fulfillment-api.hurl",
+    users=(
+        ("employee", "fulfillment-employee-client"),
+        ("other-employee", "fulfillment-employee-client"),
+        ("resolver", "fulfillment-resolver-client"),
+        ("customer", "fulfillment-customer-client"),
+        ("shopping", "shopping-service-client"),
+    ),
+    variables=(
+        ("shoppingToken", "shopping"),
+        ("employeeToken", "employee"),
+        ("otherEmployeeToken", "other-employee"),
+        ("resolverToken", "resolver"),
+        ("customerToken", "customer"),
+    ),
+    realm_documents=(SERVICES / "fulfillment/src/test/resources/iot-realm.json",),
+    warmup=("/orders", "employee"),
+)
+
+APPS = {app.name: app for app in (CATALOG, FULFILLMENT)}
+APP_ORDER = ("catalog", "fulfillment")
+
+
+def app_named(name: str) -> App:
+    if name not in APPS:
+        raise Fail(f"unknown service {name!r}; this environment manages {', '.join(APP_ORDER)}")
+    return APPS[name]
+
+
+def targets(name: str | None) -> list[App]:
+    """No argument means both services, in a fixed order."""
+    return [app_named(name)] if name else [APPS[service] for service in APP_ORDER]
 
 
 # ── process plumbing ──────────────────────────────────────────────────────────────────────────────
@@ -114,24 +246,28 @@ def ok(message: str) -> None:
 
 def empty_state() -> dict:
     return {
-        "version": 1,
+        "version": STATE_VERSION,
         "cluster": None,
         "hostProcesses": {},
-        "services": {APP_DEPLOYMENT: {"image": APP_IMAGE}},
+        "services": {name: {"image": APPS[name].image} for name in APP_ORDER},
+        "realmsHash": None,
         "auth": None,
         "updatedAt": None,
     }
 
 
 def load_state() -> dict:
-    if not STATE_FILE.exists():
-        return empty_state()
-    try:
-        state = json.loads(STATE_FILE.read_text())
-    except (OSError, json.JSONDecodeError):
-        return empty_state()
     base = empty_state()
-    base.update(state)
+    if not STATE_FILE.exists():
+        return base
+    try:
+        stored = json.loads(STATE_FILE.read_text())
+    except (OSError, json.JSONDecodeError):
+        return base
+    base.update(stored)
+    base["version"] = STATE_VERSION
+    base["hostProcesses"] = dict(stored.get("hostProcesses") or {})
+    base["services"] = {**empty_state()["services"], **(stored.get("services") or {})}
     return base
 
 
@@ -207,7 +343,7 @@ def ensure_cluster() -> None:
         "--disable=traefik", "--disable=servicelb", "--disable=metrics-server",
         "--write-kubeconfig-mode=644", "--tls-san=127.0.0.1",
         # The podman machine is a shared 100 GiB disk that other work also fills. k3s defaults to
-        # evicting at 5 % free (5 GiB here), which is more than these five pods can ever use; a 1 GiB
+        # evicting at 5 % free (5 GiB here), which is more than these pods can ever use; a 1 GiB
         # floor still leaves the node honest about a genuinely full disk without evicting the stack.
         "--kubelet-arg=eviction-hard=imagefs.available<1Gi,nodefs.available<1Gi",
         timeout=180,
@@ -301,14 +437,14 @@ def wait_node_ready(timeout: int = T_NODE_READY) -> None:
     raise Fail(f"node not Ready after {timeout}s ({detail})\n{tail((logs.stdout or '') + (logs.stderr or ''))}")
 
 
-def rollout_status(deployment: str, timeout: int = T_ROLLOUT) -> None:
+def rollout_status(namespace: str, deployment: str, timeout: int = T_ROLLOUT) -> None:
     done = kubectl(
-        "-n", NAMESPACE, "rollout", "status", f"deployment/{deployment}",
+        "-n", namespace, "rollout", "status", f"deployment/{deployment}",
         f"--timeout={timeout}s", check=False, timeout=timeout + 30,
     )
     if done.returncode != 0:
-        raise Fail(f"deployment/{deployment} did not become Ready\n{diagnose(deployment)}")
-    ok(f"deployment/{deployment} Ready")
+        raise Fail(f"deployment/{deployment} in {namespace} did not become Ready\n{diagnose(namespace, deployment)}")
+    ok(f"deployment/{deployment} Ready ({namespace})")
 
 
 def disk_free_gib() -> float | None:
@@ -341,27 +477,30 @@ def node_conditions() -> str:
     return tail(found.stdout or "", 5)
 
 
-def diagnose(deployment: str) -> str:
+def diagnose(namespace: str, deployment: str) -> str:
     parts = [node_conditions()]
-    pods = kubectl("-n", NAMESPACE, "get", "pods", "-l", f"app={deployment}", "-o", "wide", check=False, timeout=30)
+    pods = kubectl("-n", namespace, "get", "pods", "-l", f"app={deployment}", "-o", "wide", check=False, timeout=30)
     parts.append(tail(pods.stdout or "", 10))
-    for pod in pod_names(f"app={deployment}"):
-        described = kubectl("-n", NAMESPACE, "describe", "pod", pod, check=False, timeout=30)
+    for pod in pod_names(namespace, f"app={deployment}"):
+        described = kubectl("-n", namespace, "describe", "pod", pod, check=False, timeout=30)
         events = [line for line in (described.stdout or "").splitlines() if line.startswith("  ") and ":" in line]
         parts.append(f"--- {pod} events ---\n" + tail("\n".join(events), 12))
-        logged = kubectl("-n", NAMESPACE, "logs", pod, "--tail", "30", check=False, timeout=60)
+        logged = kubectl("-n", namespace, "logs", pod, "--tail", "30", check=False, timeout=60)
         parts.append(f"--- {pod} logs ---\n" + tail((logged.stdout or "") + (logged.stderr or ""), 30))
     return "\n".join(p for p in parts if p.strip())
 
 
-def pod_names(selector: str) -> list[str]:
-    found = kubectl("-n", NAMESPACE, "get", "pods", "-l", selector, "-o", "jsonpath={.items[*].metadata.name}",
-                    check=False, timeout=30)
+def pod_names(namespace: str, selector: str) -> list[str]:
+    command = ["-n", namespace, "get", "pods"]
+    if selector:
+        command += ["-l", selector]
+    command += ["-o", "jsonpath={.items[*].metadata.name}"]
+    found = kubectl(*command, check=False, timeout=30)
     return (found.stdout or "").split()
 
 
-def pod_phase(selector: str) -> str:
-    found = kubectl("-n", NAMESPACE, "get", "pods", "-l", selector, "-o",
+def pod_phase(namespace: str, selector: str) -> str:
+    found = kubectl("-n", namespace, "get", "pods", "-l", selector, "-o",
                     "jsonpath={.items[*].status.phase}", check=False, timeout=30)
     return " ".join((found.stdout or "").split())
 
@@ -379,8 +518,8 @@ def http_get(url: str, timeout: int = 5) -> tuple[int, str]:
         return 0, str(unreachable)
 
 
-def health() -> tuple[bool, str]:
-    status, body = http_get(f"http://127.0.0.1:{APP_PORT}/actuator/health")
+def health(app: App) -> tuple[bool, str]:
+    status, body = http_get(app.health_url)
     try:
         verdict = json.loads(body).get("status", "")
     except json.JSONDecodeError:
@@ -398,16 +537,29 @@ def answers(url: str, timeout: int = 15) -> bool:
     return False
 
 
-def wait_health(timeout: int = T_HEALTH) -> None:
+def forward_alive(name: str) -> bool:
+    entry = load_state()["hostProcesses"].get(name) or {}
+    return pid_alive(int(entry.get("pid", 0)))
+
+
+def wait_health(app: App, timeout: int = T_HEALTH) -> None:
     deadline = time.time() + timeout
     last = ""
+    recovered = False
     while time.time() < deadline:
-        healthy, last = health()
+        healthy, last = health(app)
         if healthy:
-            ok(f"GET /actuator/health → {last} on http://127.0.0.1:{APP_PORT}")
+            ok(f"GET /actuator/health → {last} on {app.url}")
             return
+        if not recovered and not forward_alive(app.forward):
+            # A rollout replaces the pod, and kubectl's forward dies with it (`lost connection to
+            # pod`); the health of the new pod is what this wait is for.
+            print(f"    {app.name}: the port-forward died with the old pod — restarting it", flush=True)
+            ensure_forward(app.forward, app.namespace, app.port, f"svc/{app.service}", app.service_port)
+            recovered = True
+            continue
         time.sleep(3)
-    raise Fail(f"health not UP after {timeout}s (last {last or 'no answer'})\n{diagnose(APP_DEPLOYMENT)}")
+    raise Fail(f"{app.name} health not UP after {timeout}s (last {last or 'no answer'})\n{diagnose(app.namespace, app.deployment)}")
 
 
 # ── host-side port-forwards ────────────────────────────────────────────────────────────────────
@@ -473,12 +625,13 @@ def stop_forwards(state: dict) -> list[str]:
     return stopped
 
 
-def ensure_forward(name: str, local: int, target: str, remote: int, health_url: str | None = None) -> dict:
+def ensure_forward(name: str, namespace: str, local: int, target: str, remote: int,
+                   health_url: str | None = None) -> dict:
     state = load_state()
     entry = state["hostProcesses"].get(name)
     if entry and pid_alive(int(entry["pid"])):
         if health_url is None or answers(health_url):
-            ok(f"{name}: http://127.0.0.1:{local} → {target}:{remote} already up (pid {entry['pid']})")
+            ok(f"{name}: http://127.0.0.1:{local} → {namespace}/{target}:{remote} already up (pid {entry['pid']})")
             return entry
         print(f"    {name} on {local} is alive but not answering for 15s — restarting it", flush=True)
         terminate(int(entry["pid"]))
@@ -493,13 +646,14 @@ def ensure_forward(name: str, local: int, target: str, remote: int, health_url: 
     log_path = LOG_DIR / f"port-forward-{name}.log"
     handle = open(log_path, "wb")
     process = subprocess.Popen(
-        ["kubectl", "--kubeconfig", str(KUBECONFIG), "-n", NAMESPACE, "port-forward", target, f"{local}:{remote}"],
+        ["kubectl", "--kubeconfig", str(KUBECONFIG), "-n", namespace, "port-forward", target, f"{local}:{remote}"],
         stdout=handle, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, start_new_session=True,
     )
     handle.close()
     entry = {
         "pid": process.pid,
         "localPort": local,
+        "namespace": namespace,
         "target": target,
         "remotePort": remote,
         "url": f"http://127.0.0.1:{local}",
@@ -512,15 +666,15 @@ def ensure_forward(name: str, local: int, target: str, remote: int, health_url: 
     deadline = time.time() + T_FORWARD
     while time.time() < deadline:
         if process.poll() is not None:
-            raise Fail(f"port-forward {target} → {local} exited\n{tail(log_path.read_text(errors='replace'))}")
+            raise Fail(f"port-forward {namespace}/{target} → {local} exited\n{tail(log_path.read_text(errors='replace'))}")
         if health_url and http_get(health_url)[0] in (200, 401):
-            ok(f"{name}: http://127.0.0.1:{local} → {target}:{remote} (pid {process.pid})")
+            ok(f"{name}: http://127.0.0.1:{local} → {namespace}/{target}:{remote} (pid {process.pid})")
             return entry
         if health_url is None:
-            ok(f"{name}: http://127.0.0.1:{local} → {target}:{remote} (pid {process.pid})")
+            ok(f"{name}: http://127.0.0.1:{local} → {namespace}/{target}:{remote} (pid {process.pid})")
             return entry
         time.sleep(1)
-    raise Fail(f"port-forward {target} → {local} did not answer within {T_FORWARD}s\n{tail(log_path.read_text(errors='replace'))}")
+    raise Fail(f"port-forward {namespace}/{target} → {local} did not answer within {T_FORWARD}s\n{tail(log_path.read_text(errors='replace'))}")
 
 
 # ── ports ──────────────────────────────────────────────────────────────────────────────────────
@@ -556,37 +710,68 @@ def free_ports(ports: tuple[int, ...]) -> tuple[list[str], list[str]]:
 # ── infra and app manifests ───────────────────────────────────────────────────────────────────
 
 
-def ensure_namespace() -> None:
-    document = kubectl("create", "namespace", NAMESPACE, "--dry-run=client", "-o", "yaml", timeout=30).stdout
+def ensure_namespace(namespace: str) -> None:
+    document = kubectl("create", "namespace", namespace, "--dry-run=client", "-o", "yaml", timeout=30).stdout
     kubectl("apply", "-f", "-", input=document, timeout=60)
 
 
-def ensure_realm_configmap() -> None:
-    if not REALM_DOCUMENT.exists():
-        raise Fail(f"the realm document is missing: {REALM_DOCUMENT}")
+def ensure_realm_configmap() -> str:
+    """One Keycloak, one ConfigMap, one realm document per service. `--import-realm` reads the
+    directory the ConfigMap is mounted into, so both realms come up together."""
+    sources = [f"--from-file={APPS[name].realm_document().name}={APPS[name].realm_document()}" for name in APP_ORDER]
     rendered = kubectl(
-        "-n", NAMESPACE, "create", "configmap", "keycloak-realm",
-        f"--from-file=catalog-realm.json={REALM_DOCUMENT}", "--dry-run=client", "-o", "yaml", timeout=60,
+        "-n", NAMESPACE, "create", "configmap", KEYCLOAK_REALMS, *sources,
+        "--dry-run=client", "-o", "yaml", timeout=60,
     )
     kubectl("apply", "-f", "-", input=rendered.stdout, timeout=60)
-    ok(f"realm {REALM} from {REALM_DOCUMENT.relative_to(WORKSPACE)}")
+    digest = hashlib.sha256(rendered.stdout.encode()).hexdigest()[:12]
+    ok(f"realms {', '.join(APPS[name].realm for name in APP_ORDER)} in {KEYCLOAK_REALMS} ({digest})")
+    return digest
 
 
 def apply_infra() -> None:
-    ensure_namespace()
-    ensure_realm_configmap()
+    ensure_namespace(NAMESPACE)
+    digest = ensure_realm_configmap()
     kubectl("apply", "-f", MANIFESTS / "infra", timeout=120)
     ok("manifests/infra applied (postgresql with one database per service, kafka, keycloak)")
+    state = load_state()
+    exists = kubectl("-n", NAMESPACE, "get", "deployment", "keycloak", check=False, timeout=30).returncode == 0
+    if exists and state["realmsHash"] not in (None, digest):
+        # `--import-realm` reads the directory only at startup and skips a realm that already exists,
+        # so a changed realm set is applied by restarting the one Keycloak.
+        print("    the realm documents changed — restarting keycloak to import them", flush=True)
+        kubectl("-n", NAMESPACE, "rollout", "restart", "deployment/keycloak", timeout=60)
+    state["realmsHash"] = digest
+    save_state(state)
 
 
-def app_manifest() -> str:
-    return kubectl("kustomize", "--load-restrictor", "LoadRestrictionsNone", MANIFESTS / "app", timeout=120).stdout
+def app_manifest(app: App) -> str:
+    return kubectl("kustomize", "--load-restrictor", "LoadRestrictionsNone", app.manifest, timeout=120).stdout
 
 
-def apply_app() -> None:
-    rendered = app_manifest()
-    kubectl("apply", "-f", "-", input=rendered, timeout=120)
-    ok("service overlay applied (overlays/k3d + catalog realm issuer + otel collector)")
+def configmap_digest(rendered: str) -> str:
+    blocks = [block for block in rendered.split("\n---\n")
+              if re.search(r"^kind: ConfigMap$", block, re.MULTILINE)]
+    return hashlib.sha256("\n---\n".join(blocks).encode()).hexdigest()[:12]
+
+
+def apply_app(app: App) -> None:
+    rendered = app_manifest(app)
+    existed = kubectl("-n", app.namespace, "get", "deployment", app.deployment,
+                      check=False, timeout=30).returncode == 0
+    applied = kubectl("apply", "-f", "-", input=rendered, timeout=120).stdout
+    ok(f"{app.name}: overlays/k3d + shared addresses + otel collector (namespace {app.namespace})")
+    digest = configmap_digest(rendered)
+    state = load_state()
+    entry = state["services"].setdefault(app.name, {"image": app.image})
+    # A merge-generated ConfigMap keeps its name, so a content change does not roll the Deployment,
+    # and env read from configMapKeyRef is only read at container start.
+    changed = re.search(r"^configmap/\S+ (created|configured)$", applied, re.MULTILINE) is not None
+    if existed and (changed or entry.get("configMapsHash") != digest):
+        print(f"    {app.name}: its ConfigMap changed — restarting the deployment", flush=True)
+        kubectl("-n", app.namespace, "rollout", "restart", f"deployment/{app.deployment}", timeout=60)
+    entry["configMapsHash"] = digest
+    save_state(state)
 
 
 # ── image pipeline ────────────────────────────────────────────────────────────────────────────
@@ -613,13 +798,13 @@ def tar_architecture(tar: Path) -> str:
         return ""
 
 
-def newest_source_mtime() -> float:
+def newest_source_mtime(app: App) -> float:
     newest = 0.0
-    for root in (SERVICE / "src", SERVICE / "config"):
+    for root in (app.directory / "src", app.directory / "config"):
         for path in root.rglob("*"):
             if path.is_file():
                 newest = max(newest, path.stat().st_mtime)
-    for path in (SERVICE / "build.gradle", SERVICE / "settings.gradle"):
+    for path in (app.directory / "build.gradle", app.directory / "settings.gradle"):
         if path.exists():
             newest = max(newest, path.stat().st_mtime)
     return newest
@@ -632,13 +817,13 @@ def cluster_images() -> str:
     return found.stdout or ""
 
 
-def cluster_has_app_image() -> bool:
-    return bool(re.search(r"(^|/)catalog:latest$", cluster_images(), re.MULTILINE))
+def cluster_has_image(app: App) -> bool:
+    return bool(re.search(rf"(^|/){re.escape(app.image)}$", cluster_images(), re.MULTILINE))
 
 
-def build_image(force: bool, skip_build: bool) -> tuple[Path, bool]:
+def build_image(app: App, force: bool, skip_build: bool) -> tuple[Path, bool]:
     """Returns the tar and whether it was built by this call."""
-    tar = SERVICE / "build/jib-image.tar"
+    tar = app.tar
     arch = node_architecture()
     target = f"linux/{arch}"
     if tar.exists() and tar_architecture(tar) != arch:
@@ -647,28 +832,29 @@ def build_image(force: bool, skip_build: bool) -> tuple[Path, bool]:
     if skip_build:
         if not tar.exists():
             raise Fail(f"--skip-build was asked for but {tar} does not exist")
-        ok(f"image tar reused (--skip-build, {target})")
+        ok(f"{app.name}: image tar reused (--skip-build, {target})")
         return tar, False
-    if not force and tar.exists() and tar.stat().st_mtime >= newest_source_mtime():
-        ok(f"image tar up to date ({target}, {tar.stat().st_size // (1024 * 1024)} MiB)")
+    if not force and tar.exists() and tar.stat().st_mtime >= newest_source_mtime(app):
+        ok(f"{app.name}: image tar up to date ({target}, {tar.stat().st_size // (1024 * 1024)} MiB)")
         return tar, False
-    print(f"    ./gradlew jibBuildTar -Djib.from.platforms={target}", flush=True)
+    print(f"    {app.name}: ./gradlew jibBuildTar -Djib.from.platforms={target}", flush=True)
     built = run(
         ["./gradlew", "jibBuildTar", f"-Djib.from.platforms={target}", "--console=plain"],
-        cwd=SERVICE, timeout=T_BUILD, check=False,
+        cwd=app.directory, timeout=T_BUILD, check=False,
     )
     if built.returncode != 0:
-        raise Fail(f"jibBuildTar failed with exit {built.returncode}\n{tail((built.stdout or '') + (built.stderr or ''), 40)}")
+        raise Fail(f"{app.name}: jibBuildTar failed with exit {built.returncode}\n"
+                   f"{tail((built.stdout or '') + (built.stderr or ''), 40)}")
     if not tar.exists():
-        raise Fail(f"jibBuildTar reported success but {tar} does not exist")
+        raise Fail(f"{app.name}: jibBuildTar reported success but {tar} does not exist")
     if tar_architecture(tar) != arch:
         raise Fail(f"{tar} is {tar_architecture(tar) or 'unknown'} but the node runs {target}; "
                    f"Jib was not switched by -Djib.from.platforms")
-    ok(f"image tar built ({target}, {tar.stat().st_size // (1024 * 1024)} MiB)")
+    ok(f"{app.name}: image tar built ({target}, {tar.stat().st_size // (1024 * 1024)} MiB)")
     return tar, True
 
 
-def import_image(tar: Path) -> None:
+def import_image(app: App, tar: Path) -> None:
     with open(tar, "rb") as image:
         imported = podman(
             "exec", "-i", CLUSTER, "ctr", "-n", "k8s.io", "images", "import", "-",
@@ -676,37 +862,35 @@ def import_image(tar: Path) -> None:
         )
     if imported.returncode != 0:
         raise Fail(f"ctr images import failed with exit {imported.returncode}\n{tail((imported.stdout or '') + (imported.stderr or ''))}")
-    if not cluster_has_app_image():
-        raise Fail(f"{APP_IMAGE} is not in the cluster image store after the import")
-    ok(f"{APP_IMAGE} imported into k3s containerd")
+    if not cluster_has_image(app):
+        raise Fail(f"{app.image} is not in the cluster image store after the import")
+    ok(f"{app.image} imported into k3s containerd")
 
 
-def restart_deployment(deployment: str) -> None:
-    kubectl("-n", NAMESPACE, "rollout", "restart", f"deployment/{deployment}", timeout=60)
-    rollout_status(deployment)
+def restart_deployment(app: App) -> None:
+    kubectl("-n", app.namespace, "rollout", "restart", f"deployment/{app.deployment}", timeout=60)
+    rollout_status(app.namespace, app.deployment)
 
 
 # ── auth ──────────────────────────────────────────────────────────────────────────────────────
 
 
 def ensure_keycloak_forward() -> None:
-    ensure_forward("keycloak", KEYCLOAK_PORT, "svc/catalog-keycloak", 8080,
-                   health_url=f"http://127.0.0.1:{KEYCLOAK_PORT}/realms/{REALM}")
+    ensure_forward("keycloak", NAMESPACE, KEYCLOAK_PORT, f"svc/{KEYCLOAK_SERVICE}", 8080,
+                   health_url=f"http://127.0.0.1:{KEYCLOAK_PORT}/realms/{CATALOG.realm}")
 
 
-def mint_tokens() -> dict:
-    if not cluster_container() or not cluster_container()["running"]:
-        raise Fail("the cluster is not running — `run-apps deploy` first")
-    if pod_phase("app=keycloak") != "Running":
-        raise Fail(f"keycloak is not Running (phase: {pod_phase('app=keycloak') or 'absent'}) — `run-apps deploy` first")
-    ensure_keycloak_forward()
+def keycloak_running() -> bool:
+    return pod_phase(NAMESPACE, "app=keycloak") == "Running"
 
-    endpoint = f"http://127.0.0.1:{KEYCLOAK_PORT}/realms/{REALM}/protocol/openid-connect/token"
+
+def mint_realm(app: App) -> dict:
+    endpoint = f"http://127.0.0.1:{KEYCLOAK_PORT}/realms/{app.realm}/protocol/openid-connect/token"
     tokens = {}
-    for user in USERS:
+    for user, client in app.users:
         payload = urllib.parse.urlencode({
             "grant_type": "password",
-            "client_id": f"catalog-{user}-client",
+            "client_id": client,
             "client_secret": "secret",
             "username": user,
             "password": user,
@@ -718,47 +902,90 @@ def mint_tokens() -> dict:
             with urllib.request.urlopen(request, timeout=20) as answer:
                 body = json.loads(answer.read())
         except urllib.error.HTTPError as failure:
-            raise Fail(f"keycloak refused the password grant for {user}: {failure.code} {failure.read(400).decode('utf-8', 'replace')}") from failure
+            raise Fail(f"keycloak refused the password grant for {user} in realm {app.realm}: "
+                       f"{failure.code} {failure.read(400).decode('utf-8', 'replace')}") from failure
         except (urllib.error.URLError, OSError) as unreachable:
             raise Fail(f"keycloak is not reachable at {endpoint}: {unreachable}") from unreachable
         issued = datetime.now(timezone.utc)
         tokens[user] = {
             "token": body["access_token"],
             "scope": body.get("scope", ""),
-            "clientId": f"catalog-{user}-client",
+            "clientId": client,
             "issuedAt": issued.strftime("%Y-%m-%dT%H:%M:%SZ"),
             "expiresAt": (issued + timedelta(seconds=int(body.get("expires_in", 3600)))).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "expiresIn": int(body.get("expires_in", 3600)),
         }
+    return {"realm": app.realm, "endpoint": endpoint, "tokens": tokens}
+
+
+def mint_tokens() -> dict:
+    if not cluster_container() or not cluster_container()["running"]:
+        raise Fail("the cluster is not running — `run-apps deploy` first")
+    if not keycloak_running():
+        raise Fail(f"keycloak is not Running (phase: {pod_phase(NAMESPACE, 'app=keycloak') or 'absent'}) — `run-apps deploy` first")
+    ensure_keycloak_forward()
+
+    realms = {APPS[name].realm: mint_realm(APPS[name]) for name in APP_ORDER}
     # Reload first: the port-forward started above was recorded in the state file after this
     # command began, and a save from the older copy would drop it.
     state = load_state()
-    state["auth"] = {"realm": REALM, "endpoint": endpoint, "issuedAt": now_iso(), "tokens": tokens}
+    state["auth"] = {"issuedAt": now_iso(), "realms": realms}
     save_state(state)
-
-    env_file = RUNTIME / "catalog-tokens.env"
-    env_file.write_text("".join(f"export {user.upper()}_TOKEN='{tokens[user]['token']}'\n" for user in USERS))
-    os.chmod(env_file, 0o600)
+    write_tokens_env(state["auth"])
     return state["auth"]
 
 
+def write_tokens_env(auth: dict) -> Path:
+    lines = []
+    for name in APP_ORDER:
+        app = APPS[name]
+        for user, _ in app.users:
+            token = auth["realms"][app.realm]["tokens"][user]["token"]
+            lines.append(f"export {name.upper()}_{user.upper().replace('-', '_')}_TOKEN='{token}'")
+    TOKENS_ENV.write_text("\n".join(lines) + "\n")
+    os.chmod(TOKENS_ENV, 0o600)
+    return TOKENS_ENV
+
+
 def tokens_valid(auth: dict | None) -> bool:
-    if not auth or not auth.get("tokens"):
+    if not auth or not auth.get("realms"):
         return False
-    for user in USERS:
-        entry = auth["tokens"].get(user)
-        if not entry:
-            return False
-        expires = datetime.strptime(entry["expiresAt"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
-        if expires - datetime.now(timezone.utc) < timedelta(seconds=60):
-            return False
+    for name in APP_ORDER:
+        app = APPS[name]
+        realm = auth["realms"].get(app.realm) or {}
+        for user, _ in app.users:
+            entry = (realm.get("tokens") or {}).get(user)
+            if not entry:
+                return False
+            expires = datetime.strptime(entry["expiresAt"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+            if expires - datetime.now(timezone.utc) < timedelta(seconds=60):
+                return False
     return True
 
 
 # ── commands ─────────────────────────────────────────────────────────────────────────────────
 
 
+def deploy_app(app: App, args) -> None:
+    step(f"image {app.name}")
+    tar, built = build_image(app, force=args.force_build, skip_build=args.skip_build)
+    if built or args.force_build or not cluster_has_image(app):
+        import_image(app, tar)
+    else:
+        ok(f"cluster already carries {app.image}")
+    step(f"{app.name} manifests")
+    apply_app(app)
+    step(f"{app.name} rollout")
+    rollout_status(app.namespace, app.deployment)
+    step(f"{app.name} host port-forward")
+    ensure_forward(app.forward, app.namespace, app.port, f"svc/{app.service}", app.service_port,
+                   health_url=app.health_url)
+    step(f"{app.name} health")
+    wait_health(app)
+
+
 def cmd_deploy(args) -> int:
+    chosen = targets(args.service)
     step("podman machine")
     ensure_machine()
     reclaim_legacy()
@@ -784,22 +1011,11 @@ def cmd_deploy(args) -> int:
     apply_infra()
     step("infra readiness")
     for deployment in INFRA_DEPLOYMENTS:
-        rollout_status(deployment)
-    step("image")
-    tar, built = build_image(force=args.force_build, skip_build=args.skip_build)
-    if built or args.force_build or not cluster_has_app_image():
-        import_image(tar)
-    else:
-        ok(f"cluster already carries {APP_IMAGE}")
-    step("app manifests")
-    apply_app()
-    step("app rollout")
-    rollout_status(APP_DEPLOYMENT)
-    step("host port-forward")
-    ensure_forward("catalog-app", APP_PORT, "svc/catalog", 80, health_url=f"http://127.0.0.1:{APP_PORT}/actuator/health")
-    step("health")
-    wait_health()
-    print("\nThe catalog API is at http://127.0.0.1:8080 — `run-apps status`, `run-apps auth`, `run-apps test`.")
+        rollout_status(NAMESPACE, deployment)
+    for app in chosen:
+        deploy_app(app, args)
+    listed = ", ".join(f"{app.name} at {app.url}" for app in chosen)
+    print(f"\n{listed} — `run-apps status`, `run-apps auth`, `run-apps test`.")
     return 0
 
 
@@ -814,44 +1030,66 @@ def postgres_databases() -> list[str]:
     return (found.stdout or "").split() if found.returncode == 0 else []
 
 
+def queried(namespace: str, *query: str) -> str:
+    found = kubectl("-n", namespace, *query, check=False, timeout=60)
+    return found.stdout if found.returncode == 0 else tail((found.stdout or "") + (found.stderr or ""), 5)
+
+
 def cmd_status(args) -> int:
     state = load_state()
+    container = cluster_container()
+    running = bool(container and container["running"])
     report = {
         "podmanMachine": podman_reachable(),
-        "clusterContainer": cluster_container(),
-        "legacyContainers": [],
-        "databases": [],
+        "clusterContainer": container,
+        "legacyContainers": [name for name in LEGACY_CLUSTERS if podman_reachable() and container_exists(name)],
         "node": None,
-        "pods": "", "services": "", "deployments": "", "endpoints": "",
-        "hostProcesses": [], "appHealth": (False, "cluster down"),
+        "databases": [],
+        "namespaces": {},
+        "apps": {},
+        "hostProcesses": [],
     }
-    if report["podmanMachine"]:
-        report["legacyContainers"] = [name for name in LEGACY_CLUSTERS if container_exists(name)]
-    if report["clusterContainer"] and report["clusterContainer"]["running"]:
+    if running:
         report["node"] = node_state()[0]
         report["databases"] = postgres_databases()
-        for key, query in (
-            ("pods", ("get", "pods", "-o", "wide")),
-            ("services", ("get", "services", "-o", "wide")),
-            ("endpoints", ("get", "endpoints")),
-            ("deployments", ("get", "deployments")),
-        ):
-            found = kubectl("-n", NAMESPACE, *query, check=False, timeout=60)
-            report[key] = found.stdout if found.returncode == 0 else tail((found.stdout or "") + (found.stderr or ""), 5)
+        infra_selector = f"app in ({POSTGRES},kafka,keycloak,otel-collector)"
+        report["namespaces"][NAMESPACE] = {
+            "pods": queried(NAMESPACE, "get", "pods", "-l", infra_selector, "-o", "wide"),
+            "services": queried(NAMESPACE, "get", "services", "-l", infra_selector, "-o", "wide"),
+            "endpoints": queried(NAMESPACE, "get", "endpoints", "-l", infra_selector),
+        }
+        for name in APP_ORDER:
+            app = APPS[name]
+            deployment = queried(app.namespace, "get", "deployment", app.deployment, "--no-headers")
+            report["apps"][name] = {
+                "namespace": app.namespace,
+                "port": app.port,
+                "realm": app.realm,
+                "deployment": " ".join(deployment.split()),
+                "ready": re.search(rf"{app.deployment}\s+1/1", deployment) is not None,
+                "pods": " ".join(pod_names(app.namespace, f"app={app.deployment}")),
+                "health": health(app),
+            }
+        forwards = {candidate.forward: candidate for candidate in APPS.values()}
         for name, entry in state["hostProcesses"].items():
             alive = pid_alive(int(entry["pid"]))
+            app = forwards.get(name)
             healthy, detail = (False, "not answering")
             if alive:
-                healthy, detail = health() if name == "catalog-app" else (http_get(f"{entry['url']}/realms/{REALM}")[0] == 200, "200")
+                healthy, detail = (health(app) if app
+                                   else (http_get(f"{entry['url']}/realms/{CATALOG.realm}")[0] == 200, "200"))
             report["hostProcesses"].append({**entry, "alive": alive, "healthy": healthy, "detail": detail})
-        report["appHealth"] = health()
-    if not isinstance(report["appHealth"], tuple):
-        report["appHealth"] = (False, "unknown")
+
+    green = (running and bool(report["node"])
+             and all(entry["ready"] and entry["health"][0] for entry in report["apps"].values())
+             and len(report["apps"]) == len(APP_ORDER))
+    # Nothing running at all is the state `stop` leaves behind, and it is not a failure.
+    idle = not running and not report["hostProcesses"]
+    state_name = "green" if green else "none" if idle else "red"
 
     if args.json:
-        print(json.dumps(report, indent=2))
+        print(json.dumps({**report, "state": state_name}, indent=2))
     else:
-        container = report["clusterContainer"]
         print("== runtime ==")
         print(f"podman machine      {'UP' if report['podmanMachine'] else 'DOWN'}")
         if container:
@@ -861,59 +1099,98 @@ def cmd_status(args) -> int:
             print(f"cluster container   {CLUSTER} ABSENT")
         print(f"node                {report['node'] or 'none Ready'}")
         print(f"kubeconfig          {KUBECONFIG.relative_to(WORKSPACE) if KUBECONFIG.exists() else 'absent'}")
-        if report["clusterContainer"] and report["clusterContainer"]["running"]:
+        if running:
             print(f"databases           {', '.join(report['databases']) or 'unreachable'} (instance {POSTGRES})")
         else:
             print(f"databases           n/a — cluster down (instance {POSTGRES})")
         for legacy in report["legacyContainers"]:
             print(f"legacy container    {legacy} PRESENT — the old per-service cluster; `run-apps deploy` removes it")
 
-        for title, key in (("workloads", "pods"), ("deployments", "deployments"),
-                           ("services", "services"), ("endpoints", "endpoints")):
-            print(f"\n== {title} ({NAMESPACE}) ==")
-            print((report[key] or "(none)").rstrip())
+        for name in APP_ORDER:
+            app = APPS[name]
+            entry = report["apps"].get(name)
+            print(f"\n== {name} (namespace {app.namespace}, realm {app.realm}, {app.url}) ==")
+            if not entry:
+                print("(cluster down)")
+                continue
+            print(f"pod                 {entry['pods'] or '(none)'}")
+            print(f"deployment          {entry['deployment'] or '(absent)'}")
+            print(f"health              GET /actuator/health → {entry['health'][1]}")
+
+        print(f"\n== shared infra (namespace {NAMESPACE}) ==")
+        for title, key in (("workloads", "pods"), ("services", "services"), ("endpoints", "endpoints")):
+            if not running:
+                print(f"{title:<12}(cluster down)")
+                continue
+            print(f"-- {title}")
+            print((report["namespaces"][NAMESPACE][key] or "(none)").rstrip())
 
         print("\n== host bridges ==")
         if not report["hostProcesses"]:
             print("(none)")
         for entry in report["hostProcesses"]:
-            print(f"{entry['url']:<28} -> {entry['target']}:{entry['remotePort']}  "
+            print(f"{entry['url']:<28} -> {entry['namespace']}/{entry['target']}:{entry['remotePort']}  "
                   f"{'LIVE ' if entry['alive'] else 'DEAD '} pid {entry['pid']}  "
                   f"{'healthy' if entry['healthy'] else entry['detail']}")
 
-        healthy, detail = report["appHealth"]
         print("\n== verdict ==")
-        deploy_ready = re.search(rf"{APP_DEPLOYMENT}\s+1/1", report["deployments"] or "") is not None
-        green = (bool(container and container["running"]) and bool(report["node"]) and healthy and deploy_ready)
         if green:
-            print(f"GREEN — cluster up, {APP_DEPLOYMENT} 1/1, GET /actuator/health → {detail}")
+            detail = ", ".join(f"{name} 1/1 {report['apps'][name]['health'][1]}" for name in APP_ORDER)
+            print(f"GREEN — cluster up, {detail}")
+        elif idle:
+            print("NONE — nothing running (cluster absent, no host bridges)")
         else:
-            print(f"RED — cluster {'up' if container and container['running'] else 'down'}, "
-                  f"node {report['node'] or 'not Ready'}, {APP_DEPLOYMENT} {'1/1' if deploy_ready else 'not Ready'}, "
-                  f"health {detail}")
-    green = (bool(report["clusterContainer"] and report["clusterContainer"]["running"])
-             and bool(report["node"]) and report["appHealth"] and report["appHealth"][0]
-             and re.search(rf"{APP_DEPLOYMENT}\s+1/1", report["deployments"] or "") is not None)
-    return 0 if green else 1
+            problems = []
+            if not running:
+                problems.append("cluster down")
+            if not report["node"]:
+                problems.append("node not Ready")
+            for name in APP_ORDER:
+                entry = report["apps"].get(name)
+                if not entry:
+                    problems.append(f"{name} not deployed")
+                    continue
+                if not entry["ready"]:
+                    problems.append(f"{name} not 1/1")
+                if not entry["health"][0]:
+                    problems.append(f"{name} health {entry['health'][1]}")
+            print("RED — " + "; ".join(problems))
+    return 0 if green or idle else 1
 
 
 def cmd_logs(args) -> int:
     if not cluster_container() or not cluster_container()["running"]:
         raise Fail("the cluster is not running — `run-apps deploy` first")
-    if args.pod:
-        pods = [args.pod]
+    namespaces = list(dict.fromkeys((NAMESPACE, *(APPS[name].namespace for name in APP_ORDER))))
+    sections: list[tuple[str, str]] = []
+    if args.pod and args.pod in APPS:
+        app = APPS[args.pod]
+        sections = [(app.namespace, pod) for pod in pod_names(app.namespace, f"app={app.deployment}")]
+        if not sections:
+            raise Fail(f"no pod of {app.name} in namespace {app.namespace}")
+    elif args.pod:
+        for namespace in namespaces:
+            if args.pod in pod_names(namespace, ""):
+                sections.append((namespace, args.pod))
+                break
+        if not sections:
+            raise Fail(f"pod {args.pod} not found in {', '.join(namespaces)}")
+    elif args.infra:
+        selector = f"app in ({POSTGRES},kafka,keycloak,otel-collector)"
+        sections = [(namespace, pod) for namespace in namespaces for pod in pod_names(namespace, selector)]
+        if not sections:
+            raise Fail(f"no infra pod matches {selector} in {', '.join(namespaces)}")
     else:
-        if args.infra:
-            selector = f"app in ({POSTGRES},kafka,keycloak,otel-collector)"
-        else:
-            selector = f"app={APP_DEPLOYMENT}"
-        pods = pod_names(selector)
-        if not pods:
-            raise Fail(f"no pod matches {selector} in namespace {NAMESPACE}")
-    print(f"logs for {', '.join(pods)} (tail {args.tail}{', following' if args.follow else ''})", flush=True)
-    for pod in pods:
-        print(f"\n===== {pod} =====", flush=True)
-        command = ["-n", NAMESPACE, "logs", pod, "--tail", str(args.tail)]
+        sections = [(APPS[name].namespace, pod) for name in APP_ORDER
+                    for pod in pod_names(APPS[name].namespace, f"app={APPS[name].deployment}")]
+        if not sections:
+            raise Fail(f"no app pod in {', '.join(namespaces)}")
+
+    print(f"logs for {', '.join(pod for _, pod in sections)} "
+          f"(tail {args.tail}{', following' if args.follow else ''})", flush=True)
+    for namespace, pod in sections:
+        print(f"\n===== {namespace}/{pod} =====", flush=True)
+        command = ["-n", namespace, "logs", pod, "--tail", str(args.tail)]
         if args.since:
             command += ["--since", args.since]
         if args.follow:
@@ -924,26 +1201,26 @@ def cmd_logs(args) -> int:
 
 
 def cmd_rebuild(args) -> int:
-    service = args.service or APP_DEPLOYMENT
-    if service != APP_DEPLOYMENT:
-        raise Fail(f"unknown service {service!r}; this environment manages only {APP_DEPLOYMENT!r}")
+    chosen = targets(args.service)
     step("cluster")
     ensure_cluster()
     write_kubeconfig()
     wait_node_ready()
     check_disk()
-    before = " ".join(pod_names(f"app={APP_DEPLOYMENT}"))
-    step("image")
-    tar, _ = build_image(force=True, skip_build=False)
-    import_image(tar)
-    step("rollout restart")
-    restart_deployment(APP_DEPLOYMENT)
-    step("host port-forward")
-    ensure_forward("catalog-app", APP_PORT, "svc/catalog", 80, health_url=f"http://127.0.0.1:{APP_PORT}/actuator/health")
-    step("health")
-    wait_health()
-    after = " ".join(pod_names(f"app={APP_DEPLOYMENT}"))
-    ok(f"pod {before or '(none)'} → {after or '(none)'}")
+    for app in chosen:
+        before = " ".join(pod_names(app.namespace, f"app={app.deployment}"))
+        step(f"image {app.name}")
+        tar, _ = build_image(app, force=True, skip_build=False)
+        import_image(app, tar)
+        step(f"{app.name} rollout restart")
+        restart_deployment(app)
+        step(f"{app.name} host port-forward")
+        ensure_forward(app.forward, app.namespace, app.port, f"svc/{app.service}", app.service_port,
+                       health_url=app.health_url)
+        step(f"{app.name} health")
+        wait_health(app)
+        after = " ".join(pod_names(app.namespace, f"app={app.deployment}"))
+        ok(f"{app.name}: pod {before or '(none)'} → {after or '(none)'}")
     return 0
 
 
@@ -979,17 +1256,18 @@ def cmd_stop(args) -> int:
     if leftover:
         raise Fail(f"{', '.join(leftover)} still exists after podman rm -f")
 
+    ports = (*(app.port for app in APPS.values()), KEYCLOAK_PORT, API_PORT)
     step("ports")
-    freed, problems = free_ports((APP_PORT, KEYCLOAK_PORT, API_PORT))
+    freed, problems = free_ports(ports)
     if freed:
         ok("; ".join(freed))
     if problems:
         raise Fail("; ".join(problems))
-    ok(f"{', '.join(str(p) for p in (APP_PORT, KEYCLOAK_PORT, API_PORT))} free")
+    ok(f"{', '.join(str(port) for port in ports)} free")
 
     state = empty_state()
     save_state(state)
-    for stale in (KUBECONFIG, *LEGACY_KUBECONFIGS, RUNTIME / "catalog-tokens.env"):
+    for stale in (KUBECONFIG, *LEGACY_KUBECONFIGS, TOKENS_ENV, *LEGACY_TOKEN_FILES):
         if stale.exists():
             stale.unlink()
             ok(f"removed {stale.relative_to(WORKSPACE)}")
@@ -998,64 +1276,98 @@ def cmd_stop(args) -> int:
 
 
 def cmd_auth(args) -> int:
-    auth = mint_tokens() if not args.reuse else load_state().get("auth") or mint_tokens()
-    print(f"realm {auth['realm']} via {auth['endpoint']}")
-    print(f"{'user':<13}{'client':<28}{'scope':<40}{'expires'}")
-    for user in USERS:
-        entry = auth["tokens"][user]
-        print(f"{user:<13}{entry['clientId']:<28}{entry['scope'][:38]:<40}{entry['expiresAt']} (+{entry['expiresIn']}s)")
-    print()
+    auth = load_state().get("auth")
+    if args.reuse and tokens_valid(auth):
+        ok("tokens reused (still valid)")
+        write_tokens_env(auth)
+    else:
+        auth = mint_tokens()
+    for name in APP_ORDER:
+        app = APPS[name]
+        realm = auth["realms"][app.realm]
+        print(f"realm {app.realm} ({name}) via {realm['endpoint']}")
+        print(f"{'user':<16}{'client':<30}{'scope':<44}{'expires'}")
+        for user, _ in app.users:
+            entry = realm["tokens"][user]
+            print(f"{user:<16}{entry['clientId']:<30}{entry['scope'][:42]:<44}{entry['expiresAt']} (+{entry['expiresIn']}s)")
+        print()
     if args.json:
         print(json.dumps(auth, indent=2))
     else:
-        for user in USERS:
-            print(f"export {user.upper()}_TOKEN='{auth['tokens'][user]['token']}'")
-        print(f"\nexports also on disk: {(RUNTIME / 'catalog-tokens.env').relative_to(WORKSPACE)}")
+        print(TOKENS_ENV.read_text().rstrip())
+        print(f"\nexports also on disk: {TOKENS_ENV.relative_to(WORKSPACE)}")
     return 0
 
 
+def warm_up(app: App, token: str) -> None:
+    """The suite's first authenticated request is also the app's first JWKS fetch, and Keycloak's first
+    realm-key load can outlast the resource server's read timeout: one request of its own, retried."""
+    path, _ = app.warmup
+    request = urllib.request.Request(f"{app.url}{path}", headers={"Authorization": f"Bearer {token}"})
+    for _ in range(4):
+        try:
+            with urllib.request.urlopen(request, timeout=25) as answer:
+                ok(f"{app.name}: JWKS warm ({path} → {answer.status})")
+                return
+        except urllib.error.HTTPError as failure:
+            if failure.code < 500:
+                ok(f"{app.name}: JWKS warm ({path} → {failure.code})")
+                return
+        except (urllib.error.URLError, OSError):
+            pass
+        time.sleep(2)
+    ok(f"{app.name}: warm-up left unanswered — the suite reports the real state")
+
+
 def cmd_test(args) -> int:
+    chosen = targets(args.service)
     auth = load_state().get("auth")
-    if not tokens_valid(auth):
+    if tokens_valid(auth):
+        ok("tokens reused (still valid)")
+    else:
         step("tokens")
         auth = mint_tokens()
-    else:
-        ok("tokens reused (still valid)")
 
     now = datetime.now(timezone.utc).replace(microsecond=0)
     today = now.date()
-    variables = [
-        ("BASE_URL", args.base_url),
-        ("availability_future", (today + timedelta(days=30)).isoformat()),
-        ("availability_past", (today - timedelta(days=30)).isoformat()),
-        ("price_from_future", (now + timedelta(days=30)).isoformat().replace("+00:00", "Z")),
-        ("price_until_future", (now + timedelta(days=60)).isoformat().replace("+00:00", "Z")),
-        ("author_token", auth["tokens"]["author"]["token"]),
-        ("reviewer_token", auth["tokens"]["reviewer"]["token"]),
-        ("photographer_token", auth["tokens"]["photographer"]["token"]),
-        ("sales_token", auth["tokens"]["sales"]["token"]),
-    ]
-    suite = Path(args.suite)
-    if not suite.is_absolute():
-        suite = SERVICE / suite
-    if not suite.exists():
-        raise Fail(f"suite not found: {suite}")
+    exit_code = 0
+    for app in chosen:
+        ensure_forward(app.forward, app.namespace, app.port, f"svc/{app.service}", app.service_port,
+                       health_url=app.health_url)
+        variables = [("BASE_URL", args.base_url or app.url)]
+        if app.dates:
+            variables += [
+                ("availability_future", (today + timedelta(days=30)).isoformat()),
+                ("availability_past", (today - timedelta(days=30)).isoformat()),
+                ("price_from_future", (now + timedelta(days=30)).isoformat().replace("+00:00", "Z")),
+                ("price_until_future", (now + timedelta(days=60)).isoformat().replace("+00:00", "Z")),
+            ]
+        tokens = auth["realms"][app.realm]["tokens"]
+        variables += [(variable, tokens[user]["token"]) for variable, user in app.variables]
+        warm_up(app, tokens[app.warmup[1]]["token"])
 
-    command = ["hurl", "--test", "--max-time", "30"]
-    for name, value in variables:
-        command += ["--variable", f"{name}={value}"]
-    command.append(str(suite))
+        suite = Path(args.suite) if args.suite else app.directory / app.suite
+        if not suite.is_absolute():
+            suite = app.directory / suite
+        if not suite.exists():
+            raise Fail(f"suite not found: {suite}")
 
-    step(f"hurl --test {suite.relative_to(SERVICE)} against {args.base_url}")
-    completed = run(command, cwd=SERVICE, timeout=T_HURL, check=False)
-    output = (completed.stdout or "") + (completed.stderr or "")
-    print(output.rstrip(), flush=True)
-    requests = re.search(r"Executed requests:\s*(\d+)", output) or re.search(r"Requests:\s*(\d+)", output)
-    files = re.search(r"Executed files:\s*(\d+)", output)
-    print(f"\nexit code {completed.returncode}; "
-          f"requests {requests.group(1) if requests else '?'}; "
-          f"files {files.group(1) if files else '?'}")
-    return completed.returncode
+        command = ["hurl", "--test", "--max-time", "30"]
+        for variable, value in variables:
+            command += ["--variable", f"{variable}={value}"]
+        command.append(str(suite))
+
+        step(f"{app.name}: hurl --test {suite.relative_to(app.directory)} against {args.base_url or app.url}")
+        completed = run(command, cwd=app.directory, timeout=T_HURL, check=False)
+        output = (completed.stdout or "") + (completed.stderr or "")
+        print(output.rstrip(), flush=True)
+        requests = re.search(r"Executed requests:\s*(\d+)", output) or re.search(r"Requests:\s*(\d+)", output)
+        files = re.search(r"Executed files:\s*(\d+)", output)
+        print(f"\nexit code {completed.returncode}; "
+              f"requests {requests.group(1) if requests else '?'}; "
+              f"files {files.group(1) if files else '?'}")
+        exit_code = exit_code or completed.returncode
+    return exit_code
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -1063,27 +1375,29 @@ def build_parser() -> argparse.ArgumentParser:
     commands = parser.add_subparsers(dest="command", required=True)
 
     deploy = commands.add_parser("deploy", help="create/reuse the cluster, install infra, build, import, roll out")
+    deploy.add_argument("service", nargs="?", choices=APP_ORDER, help="one service; omit for both")
     deploy.add_argument("--force-build", action="store_true", help="rebuild the image even when nothing changed")
     deploy.add_argument("--skip-build", action="store_true", help="reuse build/jib-image.tar without running Gradle")
     deploy.set_defaults(handler=cmd_deploy)
 
-    status = commands.add_parser("status", help="cluster, pods, endpoints, health and host bridges")
+    status = commands.add_parser("status", help="cluster, both services' pods, health, host bridges")
     status.add_argument("--json", action="store_true")
     status.set_defaults(handler=cmd_status)
 
-    logs = commands.add_parser("logs", help="bounded logs of one pod or of the app pods")
-    logs.add_argument("pod", nargs="?", help="pod name; omit for every app pod")
+    logs = commands.add_parser("logs", help="bounded logs of one pod, one service or every app pod")
+    logs.add_argument("pod", nargs="?", help=f"pod name or one of {', '.join(APP_ORDER)}; omit for every app pod")
     logs.add_argument("--tail", type=int, default=200)
     logs.add_argument("--since", default=None, help="kubectl --since, e.g. 10m")
     logs.add_argument("--follow", action="store_true", help="stream (Ctrl-C to stop) — opt-in only")
-    logs.add_argument("--infra", action="store_true", help="with no pod argument, show the infra pods")
+    logs.add_argument("--infra", action="store_true", help="with no pod argument, show the shared infra pods")
     logs.set_defaults(handler=cmd_logs)
 
     rebuild = commands.add_parser("rebuild", help="jibBuildTar → import → rollout restart → wait Ready")
-    rebuild.add_argument("service", nargs="?", default=APP_DEPLOYMENT)
+    rebuild.add_argument("service", nargs="?", choices=APP_ORDER, help="one service; omit for both, in order")
     rebuild.set_defaults(handler=cmd_rebuild)
 
     restart = commands.add_parser("restart", help="stop then deploy")
+    restart.add_argument("service", nargs="?", choices=APP_ORDER, help="one service; omit for both")
     restart.add_argument("--skip-build", action="store_true")
     restart.add_argument("--force-build", action="store_true")
     restart.set_defaults(handler=cmd_restart)
@@ -1091,14 +1405,15 @@ def build_parser() -> argparse.ArgumentParser:
     stop = commands.add_parser("stop", help="delete the cluster, kill port-forwards, free the ports")
     stop.set_defaults(handler=cmd_stop)
 
-    auth = commands.add_parser("auth", help="mint the four scoped tokens from the in-cluster Keycloak")
+    auth = commands.add_parser("auth", help="mint the scoped tokens of both realms from the in-cluster Keycloak")
     auth.add_argument("--json", action="store_true")
     auth.add_argument("--reuse", action="store_true", help="keep the tokens on disk when they are still valid")
     auth.set_defaults(handler=cmd_auth)
 
-    test = commands.add_parser("test", help="run the element-12 hurl contract against the cluster")
-    test.add_argument("suite", nargs="?", default=str(APP_SUITE))
-    test.add_argument("--base-url", default=f"http://127.0.0.1:{APP_PORT}")
+    test = commands.add_parser("test", help="run a service's hurl suite against the cluster")
+    test.add_argument("service", nargs="?", choices=APP_ORDER, help="one service; omit for both, in order")
+    test.add_argument("--suite", default=None, help="suite path relative to the service, overriding the default")
+    test.add_argument("--base-url", default=None, help="override the service's host URL")
     test.set_defaults(handler=cmd_test)
 
     return parser

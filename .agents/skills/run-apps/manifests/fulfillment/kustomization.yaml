@@ -1,0 +1,34 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# The app manifests are the service's own k3d overlay; this kustomization only adds what the
+# service tree cannot carry: the address of the shared Kafka and Keycloak, and the address of the
+# shop-wide Postgres. The overlay keeps pointing at a standalone `fulfillment-*` infra that this
+# environment does not run — nothing here edits the service's manifests.
+#
+# The override lives here, not in a `kubectl apply` after the overlay: a merge generator renames
+# its object with a content hash and rewrites the Deployment's references, so a plain Secret of the
+# same name would be read by nobody.
+namespace: fulfillment
+
+resources:
+  - ../../../../../services/fulfillment/k8s/overlays/k3d
+  - ../../../../../services/fulfillment/k8s/infra/otel-collector.yaml
+
+configMapGenerator:
+  - name: fulfillment
+    behavior: merge
+    literals:
+      - kafka-bootstrap-servers=catalog-kafka.catalog.svc.cluster.local:9092
+      - spring-profile-active=dev
+      - JWT_ISSUER_URI=http://catalog-keycloak.catalog.svc.cluster.local:8080/realms/iot
+
+secretGenerator:
+  # Same role and password as the `fulfillment:fulfillment:fulfillment` line in databases.txt; the
+  # overlay's `fulfillment-db-postgresql` Service is the standalone layout and does not exist here.
+  - name: fulfillment-db
+    behavior: merge
+    literals:
+      - jdbc-url=jdbc:postgresql://postgresql.catalog.svc.cluster.local:5432/fulfillment
+      - username=fulfillment
+      - password=fulfillment

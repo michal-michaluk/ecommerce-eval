@@ -65,11 +65,12 @@ spec:
               value: admin
             - name: KC_BOOTSTRAP_ADMIN_PASSWORD
               value: admin
-            # Fixed issuer: an app inside the cluster discovers the realm over the Service DNS
-            # name, a token minted through the host port-forward must carry the same `iss`, so the
-            # host name of the request that asked for it must not leak into the token.
+            # Fixed issuer: an app discovers the realm over the Service DNS name, and a token minted
+            # through the host port-forward must carry the same `iss`, so the host name of the request
+            # that asked for it must not leak into the token. Fully qualified, because the realm is
+            # also trusted by a service in another namespace (`fulfillment`).
             - name: KC_HOSTNAME
-              value: http://catalog-keycloak:8080
+              value: http://catalog-keycloak.catalog.svc.cluster.local:8080
             - name: KC_HOSTNAME_STRICT
               value: "false"
             - name: KC_HTTP_ENABLED
@@ -108,12 +109,14 @@ spec:
           volumeMounts:
             - name: keycloak-data
               mountPath: /opt/keycloak/data
-            - name: realm
-              mountPath: /opt/keycloak/data/import/catalog-realm.json
-              subPath: catalog-realm.json
+            # One directory, one realm document per service: `--import-realm` imports every document
+            # in it, so the one Keycloak serves realm `catalog` and realm `iot`.
+            - name: realms
+              mountPath: /opt/keycloak/data/import
+              readOnly: true
       volumes:
         - name: keycloak-data
           emptyDir: {}
-        - name: realm
+        - name: realms
           configMap:
             name: keycloak-realm
