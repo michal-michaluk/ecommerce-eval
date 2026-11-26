@@ -62,6 +62,6 @@ Estimate = { kind: estimate | unknown,
 ## Recommendations
 
 1. **Ship the interface with `unknown` implemented and the 2–4 day range hardcoded behind it** (D36) — the constant satisfies D16 and lets the real algorithm (#71) drop in without touching the view or the API.
-2. **Do not let the estimate feed the price** — `Dostawa od 9,99 zł` comes from `DeliveryRate` (element 04); the estimate only says *when*.
+2. **Do not let the estimate feed the price** — `Dostawa od 9,99 zł` comes from `DeliveryRate` (element 04); the estimate only says *when*.
 3. **The 2–4 day range is a decision, not a measurement** (D36): it is hardcoded so the shape is testable; issue #71 may replace the constant with the real policy.
 4. **The staleness of `now`** — compute against a request-scoped clock, never a cached one, or a basket left open overnight will show yesterday's range.

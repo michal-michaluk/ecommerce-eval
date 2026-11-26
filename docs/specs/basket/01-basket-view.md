@@ -38,16 +38,16 @@ The UI-prototyping mandate of the specification skill makes a gallery mandatory 
 | item price | `basket.json` `items[].price` | **line total** for the quantity, not a unit price (D8) |
 | item remove | `basket.json` `items[].removeAction` | trash icon, removes that item |
 | basket total | `basket.json` `shipments[].itemsTotal` | `RAZEM`, sum of selected item line totals |
-| delivery hint | `basket.json` `basket.deliveryHint` | `dostawa od 9,99 zł lub za 0,00 zł ze SMART` |
+| delivery hint | `basket.json` `basket.deliveryHint` | `dostawa od 9,99 zł lub za 0,00 zł ze SMART` |
 | summary: product value | `basket.json` `summary.productValue` | `Wartość produktów` over the selection |
 | summary: delivery | `basket.json` `summary.delivery` | `Dostawa od`, per seller shipment (D8) |
 | summary: total | `basket.json` `summary.totalWithDelivery` | `Razem z dostawą`, emphasised |
 | primary action | `basket.json` `summary.primaryAction` | `DOSTAWA I PŁATNOŚĆ` → element 09 |
 | secondary action | `basket.json` `summary.secondaryAction` | `KONTYNUUJ ZAKUPY`, a link, not a button |
 | cross-sell | `basket.json` `basket.crossSellAction` | `DOBIERZ PRODUKTY ›` |
-| tiles | `basket.json` `basket.promotions[]` | donation `Przekaż 10 zł dla Szlachetnej Paczki`, `Allegro Ochrona Kupujących` |
+| tiles | `basket.json` `basket.promotions[]` | donation `Przekaż 10 zł dla Szlachetnej Paczki`, `Allegro Ochrona Kupujących` |
 
-**Formatting:** PLN, two decimals, comma as the decimal separator, non-breaking space before `zł` — `99,89 zł`. Amounts are carried in fine units and rendered at the boundary (D34).
+**Formatting:** PLN, two decimals, comma as the decimal separator, non-breaking space before `zł` — `99,89 zł`. Amounts are carried in fine units and rendered at the boundary (D34).
 
 ## States
 
