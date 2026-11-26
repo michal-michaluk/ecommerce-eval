@@ -19,14 +19,16 @@ items:
     selected: true
     availability: available
     lastKnown: { title: "UGREEN Nexode Szybka Ładowarka Sieciowa USB 2x USB Typ C Zasilacz QC PD 65W",
-                 picture: "img-1001", lineTotal: { amount: 99890, currency: PLN } }
+                 picture: "img-1001", currentPrice: { amount: 99890, currency: PLN },
+                 discount: { amount: 0, currency: PLN, kind: discount } }
   - offerId: OF-1002
     seller: UGREEN_POLSKA
     quantity: 1
     selected: true
     availability: available
     lastKnown: { title: "UGREEN Hub Adapter Stacja Revodok USB-C Do 3xUSB USB-C HDMI 4K 30Hz PD 100W",
-                 picture: "img-1002", lineTotal: { amount: 64990, currency: PLN } }
+                 picture: "img-1002", currentPrice: { amount: 64990, currency: PLN },
+                 discount: { amount: 0, currency: PLN, kind: discount } }
 # derived at read: one shipment, RAZEM 164,88 · Dostawa od 9,99 · Razem z dostawą 174,87
 ```
 
@@ -40,7 +42,8 @@ items:
   - { offerId: OF-1001, seller: UGREEN_POLSKA, quantity: 2, selected: true,  availability: available }
   - { offerId: OF-1002, seller: UGREEN_POLSKA, quantity: 1, selected: false, availability: outOfStock }
   - { offerId: OF-2007, seller: ANKER_STORE,   quantity: 1, selected: true,  availability: unavailable,
-      lastKnown: { title: "…", picture: "img-2007", lineTotal: { amount: 129000, currency: PLN } } }
+      lastKnown: { title: "…", picture: "img-2007", currentPrice: { amount: 129000, currency: PLN },
+                   discount: { amount: 0, currency: PLN, kind: discount } } }
 # derived at read: two shipments, the unavailable row excluded from the totals (D18)
 ```
 
@@ -61,7 +64,7 @@ items:
 |---|---|---|---|
 | `AddToBasket(offerId, quantity≥1)` | basket `active`, customer identified | item appended; if the offer is already there the quantity is **merged** (D19) | `added to basket` |
 | `ChangeBasketQuantity(offerId, quantity≥1)` | item exists; `availability ≠ unavailable` (D19) | quantity replaced | `basket quantity changed` — **not on the board (R4)** |
-| `RemoveFromBasket(scope)` | scope = item / shipment / selection / whole basket (D18) | items removed; an emptied basket stays `active` with no items | `removed from basket` |
+| `RemoveFromBasket(scope)` | scope = item / selection / all (element 07, the contract of record — a shipment is emptied by removing its items; D50) | items removed; an emptied basket stays `active` with no items | `removed from basket` |
 | `Select(scope, on/off)` | — | selection flags only; no event | — |
 | `HandOver()` | ≥1 selected item and no blocking problem | exposes the selection to the checkout slice (element 09); basket **not** cleared (D19) | `go to checkout` |
 

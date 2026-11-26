@@ -25,3 +25,8 @@ databaseChangeLog:
       changes:
         - tagDatabase:
             tag: template-generated
+
+  # One fragment per bounded context: a context owns its own file.
+  - include:
+      file: db/changelog/0001-basket.yaml
+      relativeToChangelogFile: false

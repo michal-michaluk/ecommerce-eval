@@ -34,4 +34,8 @@ public class MoneyFixture {
     public static Money aDiscount() {
         return new Money(10000, PLN, Money.Kind.discount);
     }
+
+    public static Money anAmountWithoutAKind() {
+        return new Money(99890, PLN, null);
+    }
 }

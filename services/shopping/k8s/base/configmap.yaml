@@ -8,6 +8,11 @@
 #
 # There is no messaging key: the service consumes no event channel (plan D39), so a broker address
 # here would be a config key nothing reads.
+#
+# `JWT_ISSUER_URI` and `SHOPPING_BASKET_CURRENCY` keep their environment-variable spelling because the
+# application's own default already names them: `spring.security...issuer-uri` reads
+# `${JWT_ISSUER_URI}` and `basket.currency` reads `${SHOPPING_BASKET_CURRENCY:PLN}`, so the cluster
+# states the same name the profile does instead of renaming it twice.
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -17,3 +22,4 @@ metadata:
 data:
   spring-profile-active: "prod"
   JWT_ISSUER_URI: "http://keycloak:8080/realms/shopping"
+  SHOPPING_BASKET_CURRENCY: "PLN"

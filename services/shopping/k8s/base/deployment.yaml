@@ -58,6 +58,11 @@ spec:
                 configMapKeyRef:
                   name: shopping
                   key: JWT_ISSUER_URI
+            - name: SHOPPING_BASKET_CURRENCY
+              valueFrom:
+                configMapKeyRef:
+                  name: shopping
+                  key: SHOPPING_BASKET_CURRENCY
             - name: SPRING_DATASOURCE_URL
               valueFrom:
                 secretKeyRef:

@@ -18,6 +18,12 @@ spring:
           # The environment always sets JWT_ISSUER_URI; the default is deliberately unresolvable (RFC 2606).
           issuer-uri: ${JWT_ISSUER_URI:https://keycloak.invalid/realms/shopping}
 
+basket:
+  # The one currency a basket holds (element 03 RULE-2, D21). The specification does not say what an empty, auto-created
+  # basket is priced in, and the API reports a currency on exactly that basket (element 07, `basket` step 2 of the contract),
+  # so the deployment states it here. It is decided once per basket: an offer in another currency is refused, never converted.
+  currency: ${SHOPPING_BASKET_CURRENCY:PLN}
+
 server:
   shutdown: graceful
   error:
