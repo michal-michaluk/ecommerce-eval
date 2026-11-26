@@ -29,3 +29,6 @@
 demo/run/
 demo/*.webm
 demo/.chapters.ffmetadata
+
+# raw source video — 233 MB, never committed (kept on disk only)
+docs/raw/*.mp4
