@@ -25,7 +25,7 @@
 - No stock reservation on any command (R6).
 - Read-dominant, must stay available under browsing traffic.
 - Prices come from the offer snapshot, never recomputed from input.
-- PLN, 2 decimals, `pl-PL` format (`99,89 zł`).
+- PLN, 2 decimals, `pl-PL` format (`99,89 zł`).
 - Basket is owned by a customer identity.
 
 ## Input materials

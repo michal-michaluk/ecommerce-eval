@@ -80,8 +80,9 @@ public record Money(long amount, String currency, Kind kind) {
     /**
      * This amount less {@code other}, keeping this amount's kind — refused when the result would be negative (RULE-6).
      *
-     * <p>The kind travels from this amount, not from {@code other}: subtracting a discount from a charge is exactly how the
-     * total is composed.
+     * <p>The kind travels from this amount, not from {@code other}. Nothing in the basket subtracts a discount from a charge:
+     * element 04's {@code productValue} is already net (D22) and only reports {@code discountValue} beside it, so a subtraction
+     * of that kind here would be the double count S7 exists to catch.
      */
     public Money minus(Money other) {
         if (!currency.equals(other.currency)) {
