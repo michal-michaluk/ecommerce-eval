@@ -19,7 +19,7 @@ OfferObservation = { offerId, seller, title, pictureUrl,
                      price: Money,              # list price, element 03
                      currentPrice: Money,       # actual price after catalog's own discount model (D22)
                      discount: Money,           # flattened discount amount, never a rule (D22, Q18/Q19)
-                     offerState: onSale | removed,
+                     offerState: onSale | removed | notRead,   # notRead: the read failed (element 06 A4)
                      stock: Quantity | notRead, # becomes a band: high | medium | last n (D20, R14)
                      readAt: Instant }
 ```
@@ -50,6 +50,7 @@ OfferObservation = { offerId, seller, title, pictureUrl,
 | `401`/`403` | `unavailable`, `stale: true` (A4 — a failed read never keeps a previous `available`) plus a logged configuration fault. The basket never hides itself because our credential is wrong | D26 |
 | timeout / `5xx` | row greyed, `unavailable`, `stale: true` (A4) | Q24 → **D26**, R13 |
 | warehouse unavailable (`stock: notRead`) | `available`, `stale: true` (A5) | A5/R14 |
+| provider answers a count **below zero** (malformed) | the count is **passed through unchanged**; the decision reads it as none left → `outOfStock` (fail-closed). Never mapped to `notRead` — that would read as `available` + `stale`, which is fail-open and contradicts A4 | D56 |
 
 ## Open questions
 

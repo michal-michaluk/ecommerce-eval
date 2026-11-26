@@ -7,10 +7,10 @@
 ## Interface
 
 ```text
-OfferAvailabilityDecision.decide(item, observation) → Availability
+OfferAvailabilityDecision.decide(observation) → Availability
 
-item        = { offerId, lastKnown }                       # business concept, element 02
-observation = { offerState: onSale | removed | notRead,
+observation = { offerId,                                   # identity travels with the observation
+                offerState: onSale | removed | notRead,
                 stock:     Quantity | notRead,
                 readAt:    Instant }
 Availability = { status: available | outOfStock | unavailable,
@@ -32,7 +32,6 @@ Availability = { status: available | outOfStock | unavailable,
 
 | Value object | Values | Origin | Source |
 |---|---|---|---|
-| `item` | offerId, lastKnown snapshot | Business concept | element 02 |
 | `offerState`, `stock` | onSale/removed/notRead, quantity/notRead | Integration | `OfferCatalog` port (element 08) |
 | `readAt` | instant | — | clock |
 | `Availability` | status, reason, stale | Derived | this element |
