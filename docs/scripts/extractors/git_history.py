@@ -61,7 +61,24 @@ def _commits(scope: str | None) -> list[dict]:
         sha, date, parents, subject, body = entry.split(FIELD_SEPARATOR, 4)
         commits.append({"sha": sha, "date": date, "parents": parents.split(), "subject": subject,
                         "body": body})
-    return commits
+    return [commit for commit in commits if _belongs_to_the_service(commit)]
+
+
+def _belongs_to_the_service(commit: dict) -> bool:
+    """A row describes a change to the documented service, so the dataset cannot invalidate itself.
+
+    Merge commits are structural, and a documentation-only commit changes nothing the reader of the
+    revision history is looking for. Indexing either made every docs commit stale the revision history it
+    had just written, so the drift gate could never pass on a committed tree.
+    """
+    if len(commit["parents"]) > 1:
+        return False
+    touched = _touched(commit["sha"])
+    return bool(touched) and not all(_is_documentation(path) for path in touched)
+
+
+def _is_documentation(path: str) -> bool:
+    return path.startswith("docs/") or path in {"README.md", ".gitignore"}
 
 
 def _touched(sha: str) -> list[str]:

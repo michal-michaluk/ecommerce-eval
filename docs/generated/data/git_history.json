@@ -1,11 +1,11 @@
 {
-  "commits_read": 24,
+  "commits_read": 15,
   "quality": {
-    "conventional": 24,
+    "conventional": 15,
     "conventional_share": 1.0,
     "counts": {
-      "chore": 6,
-      "docs": 9,
+      "chore": 5,
+      "docs": 1,
       "feat": 7,
       "fix": 1,
       "refactor": 1
@@ -16,46 +16,10 @@
     "other": 0,
     "other_share": 0.0,
     "path_classified": 0,
-    "rows": 24
+    "rows": 15
   },
   "repository": "ecommerce",
   "rows": [
-    {
-      "category": "docs",
-      "change": "fix review findings and make broken figures impossible to ship",
-      "date": "2026-11-20",
-      "evidence": [
-        "git:674d8379e90225c94bd2ccbc9ed10c93caeeb091"
-      ],
-      "ref": {
-        "sha": "674d837"
-      },
-      "scope": "."
-    },
-    {
-      "category": "docs",
-      "change": "fulfillment docset — system, integrator and business guide",
-      "date": "2026-11-20",
-      "evidence": [
-        "git:d482a5f7066be615cd936b897386f136378c0333"
-      ],
-      "ref": {
-        "sha": "d482a5f"
-      },
-      "scope": "."
-    },
-    {
-      "category": "docs",
-      "change": "close the plan — steps 5-7, resolutions, review residue",
-      "date": "2026-11-20",
-      "evidence": [
-        "git:6351030c46ecd45c5fc37c36a7dab537c0e0f4b4"
-      ],
-      "ref": {
-        "sha": "6351030"
-      },
-      "scope": "."
-    },
     {
       "category": "fix",
       "change": "review blockers — orders-list facts, order identity, registration",
@@ -129,18 +93,6 @@
       "scope": "."
     },
     {
-      "category": "docs",
-      "change": "reconcile the element docs with the executable contract",
-      "date": "2026-11-19",
-      "evidence": [
-        "git:2669c8ac8de10a0905ecccbcf16da9eb9c6163c0"
-      ],
-      "ref": {
-        "sha": "2669c8a"
-      },
-      "scope": "."
-    },
-    {
       "category": "refactor",
       "change": "shared kernel plus two slices, aggregate renamed",
       "date": "2026-11-19",
@@ -177,42 +129,6 @@
       "scope": "."
     },
     {
-      "category": "docs",
-      "change": "fulfillment implementation plan — 4 phases, 22 nodes",
-      "date": "2026-11-19",
-      "evidence": [
-        "git:9ad8a49f66311d0e2c2e4304f151a4b34766a797"
-      ],
-      "ref": {
-        "sha": "9ad8a49"
-      },
-      "scope": "."
-    },
-    {
-      "category": "docs",
-      "change": "fulfillment order processing specification",
-      "date": "2026-11-19",
-      "evidence": [
-        "git:0cf7e8c04895b58b244d709a6d233155bdddd02a"
-      ],
-      "ref": {
-        "sha": "0cf7e8c"
-      },
-      "scope": "."
-    },
-    {
-      "category": "chore",
-      "change": "ignore run-apps runtime state, storybook builds, demo scratch and the generated docs/arch + .agents/blueprints copies",
-      "date": "2026-11-19",
-      "evidence": [
-        "git:c2b9310b7b6c99ec462750c56d6f442f1e744f5c"
-      ],
-      "ref": {
-        "sha": "c2b9310"
-      },
-      "scope": "."
-    },
-    {
       "category": "chore",
       "change": "the run-apps skill",
       "date": "2026-11-19",
@@ -225,18 +141,6 @@
       "scope": "."
     },
     {
-      "category": "docs",
-      "change": "machine-readable transcriptions of the raw materials (json)",
-      "date": "2026-11-16",
-      "evidence": [
-        "git:8b3a6be0fc4594c39ede777fd4b1e3daf87d5ceb"
-      ],
-      "ref": {
-        "sha": "8b3a6be"
-      },
-      "scope": "."
-    },
-    {
       "category": "chore",
       "change": "track the spec's Storybook gallery and stop ignoring .storybook",
       "date": "2026-11-16",
@@ -245,18 +149,6 @@
       ],
       "ref": {
         "sha": "9cf2ca2"
-      },
-      "scope": "."
-    },
-    {
-      "category": "docs",
-      "change": "catalog offer management specification",
-      "date": "2026-11-16",
-      "evidence": [
-        "git:cb42283151cfae9ab1fa89fdbd4be5ed1e983b62"
-      ],
-      "ref": {
-        "sha": "cb42283"
       },
       "scope": "."
     },
