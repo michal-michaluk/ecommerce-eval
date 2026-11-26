@@ -78,7 +78,7 @@ items:
 - **RULE-5 Nothing disappears.** An item whose offer is gone stays as `unavailable` (`[seg 69]`), is excluded from the totals (D18) and blocks handover.
 - **RULE-6 Out-of-stock blocks.** `outOfStock` is counted while selected but never crosses the handover; deselecting the row enables checkout for the rest (D33 — the operator's decision, which overrides `[seg 70-71]` and closes R7).
 - **RULE-7 Grouping is derived.** Shipping grouping is `seller` on the item, not a stored shipment entity.
-- **RULE-8 Snapshot is last known.** The item keeps the last successfully read snapshot so an erased offer still renders; the snapshot is never an input to a calculation.
+- **RULE-8 Snapshot is last known.** The item keeps the last successfully read snapshot so an erased offer still renders. It is the **price source** when a fresh read is unavailable — element 04 sums its `currentPrice` and `discount` — but it is never **re-derived** from other fields (D22: no `currentPrice = price − discount`) and never **authoritative**: element 09 crosses it as a snapshot and checkout re-prices it (D31, HAND-5). A snapshot that can no longer be trusted is the `unavailable` row D18 excludes.
 - **RULE-9 Selection never exceeds the basket.** Deselecting everything leaves a valid basket with an empty selection; handover is then refused.
 - **RULE-10 Selection is not persisted history.** Selection is part of the basket state, not an event stream — no event is emitted for it.
 

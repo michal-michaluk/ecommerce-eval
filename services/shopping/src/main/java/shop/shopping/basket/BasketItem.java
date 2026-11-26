@@ -11,8 +11,9 @@ import shop.shopping.kernel.ShoppingException;
  * element 06 last decided about it (element 02 RULE-4, RULE-7).
  *
  * <p>The last-known snapshot is kept whatever happens to the offer, so an erased offer still renders as a blocked row
- * instead of disappearing (RULE-5, RULE-8). The snapshot is never an input to a calculation: it is what the row shows, and
- * the price the handover crosses is the offer's current one.
+ * instead of disappearing (RULE-5, RULE-8). It is also the price source when no fresh read is available — element 04 sums
+ * its {@code currentPrice} and {@code discount} — but it is never re-derived from other fields (D22) and never authoritative:
+ * element 09 crosses it as a snapshot and checkout re-prices it (D31).
  *
  * <p>Quantity is at least one — zero is not a quantity and removal is the only exit (RULE-3) — and the item never exists
  * twice for one offer: a repeated add merges the quantity and selects the row (D19).

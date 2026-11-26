@@ -10,7 +10,7 @@
 BasketDeliveryEstimate.estimate(request) → Estimate
 
 request  = { items: [ { offerId, seller, quantity, availability } ],
-             channel: TokenChannel,             # SMART etc., from the token (Q9/D13 boundary)
+             channel: Channel,                  # `standard | smart`, from the token (Q9/D13 boundary; D54)
              now: Instant }
 Estimate = { kind: estimate | unknown,
              from: Date, to: Date,              # inclusive day range, ISO-8601 dates
@@ -28,7 +28,7 @@ Estimate = { kind: estimate | unknown,
 | Value object | Values | Origin | Source |
 |---|---|---|---|
 | `items[]` | offerId, seller, quantity, availability | Business concept | element 02, element 06 |
-| `channel` | SMART or default | Integration | token claim (D13 — HTTP shape deferred) |
+| `channel` | `standard` or `smart` — one type for both policies (D54) | Integration | token claim (D13 — HTTP shape deferred) |
 | `now` | instant | — | clock |
 | `Estimate` | day range, source | Configuration + Derived | this element |
 
