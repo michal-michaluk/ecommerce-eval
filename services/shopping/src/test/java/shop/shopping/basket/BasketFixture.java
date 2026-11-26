@@ -71,7 +71,7 @@ public class BasketFixture {
     }
 
     public static BasketItem anItem(String offerId, String seller, int quantity, Availability availability) {
-        return new BasketItem(offerId, seller, quantity, true, availability, aLastKnown());
+        return new BasketItem(offerId, seller, quantity, true, availability, aLastKnown(), NOW);
     }
 
     public static BasketItem anItemReadAsStale() {
@@ -89,7 +89,11 @@ public class BasketFixture {
     public static BasketItem anItemInAnotherCurrency() {
         return new BasketItem(FIRST_OFFER, UGREEN, 1, true, Availability.available(),
                 new BasketItem.LastKnown("UGREEN Nexode", "img-1001",
-                        MoneyFixture.anAmountIn(99890, "EUR"), Money.zero("EUR", Money.Kind.discount)));
+                        MoneyFixture.anAmountIn(99890, "EUR"), Money.zero("EUR", Money.Kind.discount)), NOW);
+    }
+
+    public static BasketItem aRowFromBeforeTheReadInstantWasKept() {
+        return new BasketItem(FIRST_OFFER, UGREEN, 1, true, Availability.available(), aLastKnown(), null);
     }
 
     public static BasketItem.LastKnown aLastKnown() {

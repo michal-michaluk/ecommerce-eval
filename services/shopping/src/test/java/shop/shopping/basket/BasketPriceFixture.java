@@ -52,13 +52,14 @@ public class BasketPriceFixture {
 
     public static BasketItem theFirstItemWithCatalogDiscount() {
         return new BasketItem(BasketFixture.FIRST_OFFER, BasketFixture.UGREEN, 1, true, Availability.available(),
-                new BasketItem.LastKnown(TITLE, PICTURE, anAmount(DISCOUNTED_FIRST_PRICE), aDiscount(DISCOUNT)));
+                new BasketItem.LastKnown(TITLE, PICTURE, anAmount(DISCOUNTED_FIRST_PRICE), aDiscount(DISCOUNT)),
+                BasketFixture.NOW);
     }
 
     public static BasketItem aFirstItemInAnotherCurrency() {
         return new BasketItem(BasketFixture.FIRST_OFFER, BasketFixture.UGREEN, 1, true, Availability.available(),
                 new BasketItem.LastKnown(TITLE, PICTURE, new Money(FIRST_PRICE, EUR),
-                        Money.zero(EUR, Money.Kind.discount)));
+                        Money.zero(EUR, Money.Kind.discount)), BasketFixture.NOW);
     }
 
     public static BasketItem anItemWithQuantity(int quantity) {
@@ -100,12 +101,12 @@ public class BasketPriceFixture {
 
     private static BasketItem anItem(String offerId, String seller, Money currentPrice) {
         return new BasketItem(offerId, seller, 1, true, Availability.available(),
-                new BasketItem.LastKnown(TITLE, PICTURE, currentPrice, aDiscount(0)));
+                new BasketItem.LastKnown(TITLE, PICTURE, currentPrice, aDiscount(0)), BasketFixture.NOW);
     }
 
     private static BasketItem anItemOfAnotherStatus(String offerId, String seller, Availability availability,
             Money currentPrice) {
         return new BasketItem(offerId, seller, 1, true, availability,
-                new BasketItem.LastKnown(TITLE, PICTURE, currentPrice, aDiscount(0)));
+                new BasketItem.LastKnown(TITLE, PICTURE, currentPrice, aDiscount(0)), BasketFixture.NOW);
     }
 }

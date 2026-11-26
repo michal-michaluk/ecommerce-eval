@@ -18,6 +18,7 @@ items:
     quantity: 1
     selected: true
     availability: available
+    readAt: "2026-11-26T09:58:00Z"          # when the last observation was applied (D59)
     lastKnown: { title: "UGREEN Nexode Szybka Ładowarka Sieciowa USB 2x USB Typ C Zasilacz QC PD 65W",
                  picture: "img-1001", currentPrice: { amount: 99890, currency: PLN },
                  discount: { amount: 0, currency: PLN, kind: discount } }
@@ -26,6 +27,7 @@ items:
     quantity: 1
     selected: true
     availability: available
+    readAt: "2026-11-26T09:58:00Z"
     lastKnown: { title: "UGREEN Hub Adapter Stacja Revodok USB-C Do 3xUSB USB-C HDMI 4K 30Hz PD 100W",
                  picture: "img-1002", currentPrice: { amount: 64990, currency: PLN },
                  discount: { amount: 0, currency: PLN, kind: discount } }
@@ -40,8 +42,10 @@ customerId: C-42
 state: active
 items:
   - { offerId: OF-1001, seller: UGREEN_POLSKA, quantity: 2, selected: true,  availability: available }
-  - { offerId: OF-1002, seller: UGREEN_POLSKA, quantity: 1, selected: false, availability: outOfStock }
+  - { offerId: OF-1002, seller: UGREEN_POLSKA, quantity: 1, selected: false, availability: outOfStock,
+      readAt: "2026-11-26T10:02:00Z" }
   - { offerId: OF-2007, seller: ANKER_STORE,   quantity: 1, selected: true,  availability: unavailable,
+      readAt: "2026-11-26T10:02:00Z",
       lastKnown: { title: "…", picture: "img-2007", currentPrice: { amount: 129000, currency: PLN },
                    discount: { amount: 0, currency: PLN, kind: discount } } }
 # derived at read: two shipments, the unavailable row excluded from the totals (D18)
@@ -78,6 +82,7 @@ items:
 - **RULE-5 Nothing disappears.** An item whose offer is gone stays as `unavailable` (`[seg 69]`), is excluded from the totals (D18) and blocks handover.
 - **RULE-6 Out-of-stock blocks.** `outOfStock` is counted while selected but never crosses the handover; deselecting the row enables checkout for the rest (D33 — the operator's decision, which overrides `[seg 70-71]` and closes R7).
 - **RULE-7 Grouping is derived.** Shipping grouping is `seller` on the item, not a stored shipment entity.
+- **RULE-8a Read instant.** Every row keeps the `readAt` of the last observation applied to it, so an observation older than the row is discarded (element 10 EVT-3, DoD21) — across requests, which is why it is persisted (D59). A document written before the component existed rehydrates it as `EPOCH`, so the next observation always applies. It advances on a **non-answer** too (a failed read keeps `lastKnown`), an observation of the **same** instant is applied rather than discarded, and a discarded observation leaves the document untouched — no write, no version.
 - **RULE-8 Snapshot is last known.** The item keeps the last successfully read snapshot so an erased offer still renders. It is the **price source** when a fresh read is unavailable — element 04 sums its `currentPrice` and `discount` — but it is never **re-derived** from other fields (D22: no `currentPrice = price − discount`) and never **authoritative**: element 09 crosses it as a snapshot and checkout re-prices it (D31, HAND-5). A snapshot that can no longer be trusted is the `unavailable` row D18 excludes.
 - **RULE-9 Selection never exceeds the basket.** Deselecting everything leaves a valid basket with an empty selection; handover is then refused.
 - **RULE-10 Selection is not persisted history.** Selection is part of the basket state, not an event stream — no event is emitted for it.

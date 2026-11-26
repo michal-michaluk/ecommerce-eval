@@ -47,7 +47,7 @@ Availability = { status: available | outOfStock | unavailable,
 
 ## Events — the fourth input
 
-Besides the pull (element 08), the decision is re-evaluated when an **offer change event** arrives (element 10, D25): price change, offer removed, stock changed. The event carries a new `observation`; the decision runs again with it and the basket re-renders. An event is never trusted to be the only truth — a read after an event still wins, and out-of-order events must be discarded by `readAt`.
+Besides the pull (element 08), the decision is re-evaluated when an **offer change event** arrives (element 10, D25): price change, offer removed, stock changed. The event carries a new `observation`; the decision runs again with it and the basket re-renders. An event is never trusted to be the only truth — a read after an event still wins, and out-of-order events must be discarded by `readAt`. An event that carries **no** offer state (a price or description change) refreshes the row's content and **does not re-decide availability** — an event is never a reason to grey or to revive a row (D61).
 
 ## Interface scenarios
 

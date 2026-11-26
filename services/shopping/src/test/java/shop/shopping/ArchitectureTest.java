@@ -2,13 +2,17 @@ package shop.shopping;
 
 import com.tngtech.archunit.base.DescribedPredicate;
 import com.tngtech.archunit.core.domain.JavaClass;
+import com.tngtech.archunit.core.domain.JavaClasses;
+import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
+import org.junit.jupiter.api.Test;
 
 import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideInAPackage;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * The kernel/slice boundary of the shopping context, executable.
@@ -30,6 +34,7 @@ class ArchitectureTest {
 
     public static final String KERNEL = "shop.shopping.kernel";
     public static final String BASKET = "shop.shopping.basket";
+    public static final String CONTEXT = "shop.shopping..";
 
     public static final DescribedPredicate<JavaClass> sharedKernelExposed = resideInAPackage(KERNEL + "..");
     public static final DescribedPredicate<JavaClass> sharedKernelUsed = resideInAPackage(KERNEL + "..");
@@ -66,4 +71,26 @@ class ArchitectureTest {
     public static final ArchRule kernelDependsOnNoSlice =
             noClasses().that().resideInAPackage(KERNEL + "..")
                     .should().dependOnClassesThat().resideInAnyPackage(BASKET + "..");
+
+    @ArchTest
+    public static final ArchRule noReservationOperationIsDeclared =
+            ArchitectureDescription.noReservationOperations(CONTEXT);
+
+    /**
+     * The gate above must not be vacuous: a port shaped the way fulfilment's is — one operation that holds stock — is refused
+     * by it, so a future {@code reserve…} on the basket's path turns the rule red instead of quietly passing (DoD17).
+     */
+    @Test
+    void refusesAPortThatReservesStock() {
+        JavaClasses theForbiddenShape = new ClassFileImporter().importClasses(StockHoldingPort.class);
+
+        assertThatThrownBy(() -> ArchitectureDescription.noReservationOperations(CONTEXT).check(theForbiddenShape))
+                .hasMessageContaining("reserveProductQuantity");
+    }
+
+    /** Fulfilment's own port, which the basket may never reach for (R6, element 08 §Port). */
+    interface StockHoldingPort {
+
+        int reserveProductQuantity(String productId, int quantity);
+    }
 }

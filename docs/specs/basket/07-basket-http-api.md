@@ -35,7 +35,10 @@
 ### Two recorded deviations from the architecture doctrine (D44)
 
 - **`422`, not `409`, for a refused command.** `docs/arch/microservice-java-spring/http-adapter.md:38-47` assigns a well-formed but refused command `409` and reserves `422` for a syntactic/semantic split used *everywhere*. The basket keeps `422` because the contract of record — `prototypes/basket-api.prove.md` — and its five error goldens are written that way; the deviation is deliberate, not an oversight.
-- **`GET /baskets` writes.** `http-adapter.md:58` requires every `GET` to be served from a read model that cannot reach the write model. D29 makes the first read create the basket, so the read model owns exactly one write path: `BasketsProjection` delegates creation to the basket service and then answers from its own row. No other read writes.
+- **`GET /baskets` writes.** `http-adapter.md:58` requires every `GET` to be served from a read model that cannot reach the write model. D29 makes the first read create the basket, so the read model owns exactly one write path: `BasketsProjection` delegates creation to the basket service and then answers from its own row.
+- **`GET /baskets/{basketId}` writes the aggregate (D62).** The pull on render (D10) applies the observations it just read, and a persisted `readAt` (D59) makes that write happen on every render. Consequence for the client: two concurrent renders of one basket can answer `409 CONCURRENT_MODIFICATION` to a `GET`, which is retryable.
+
+No other read writes.
 
 ## Resolved questions
 

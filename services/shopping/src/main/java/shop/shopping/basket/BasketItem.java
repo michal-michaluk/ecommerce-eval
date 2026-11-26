@@ -1,5 +1,6 @@
 package shop.shopping.basket;
 
+import java.time.Instant;
 import java.util.Objects;
 
 import shop.shopping.kernel.Availability;
@@ -7,8 +8,8 @@ import shop.shopping.kernel.Money;
 import shop.shopping.kernel.ShoppingException;
 
 /**
- * One offer in a basket: which offer, whose shipment it belongs to, how many, whether the customer selected it, and what
- * element 06 last decided about it (element 02 RULE-4, RULE-7).
+ * One offer in a basket: which offer, whose shipment it belongs to, how many, whether the customer selected it, what
+ * element 06 last decided about it, and when that answer was obtained (element 02 RULE-4, RULE-7).
  *
  * <p>The last-known snapshot is kept whatever happens to the offer, so an erased offer still renders as a blocked row
  * instead of disappearing (RULE-5, RULE-8). It is also the price source when no fresh read is available — element 04 sums
@@ -24,6 +25,11 @@ import shop.shopping.kernel.ShoppingException;
  * @param selected     whether the customer's command covers this row (RULE-9, RULE-10)
  * @param availability what element 06 decided, stored as data
  * @param lastKnown    the offer as it was last read successfully (RULE-8)
+ * @param readAt       when the observation this row carries was obtained; it moves with every applied observation,
+ *                     including the one that keeps {@code lastKnown} (A4), so an answer older than a failed read is still
+ *                     discarded (EVT-3). A document written before the row carried it rehydrates as {@link Instant#EPOCH},
+ *                     the oldest possible read, so the next observation always applies — the same tolerance {@link Money}
+ *                     states for a {@code kind} it did not always store
  */
 record BasketItem(
         String offerId,
@@ -31,7 +37,8 @@ record BasketItem(
         int quantity,
         boolean selected,
         Availability availability,
-        LastKnown lastKnown) {
+        LastKnown lastKnown,
+        Instant readAt) {
 
     /**
      * The offer as it was last read: what the row renders when the offer itself can no longer be read, and the prices the
@@ -65,6 +72,7 @@ record BasketItem(
         Objects.requireNonNull(seller, "seller");
         Objects.requireNonNull(availability, "availability");
         Objects.requireNonNull(lastKnown, "lastKnown");
+        readAt = readAt == null ? Instant.EPOCH : readAt;
         if (quantity < 1) {
             throw new ShoppingException(ShoppingException.Error.QUANTITY_NOT_POSITIVE, quantity);
         }
@@ -82,12 +90,61 @@ record BasketItem(
 
     /** This row at another quantity — a change produces a new row, never an edited one (element 03 RULE-1). */
     BasketItem withQuantity(int quantity) {
-        return new BasketItem(offerId, seller, quantity, selected, availability, lastKnown);
+        return new BasketItem(offerId, seller, quantity, selected, availability, lastKnown, readAt);
     }
 
     /** This row selected or deselected — the only thing a selection command changes (RULE-10). */
     BasketItem withSelection(boolean selected) {
-        return new BasketItem(offerId, seller, quantity, selected, availability, lastKnown);
+        return new BasketItem(offerId, seller, quantity, selected, availability, lastKnown, readAt);
+    }
+
+    /**
+     * This row after one offer observation, or this row unchanged when the observation is older than the one it already
+     * carries (EVT-3, DoD21).
+     *
+     * <p>What is re-decided depends on what was answered. An observation that describes the offer decides its availability
+     * again from itself, never from this row — that is what makes a failed read fail closed instead of keeping the
+     * {@code available} it replaced (A4, D26) — and replaces every field it names, keeping the fields it left out (element 08
+     * §Fields consumed) and regrouping the row under the seller it reports (RULE-7). A partial observation, which is a price
+     * or description change, refreshes the content and leaves the availability alone, because it answered nothing about it
+     * (R13, element 10 §Events consumed). An observation of the same instant is applied: it replaces the row with an equal one,
+     * which is how a duplicate delivery costs nothing (EVT-4, DoD20).
+     *
+     * @param command the observation, already mapped from the port's read record
+     * @return the refreshed row, or this row when the observation is still older than {@link #readAt}
+     */
+    BasketItem applying(OfferObservationCommand command) {
+        Objects.requireNonNull(command, "command");
+        return command.readAt().isBefore(readAt) ? this : observedAs(command);
+    }
+
+    /**
+     * Whether this row says exactly what {@code other} says, the read instant aside — what {@code revision} counts, because
+     * a newer read of unchanged content is freshness and not a mutation of the customer's basket (element 02 §revision).
+     *
+     * @param other the row it is compared with
+     * @return true when every field but {@link #readAt} is equal
+     */
+    boolean saysTheSameAs(BasketItem other) {
+        Objects.requireNonNull(other, "other");
+        return offerId.equals(other.offerId) && seller.equals(other.seller) && quantity == other.quantity
+                && selected == other.selected && availability.equals(other.availability)
+                && lastKnown.equals(other.lastKnown);
+    }
+
+    private BasketItem observedAs(OfferObservationCommand command) {
+        return switch (command) {
+            case OfferObservationCommand.Answered answered -> refreshed(answered.snapshot().filledWith(lastKnown),
+                    OfferAvailabilityDecision.decide(answered.observation()), answered.seller(), answered.readAt());
+            case OfferObservationCommand.Unanswered unanswered -> refreshed(lastKnown,
+                    OfferAvailabilityDecision.decide(unanswered.observation()), seller, unanswered.readAt());
+            case OfferObservationCommand.Refreshed repriced -> refreshed(repriced.snapshot().filledWith(lastKnown),
+                    availability, seller, repriced.readAt());
+        };
+    }
+
+    private BasketItem refreshed(LastKnown snapshot, Availability decided, String groupedUnder, Instant obtainedAt) {
+        return new BasketItem(offerId, groupedUnder, quantity, selected, decided, snapshot, obtainedAt);
     }
 
     private int grownBy(int more) {

@@ -157,6 +157,35 @@ class BasketEditor {
     }
 
     /**
+     * Applies one offer observation to the row that already stands for it — element 10's command, in process (D39).
+     *
+     * <p>It never creates a row: an offer the basket does not hold is ignored, because a row exists only because the customer
+     * put it there (EVT-2). The row decides the rest — availability again through element 06, the snapshot replaced when the
+     * observation carries one, and an observation older than the row's own read discarded (EVT-3, DoD21) — so applying the
+     * same observation twice leaves the document as it was (EVT-4, DoD20). A terminal basket is left alone: its content
+     * crossed to checkout already (D31), and the flow must not grow with the number of baskets nobody is shopping in (EVT-5).
+     *
+     * <p>No fact is recorded, because element 02's event set is closed and availability is derived state, like selection: it
+     * is what a row is worth now, not something that happened to the customer's basket (RULE-10). {@code revision} moves only
+     * when what a row says changes — quantity, selection, seller, availability, title, picture or price. A newer read of
+     * unchanged content is stored (the next older answer must be discarded, EVT-3) but is freshness, not a mutation, so it
+     * consumes no revision: once the pull path applies observations on every render, a version that moved on each render would
+     * churn the handover identity for nothing (D35).
+     *
+     * @param command the observation, already mapped from the port's read record
+     * @return whether the document changed, so the caller writes only then
+     */
+    boolean applyObservation(OfferObservationCommand command) {
+        Objects.requireNonNull(command, "command");
+        if (state != BasketState.active) {
+            return false;
+        }
+        return storedItem(command.offerId())
+                .map(item -> replaceIfObservedAs(item, command))
+                .orElse(false);
+    }
+
+    /**
      * Reads the basket as an immutable snapshot.
      *
      * @return the state as the read side stores and serves it
@@ -171,6 +200,24 @@ class BasketEditor {
                 .orElseGet(() -> item.withSelection(true));
         stored.ifPresentOrElse(existing -> items.set(items.indexOf(existing), added), () -> items.add(added));
         return added;
+    }
+
+    private boolean replaceIfObservedAs(BasketItem stored, OfferObservationCommand command) {
+        BasketItem refreshed = stored.applying(command);
+        if (refreshed.saysTheSameAs(stored)) {
+            return rememberRead(refreshed, stored);
+        }
+        items.set(items.indexOf(stored), refreshed);
+        revision++;
+        return true;
+    }
+
+    private boolean rememberRead(BasketItem refreshed, BasketItem stored) {
+        if (refreshed.equals(stored)) {
+            return false;
+        }
+        items.set(items.indexOf(stored), refreshed);
+        return true;
     }
 
     private void replaceQuantity(BasketItem stored, int quantity) {

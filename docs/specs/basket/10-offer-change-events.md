@@ -12,8 +12,8 @@
 
 | Event | Payload (fields we consume) | Effect on the basket |
 |---|---|---|
-| `product prices changed` | `offerId`, `price`, `currentPrice`, `discount`, `changedAt` | re-evaluate the item's price snapshot; the view and element 04 re-render |
-| `product description snapshot when published` | `offerId`, `title`, `pictureUrl`, `publishedAt` | refresh the item's last-known snapshot (02 RULE-8) |
+| `product prices changed` | `offerId`, `price`, `currentPrice`, `discount`, `changedAt` | re-evaluate the item's price snapshot; the view and element 04 re-render. **Content only** — availability is untouched (D61) |
+| `product description snapshot when published` | `offerId`, `title`, `pictureUrl`, `publishedAt` | refresh the item's last-known snapshot (02 RULE-8). **Content only** — availability is untouched (D61) |
 | `product removed from offer` | `offerId`, `removedAt` | element 06 A3 → `unavailable`, greyed, handover blocked |
 | `stock changed` | `offerId`, `stock` (quantity today, a band later — R14), `changedAt` | element 06 A2/A5 re-evaluated — a transition to `outOfStock` now **blocks** handover (D33) |
 

@@ -112,7 +112,8 @@ class DocumentBasketRepositoryTest {
                       "picture": "img-1001",
                       "currentPrice": {"amount": 99890, "currency": "PLN", "kind": "charge"},
                       "discount": {"amount": 0, "currency": "PLN", "kind": "discount"}
-                    }
+                    },
+                    "readAt": "2026-11-26T10:00:00Z"
                   }],
                   "revision": 1,
                   "lastHandover": null

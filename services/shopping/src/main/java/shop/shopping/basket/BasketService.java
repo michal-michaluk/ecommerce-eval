@@ -73,6 +73,22 @@ class BasketService {
         return store(basket);
     }
 
+    /**
+     * Applies one offer observation to the basket it answers for — element 10's application path, the one an event or a read
+     * feeds and the one DoD20/DoD21 prove (D39). The transport itself is deferred.
+     *
+     * <p>The write happens only when the document changed: a duplicate delivery and an observation older than the row's read
+     * are answered from the state that is already there, so neither costs a write nor a version (EVT-3, EVT-4).
+     *
+     * @param basketId the basket the observation answers for
+     * @param command  the observation, already mapped from the port's read record
+     * @return the basket as the read side serves it
+     */
+    Basket applyObservation(BasketId basketId, OfferObservationCommand command) {
+        BasketEditor basket = editor(basketId);
+        return basket.applyObservation(command) ? store(basket) : basket.toSnapshot();
+    }
+
     Basket removeItem(BasketId basketId, String offerId) {
         BasketEditor basket = editor(basketId);
         basket.removeItem(offerId);
