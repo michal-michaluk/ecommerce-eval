@@ -34,20 +34,27 @@ an infrastructure stack.
 | `rebuild [catalog\|fulfillment\|shopping]` | `jibBuildTar` → import → `rollout restart` → wait Ready → health; touches only the named service. No argument = all three, sequentially |
 | `restart [catalog\|fulfillment\|shopping]` | `stop` then `deploy` |
 | `stop` | kill port-forwards (tracked and orphaned) → `podman rm -f shop-k3s` (and any legacy `catalog-k3s`) → free 8080/8081/8082/18081/6443 → clear state and tokens |
-| `auth [--json] [--reuse]` | mint the scoped tokens of **every** realm (catalog: author, reviewer, photographer, sales; fulfillment: employee, other-employee, resolver, customer, shopping; shopping: customer once its realm document exists), printed as `export` lines and written to `.agents/runtime/tokens.env` |
+| `auth [--json] [--reuse]` | mint the scoped tokens of **every** realm (catalog: author, reviewer, photographer, sales; fulfillment: employee, other-employee, resolver, customer, shopping; shopping: customer, service), printed as `export` lines and written to `.agents/runtime/tokens.env` |
 | `test [catalog\|fulfillment\|shopping] [--suite] [--base-url]` | `hurl --test` over that service's suite with its own tokens; no argument = all three, sequentially |
 
 Every command is idempotent. `deploy` on a deployed environment reuses the cluster, skips an unchanged
 image and an unchanged rollout; `stop` on a stopped environment reports `none running` and exits 0.
 
+**Two identities are both called "the service token", and only one of them is one.**
+`SHOPPING_SERVICE_TOKEN` is realm `shopping`'s `service` user (`shopping-service-client`, scope
+`openid shopping-service`); it validates against the shopping service and gives the customer route a
+`403` (prove step 24, DoD16). `FULFILLMENT_SHOPPING_TOKEN` is realm `iot`'s `shopping` user
+(`shopping-service-client` too, scope `openid shopping-service`) and answers `401` at the shopping
+service, because the issuer is another realm. Use the first for step 24.
+
 `status` exits 0 for GREEN and for NONE (nothing running at all — the state `stop` leaves), and exits 1
 only for a half-state: cluster up while a service is not 1/1 or not healthy.
 
-**`NOT CONFIGURED` is out of the verdict.** A service whose realm document does not exist yet (today
-`shopping`, whose `services/shopping/src/test/resources/shopping-realm.json` arrives with
-`customer-security`) prints a `state NOT CONFIGURED` line under its own heading and one `warning: not
+**`NOT CONFIGURED` is out of the verdict.** A service whose realm document does not exist yet prints a
+`state NOT CONFIGURED` line under its own heading and one `warning: not
 configured` above the verdict, and it does not count towards GREEN — its realm was never imported and
-no token of it can be minted. It does not hide a real failure either: a `NOT CONFIGURED` service that
+no token of it can be minted. All three services carry a realm document today, so only a service that
+loses its document reaches this state. It does not hide a real failure either: a `NOT CONFIGURED` service that
 is actually deployed and unhealthy still turns the verdict RED. The same predicate keeps `auth`,
 `tokens_valid`, `write_tokens_env` and `ensure_realm_configmap` working for the other services, and
 `test shopping` fails with the missing path instead of a Keycloak error.
@@ -163,7 +170,11 @@ into (`/opt/keycloak/data/import`), so one Keycloak serves realm `catalog`, real
 | --- | --- | --- | --- | --- |
 | catalog | `catalog` | `services/catalog/src/test/resources/catalog-realm.json` if it exists, else the copy this skill vendors at `manifests/realms/catalog-realm.json` | author, reviewer, photographer, sales | `catalog-<user>-client` |
 | fulfillment | `iot` | `services/fulfillment/src/test/resources/iot-realm.json` | employee, other-employee, resolver, customer, shopping | `fulfillment-employee-client`, `fulfillment-resolver-client`, `fulfillment-customer-client`, `shopping-service-client` |
-| shopping | `shopping` | `services/shopping/src/test/resources/shopping-realm.json` — **not written yet** | customer | `customer-client` |
+| shopping | `shopping` | `services/shopping/src/test/resources/shopping-realm.json` | customer, service | `customer-client`, `shopping-service-client` |
+
+The customer's token carries scope `customer` (the route authority `SCOPE_customer`); the service
+token is valid in the same realm through `shopping-service` and carries no customer scope, so a
+customer route can answer `403` to it (DoD16).
 
 The realm document stays the service's single source of truth. The catalog document is on
 `feat/catalog-domain-model` and **not on `main`**, so the skill vendors the same file and a `deploy` on
@@ -249,8 +260,8 @@ A full cycle, observed end to end with both services.
 | --- | --- |
 | `deploy` from nothing (container absent, image tars present) | exit 0 in 219 s: `shop-k3s` created, postgres/kafka/keycloak Ready, both images imported, `catalog-64d94c7c84-rvwcc` and `fulfillment-7ddb4d9b76-nnlkb` 1/1, health `200 UP` on 8080 and 8081 |
 | `status` | exit 0: `databases catalog, fulfillment (instance postgresql)`, both services `1/1` and `200 UP`, two LIVE forwards, `GREEN — cluster up, catalog 1/1 200 UP, fulfillment 1/1 200 UP` |
-| `auth` | exit 0: 9 tokens out of the one Keycloak — realm `catalog` (author/reviewer/photographer/sales, scope `openid catalog-author`…, client `catalog-*-client`) and realm `iot` (employee/other-employee/resolver/customer/shopping, scope `openid fulfillment-employee`…, client `fulfillment-*-client`), +3600 s, written to `.agents/runtime/tokens.env` (9 lines, 0600) |
-| keycloak import | `Realm 'catalog' imported`, `Realm 'iot' imported`, `Import finished successfully` in one pod |
+| `auth` (re-observed with three services) | exit 0: 11 tokens out of the one Keycloak — realm `catalog` (author/reviewer/photographer/sales, scope `openid catalog-author`…, client `catalog-*-client`), realm `iot` (employee/other-employee/resolver/customer/shopping, scope `openid fulfillment-employee`…, client `fulfillment-*-client`) and realm `shopping` (customer through `customer-client`, scope `openid customer`; service through `shopping-service-client`, scope `openid shopping-service`), +3600 s, written to `.agents/runtime/tokens.env` (11 lines, 0600) |
+| keycloak import (re-observed with three services) | `realms catalog, iot, shopping in keycloak-realm`, then `Realm 'catalog' imported`, `Realm 'iot' imported`, `Realm 'shopping' imported`, `Import finished successfully` in one pod |
 | `test fulfillment` | executes requests 1–8 on a fresh database (order hand-over `201`, `OP-2026-0001`) and fails at request 9 (`e2e/fulfillment-api.hurl:121`) with `500 the warehouse port has no implementation` — exit 4, see *Known gaps* below |
 | `test catalog` | `e2e/healthcheck.hurl` fails at request 2 (`:12`): it expects `401` on `GET /actuator/info`, the app permits the path and answers `200` — exit 4, see *Known gaps* |
 | `rebuild catalog` | exit 0: `catalog-5d656df695-v5hm2 → catalog-7776ddff48-pd47q`, health `200 UP`, forward restarted, `fulfillment-6db4c5ff4d-xjzpp` untouched |
@@ -267,8 +278,11 @@ A full cycle, observed end to end with both services.
   `services/catalog/src/main/java/shop/catalog/AppConfiguration.java:29` permits that path, so the deployed app answers `200` and the suite fails on its second request. Element 12 (offers, the four scopes) lives on `feat/catalog-domain-model`, not on `main`; the same branch carries the 106-request `e2e/catalog-http-api.hurl` that `--suite` can run once it lands.
 - **`shopping`'s `e2e/healthcheck.hurl` has the same `401`-on-`/actuator/info` assertion.**
   `services/shopping/src/main/java/shop/shopping/AppConfiguration.java:30` permits that path, so `test shopping` stops at request 2. The route matrix is owned by `basket-http-api`; until it lands the blueprint suite and the blueprint permit-list disagree, exactly as they do in `catalog`.
-- **`shopping` has no realm document yet.**
-  `services/shopping/src/test/resources/shopping-realm.json` is created by `customer-security`. Until then `deploy` warns and imports only `catalog` and `iot`, and `auth`/`test shopping` have no realm to mint from.
+- **A changed realm document does not re-import on its own.**
+  Keycloak's `--import-realm` skips a realm that already exists, so `deploy` restarts Keycloak after a
+  ConfigMap change and the new document is still not applied to a realm that is already there. Editing
+  a realm document needs the realm deleted first (`DELETE /admin/realms/<realm>` through the Keycloak
+  port-forward with the `admin`/`admin` superuser), then `deploy`; today that is a manual step.
 - **`fulfillment` cannot complete its own contract without a warehouse.**
   `services/fulfillment/src/main/java/shop/fulfillment/processing/InvenTreeWarehouseIntegration.java` wires the adapter only when `fulfillment.warehouse.token` (and URL) are configured, and its class comment states that no simulator lives in `src/main` — the tests bring their own double. A deployment without them boots, answers `/orders`, and refuses the first claim with `the warehouse port has no implementation` (a 500, not the intended `WAREHOUSE_NOT_WIRED`). The suite therefore stops at request 9 of 48. A deployment that passes it needs an InvenTree-shaped endpoint (`docs/api/warehouse-api.md`) and `FULFILLMENT_WAREHOUSE_URL`/`FULFILLMENT_WAREHOUSE_TOKEN` in `manifests/fulfillment/kustomization.yaml`; the eval itself says the warehouse is never run, so this environment does not invent one.
 
@@ -326,7 +340,8 @@ fails on that assertion by design.
 | first authenticated request 500, logs `Read timed out` on `…/protocol/openid-connect/certs` | Keycloak's first realm-key load outlasted the resource server's read timeout; `run-apps test` warms it, and the same request succeeds on retry |
 | `test catalog` fails on `GET /actuator/info` expecting 401 | the app permits that path on `main` — see *Known gaps* |
 | `test shopping` fails on `GET /actuator/info` expecting 401 | the same permitted path as catalog — see *Known gaps* |
-| `deploy` warns `no realm document for shopping` | expected until `customer-security` adds `services/shopping/src/test/resources/shopping-realm.json` — see *Known gaps* |
+| `deploy` warns `no realm document for <service>` | that service's realm document is missing; `deploy` imports the other realms and skips this one — see *Known gaps* |
+| a realm document edit had no effect | Keycloak skips a realm that already exists — delete the realm through the admin API, then `deploy` — see *Known gaps* |
 | `test fulfillment` fails at request 9 with `the warehouse port has no implementation` | no warehouse adapter is configured — see *Known gaps* |
 | pods `Pending`, `node was low on resource: ephemeral-storage` | the podman machine disk is full — `podman image prune -f`, then `podman system df`; `deploy` refuses below 3 GiB free |
 | `port-forward … exited` | the API server or the pod went away; `status` then `deploy` restores it |

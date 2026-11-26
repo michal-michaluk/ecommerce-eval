@@ -2,16 +2,15 @@
 #
 # The cluster and its context are properties of the WORKSPACE, not of this service — this overlay
 # only names the namespace it deploys into. On this machine the cluster is `shop-k3s`, a privileged
-# podman container running `rancher/k3s` (there is no Docker daemon, so k3d cannot start);
-# `.agents/skills/run-apps/` is the one place that creates it and gets an image into it.
+# podman container running `rancher/k3s`; `.agents/skills/run-apps/` is the one place that creates it
+# and gets an image into it.
 #
-# The addresses below are the stand-alone layout: `keycloak` and `postgresql` as a self-contained
-# deployment of this service would create them in this namespace. That set is NOT composed here,
-# because the shop cluster runs one Postgres and one Keycloak in namespace `catalog` and shares them
-# by fully qualified name.
-# `.agents/skills/run-apps/manifests/shopping/kustomization.yaml` is what points this overlay at that
-# one set; an override never lives in the service tree. There is no broker in this set: the service
-# consumes no event channel (plan D39).
+# The issuer points at the one Keycloak the shop cluster runs, in namespace `catalog`, so a render of
+# this overlay alone authenticates (base carries the stand-alone `keycloak` Service this namespace
+# does not compose). The database address stays the stand-alone `postgresql`: `shopping-db` is a
+# Secret, and a merge generator would rename it out from under the Deployment, so
+# `.agents/skills/run-apps/manifests/shopping/kustomization.yaml` carries the shared address.
+# There is no broker in this set: the service consumes no event channel (plan D39).
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
@@ -30,7 +29,7 @@ configMapGenerator:
     behavior: merge
     literals:
       - spring-profile-active=dev
-      - JWT_ISSUER_URI=http://keycloak:8080/realms/shopping
+      - JWT_ISSUER_URI=http://catalog-keycloak.catalog.svc.cluster.local:8080/realms/shopping
 
 secretGenerator:
   - name: shopping-db

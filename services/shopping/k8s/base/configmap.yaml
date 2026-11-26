@@ -1,8 +1,10 @@
 # Keys are kebab-case and are NOT environment variable names: every one of them is read by an
 # explicit `configMapKeyRef` in base/deployment.yaml, so adding a key here needs a matching entry
-# there. `JWT_ISSUER_URI` names the stand-alone Keycloak a self-contained deployment would run in
-# this namespace; the k3d overlay and the `run-apps` manifest override it to the shared shop
-# instance. The realm is `shopping`, the same name this service's realm document imports.
+# there. `JWT_ISSUER_URI` carries the stand-alone shape: a `keycloak` Service in this namespace, which
+# only a self-contained deployment of this service would run. The k3d overlay overrides it with the
+# one Keycloak the shop cluster runs (namespace `catalog`, by fully qualified name) and the
+# `run-apps` manifest repeats that address, so a render of either authenticates. The realm is
+# `shopping`, the same name this service's realm document imports.
 #
 # There is no messaging key: the service consumes no event channel (plan D39), so a broker address
 # here would be a config key nothing reads.

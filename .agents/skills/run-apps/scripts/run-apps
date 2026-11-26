@@ -2,8 +2,8 @@
 """run-apps — the shop-wide local k3s environment, with one namespace per service in it.
 
 Three services live in it: `catalog` (realm `catalog`, http://127.0.0.1:8080), `fulfillment`
-(realm `iot`, http://127.0.0.1:8081) and `shopping` (realm `shopping`, http://127.0.0.1:8082 —
-scaffolded, its realm document does not exist yet). The cluster (`shop-k3s`, k3s in a privileged podman
+(realm `iot`, http://127.0.0.1:8081) and `shopping` (realm `shopping`, http://127.0.0.1:8082).
+The cluster (`shop-k3s`, k3s in a privileged podman
 container), the Postgres instance (`postgresql`) and one Keycloak holding every realm are
 shop-wide: one server, one superuser secret, one logical database per service (from `databases.txt`
 in manifests/infra/postgres.yaml). The image built by Jib, the namespace, the Deployment, one host
@@ -197,16 +197,24 @@ FULFILLMENT = App(
     warmup=("/orders", "employee"),
 )
 
-# The service's own realm document is the only one — no vendored fallback. `customer-security`
-# creates it; until then the infra step warns and skips this realm, so `deploy` of the other two
-# services keeps working. Realm `shopping` and its tokens appear only once the file exists.
+# The service's own realm document is the only one — no vendored fallback. It carries two identities:
+# `customer` through `customer-client` (element 07's `SCOPE_customer`) and `service` through
+# `shopping-service-client`, whose token is valid in realm `shopping` and is not a customer, so a
+# customer route can answer 403 to it (DoD16). A service whose document does not exist is skipped
+# with a warning instead of failing the infra step.
 SHOPPING = App(
     name="shopping",
     port=8082,
     realm="shopping",
     suite="e2e/healthcheck.hurl",
-    users=(("customer", "customer-client"),),
-    variables=(("customerToken", "customer"),),
+    users=(
+        ("customer", "customer-client"),
+        ("service", "shopping-service-client"),
+    ),
+    variables=(
+        ("customerToken", "customer"),
+        ("serviceToken", "service"),
+    ),
     realm_documents=(SERVICES / "shopping/src/test/resources/shopping-realm.json",),
     warmup=("/actuator/info", "customer"),
 )

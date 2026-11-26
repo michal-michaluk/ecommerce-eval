@@ -15,7 +15,8 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${JWT_ISSUER_URI:https://keycloak.auth/realms/shopping}
+          # The environment always sets JWT_ISSUER_URI; the default is deliberately unresolvable (RFC 2606).
+          issuer-uri: ${JWT_ISSUER_URI:https://keycloak.invalid/realms/shopping}
 
 server:
   shutdown: graceful
