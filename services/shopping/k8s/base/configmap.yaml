@@ -1,0 +1,17 @@
+# Keys are kebab-case and are NOT environment variable names: every one of them is read by an
+# explicit `configMapKeyRef` in base/deployment.yaml, so adding a key here needs a matching entry
+# there. `JWT_ISSUER_URI` names the stand-alone Keycloak a self-contained deployment would run in
+# this namespace; the k3d overlay and the `run-apps` manifest override it to the shared shop
+# instance. The realm is `shopping`, the same name this service's realm document imports.
+#
+# There is no messaging key: the service consumes no event channel (plan D39), so a broker address
+# here would be a config key nothing reads.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: shopping
+  labels:
+    app: shopping
+data:
+  spring-profile-active: "prod"
+  JWT_ISSUER_URI: "http://keycloak:8080/realms/shopping"

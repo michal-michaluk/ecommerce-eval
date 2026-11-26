@@ -15,6 +15,7 @@ services/   one directory per microservice (bounded context)
 | --- | --- | --- |
 | [`services/catalog`](services/catalog/AGENTS.md) | product catalog — draft, review, publication, pricing | Spring Boot 4 + Java 25 + PostgreSQL + Kafka + Keycloak |
 | [`services/fulfillment`](services/fulfillment/AGENTS.md) | order fulfillment — order intake, picking, packing, parcel and delivery, issues | Spring Boot 4 + Java 25 + PostgreSQL + Kafka + Keycloak |
+| [`services/shopping`](services/shopping/AGENTS.md) | shopping — basket and checkout slices | Spring Boot 4 + Java 25 + PostgreSQL + Keycloak |
 
 ## Materials
 

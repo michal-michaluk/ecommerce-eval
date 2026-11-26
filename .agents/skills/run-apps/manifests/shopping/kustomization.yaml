@@ -1,0 +1,34 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# The app manifests are the service's own k3d overlay; this kustomization only adds what the
+# service tree cannot carry: the address of the shared Keycloak and the address of the shop-wide
+# Postgres. The overlay keeps pointing at the stand-alone `k8s/infra/` objects that this environment
+# does not run — nothing here edits the service's manifests. There is no broker: the service consumes
+# no event channel (plan D39).
+#
+# The override lives here, not in a `kubectl apply` after the overlay: a merge generator renames
+# its object with a content hash and rewrites the Deployment's references, so a plain Secret of the
+# same name would be read by nobody.
+namespace: shopping
+
+resources:
+  - ../../../../../services/shopping/k8s/overlays/k3d
+  - ../../../../../services/shopping/k8s/infra/otel-collector.yaml
+
+configMapGenerator:
+  - name: shopping
+    behavior: merge
+    literals:
+      - spring-profile-active=dev
+      - JWT_ISSUER_URI=http://catalog-keycloak.catalog.svc.cluster.local:8080/realms/shopping
+
+secretGenerator:
+  # Same role and password as the `shopping:shopping:shopping` line in databases.txt; the overlay's
+  # `postgresql` Service is the standalone layout and does not exist here.
+  - name: shopping-db
+    behavior: merge
+    literals:
+      - jdbc-url=jdbc:postgresql://postgresql.catalog.svc.cluster.local:5432/shopping
+      - username=shopping
+      - password=shopping

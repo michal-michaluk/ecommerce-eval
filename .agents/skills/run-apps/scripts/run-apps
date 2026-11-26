@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """run-apps — the shop-wide local k3s environment, with one namespace per service in it.
 
-Two services live in it: `catalog` (realm `catalog`, http://127.0.0.1:8080) and `fulfillment`
-(realm `iot`, http://127.0.0.1:8081). The cluster (`shop-k3s`, k3s in a privileged podman
-container), the Postgres instance (`postgresql`) and one Keycloak holding both realms are
+Three services live in it: `catalog` (realm `catalog`, http://127.0.0.1:8080), `fulfillment`
+(realm `iot`, http://127.0.0.1:8081) and `shopping` (realm `shopping`, http://127.0.0.1:8082 —
+scaffolded, its realm document does not exist yet). The cluster (`shop-k3s`, k3s in a privileged podman
+container), the Postgres instance (`postgresql`) and one Keycloak holding every realm are
 shop-wide: one server, one superuser secret, one logical database per service (from `databases.txt`
 in manifests/infra/postgres.yaml). The image built by Jib, the namespace, the Deployment, one host
 port-forward and one realm stay per service.
@@ -136,6 +137,15 @@ class App:
             + ", ".join(str(candidate.relative_to(WORKSPACE)) for candidate in self.realm_documents)
         )
 
+    def realm_document_paths(self) -> str:
+        return ", ".join(str(candidate.relative_to(WORKSPACE)) for candidate in self.realm_documents)
+
+    @property
+    def configured(self) -> bool:
+        """A service is configured once its realm document exists. Until then its realm is never
+        imported, no token of it can be minted, and no verdict may depend on it."""
+        return any(candidate.exists() for candidate in self.realm_documents)
+
 
 CATALOG = App(
     name="catalog",
@@ -187,8 +197,22 @@ FULFILLMENT = App(
     warmup=("/orders", "employee"),
 )
 
-APPS = {app.name: app for app in (CATALOG, FULFILLMENT)}
-APP_ORDER = ("catalog", "fulfillment")
+# The service's own realm document is the only one — no vendored fallback. `customer-security`
+# creates it; until then the infra step warns and skips this realm, so `deploy` of the other two
+# services keeps working. Realm `shopping` and its tokens appear only once the file exists.
+SHOPPING = App(
+    name="shopping",
+    port=8082,
+    realm="shopping",
+    suite="e2e/healthcheck.hurl",
+    users=(("customer", "customer-client"),),
+    variables=(("customerToken", "customer"),),
+    realm_documents=(SERVICES / "shopping/src/test/resources/shopping-realm.json",),
+    warmup=("/actuator/info", "customer"),
+)
+
+APPS = {app.name: app for app in (CATALOG, FULFILLMENT, SHOPPING)}
+APP_ORDER = ("catalog", "fulfillment", "shopping")
 
 
 def app_named(name: str) -> App:
@@ -198,7 +222,7 @@ def app_named(name: str) -> App:
 
 
 def targets(name: str | None) -> list[App]:
-    """No argument means both services, in a fixed order."""
+    """No argument means every service, in a fixed order."""
     return [app_named(name)] if name else [APPS[service] for service in APP_ORDER]
 
 
@@ -239,6 +263,21 @@ def step(name: str) -> None:
 
 def ok(message: str) -> None:
     print(f"    {message}", flush=True)
+
+
+def warn(message: str) -> None:
+    print(f"    warning: {message}", flush=True)
+
+
+WARNED_UNCONFIGURED: set[str] = set()
+
+
+def not_configured(app: App, what: str) -> None:
+    """One line per service and command, however many passes look at its realm."""
+    if app.name in WARNED_UNCONFIGURED:
+        return
+    WARNED_UNCONFIGURED.add(app.name)
+    warn(f"no realm document for {app.name}, so {what}; looked for {app.realm_document_paths()}")
 
 
 # ── state ────────────────────────────────────────────────────────────────────────────────────────
@@ -717,15 +756,27 @@ def ensure_namespace(namespace: str) -> None:
 
 def ensure_realm_configmap() -> str:
     """One Keycloak, one ConfigMap, one realm document per service. `--import-realm` reads the
-    directory the ConfigMap is mounted into, so both realms come up together."""
-    sources = [f"--from-file={APPS[name].realm_document().name}={APPS[name].realm_document()}" for name in APP_ORDER]
+    directory the ConfigMap is mounted into, so every realm comes up together. A service whose
+    document does not exist yet is skipped with a warning instead of failing the infra step: one
+    scaffolded service must not take the two deployed ones down with it."""
+    sources = []
+    for name in APP_ORDER:
+        app = APPS[name]
+        if not app.configured:
+            not_configured(app, f"realm {app.realm} is not imported")
+            continue
+        document = app.realm_document()
+        sources.append(f"--from-file={document.name}={document}")
+    if not sources:
+        raise Fail("no realm document exists for any service; nothing to import")
     rendered = kubectl(
         "-n", NAMESPACE, "create", "configmap", KEYCLOAK_REALMS, *sources,
         "--dry-run=client", "-o", "yaml", timeout=60,
     )
     kubectl("apply", "-f", "-", input=rendered.stdout, timeout=60)
     digest = hashlib.sha256(rendered.stdout.encode()).hexdigest()[:12]
-    ok(f"realms {', '.join(APPS[name].realm for name in APP_ORDER)} in {KEYCLOAK_REALMS} ({digest})")
+    imported = [name for name in APP_ORDER if APPS[name].configured]
+    ok(f"realms {', '.join(APPS[name].realm for name in imported)} in {KEYCLOAK_REALMS} ({digest})")
     return digest
 
 
@@ -925,7 +976,13 @@ def mint_tokens() -> dict:
         raise Fail(f"keycloak is not Running (phase: {pod_phase(NAMESPACE, 'app=keycloak') or 'absent'}) — `run-apps deploy` first")
     ensure_keycloak_forward()
 
-    realms = {APPS[name].realm: mint_realm(APPS[name]) for name in APP_ORDER}
+    realms = {}
+    for name in APP_ORDER:
+        app = APPS[name]
+        if not app.configured:
+            not_configured(app, f"realm {app.realm} has no tokens")
+            continue
+        realms[app.realm] = mint_realm(app)
     # Reload first: the port-forward started above was recorded in the state file after this
     # command began, and a save from the older copy would drop it.
     state = load_state()
@@ -939,8 +996,11 @@ def write_tokens_env(auth: dict) -> Path:
     lines = []
     for name in APP_ORDER:
         app = APPS[name]
+        realm = auth["realms"].get(app.realm)
+        if not realm:
+            continue
         for user, _ in app.users:
-            token = auth["realms"][app.realm]["tokens"][user]["token"]
+            token = realm["tokens"][user]["token"]
             lines.append(f"export {name.upper()}_{user.upper().replace('-', '_')}_TOKEN='{token}'")
     TOKENS_ENV.write_text("\n".join(lines) + "\n")
     os.chmod(TOKENS_ENV, 0o600)
@@ -952,6 +1012,8 @@ def tokens_valid(auth: dict | None) -> bool:
         return False
     for name in APP_ORDER:
         app = APPS[name]
+        if not app.configured:
+            continue
         realm = auth["realms"].get(app.realm) or {}
         for user, _ in app.users:
             entry = (realm.get("tokens") or {}).get(user)
@@ -1035,6 +1097,11 @@ def queried(namespace: str, *query: str) -> str:
     return found.stdout if found.returncode == 0 else tail((found.stdout or "") + (found.stderr or ""), 5)
 
 
+def deployment_exists(namespace: str, name: str) -> bool:
+    found = kubectl("-n", namespace, "get", "deployment", name, "-o", "name", check=False, timeout=30)
+    return found.returncode == 0
+
+
 def cmd_status(args) -> int:
     state = load_state()
     container = cluster_container()
@@ -1065,6 +1132,8 @@ def cmd_status(args) -> int:
                 "namespace": app.namespace,
                 "port": app.port,
                 "realm": app.realm,
+                "configured": app.configured,
+                "deployed": deployment_exists(app.namespace, app.deployment),
                 "deployment": " ".join(deployment.split()),
                 "ready": re.search(rf"{app.deployment}\s+1/1", deployment) is not None,
                 "pods": " ".join(pod_names(app.namespace, f"app={app.deployment}")),
@@ -1080,9 +1149,15 @@ def cmd_status(args) -> int:
                                    else (http_get(f"{entry['url']}/realms/{CATALOG.realm}")[0] == 200, "200"))
             report["hostProcesses"].append({**entry, "alive": alive, "healthy": healthy, "detail": detail})
 
+    # A service whose realm document does not exist yet cannot be configured on the cluster, so the
+    # verdict does not depend on it — unless it IS deployed and unhealthy, which is a real RED.
+    counted = {
+        name: entry for name, entry in report["apps"].items()
+        if entry["configured"] or (entry["deployed"] and not (entry["ready"] and entry["health"][0]))
+    }
     green = (running and bool(report["node"])
-             and all(entry["ready"] and entry["health"][0] for entry in report["apps"].values())
-             and len(report["apps"]) == len(APP_ORDER))
+             and len(report["apps"]) == len(APP_ORDER)
+             and all(entry["ready"] and entry["health"][0] for entry in counted.values()))
     # Nothing running at all is the state `stop` leaves behind, and it is not a failure.
     idle = not running and not report["hostProcesses"]
     state_name = "green" if green else "none" if idle else "red"
@@ -1113,6 +1188,8 @@ def cmd_status(args) -> int:
             if not entry:
                 print("(cluster down)")
                 continue
+            if not entry["configured"]:
+                print(f"state               NOT CONFIGURED — no realm document yet ({app.realm_document_paths()})")
             print(f"pod                 {entry['pods'] or '(none)'}")
             print(f"deployment          {entry['deployment'] or '(absent)'}")
             print(f"health              GET /actuator/health → {entry['health'][1]}")
@@ -1134,8 +1211,12 @@ def cmd_status(args) -> int:
                   f"{'healthy' if entry['healthy'] else entry['detail']}")
 
         print("\n== verdict ==")
+        unconfigured = [name for name in APP_ORDER if name in report["apps"] and not report["apps"][name]["configured"]]
+        if running and unconfigured:
+            warn(f"not configured (no realm document yet): {', '.join(unconfigured)}")
         if green:
-            detail = ", ".join(f"{name} 1/1 {report['apps'][name]['health'][1]}" for name in APP_ORDER)
+            detail = ", ".join(f"{name} 1/1 {report['apps'][name]['health'][1]}"
+                               for name in APP_ORDER if name in counted)
             print(f"GREEN — cluster up, {detail}")
         elif idle:
             print("NONE — nothing running (cluster absent, no host bridges)")
@@ -1149,6 +1230,8 @@ def cmd_status(args) -> int:
                 entry = report["apps"].get(name)
                 if not entry:
                     problems.append(f"{name} not deployed")
+                    continue
+                if name not in counted:
                     continue
                 if not entry["ready"]:
                     problems.append(f"{name} not 1/1")
@@ -1284,7 +1367,10 @@ def cmd_auth(args) -> int:
         auth = mint_tokens()
     for name in APP_ORDER:
         app = APPS[name]
-        realm = auth["realms"][app.realm]
+        realm = auth["realms"].get(app.realm)
+        if not realm:
+            not_configured(app, f"realm {app.realm} has no tokens")
+            continue
         print(f"realm {app.realm} ({name}) via {realm['endpoint']}")
         print(f"{'user':<16}{'client':<30}{'scope':<44}{'expires'}")
         for user, _ in app.users:
@@ -1321,6 +1407,12 @@ def warm_up(app: App, token: str) -> None:
 
 def cmd_test(args) -> int:
     chosen = targets(args.service)
+    for app in chosen:
+        if not app.configured:
+            raise Fail(
+                f"no realm document for {app.name}: looked for {app.realm_document_paths()} — its "
+                f"realm is not imported, so its suite cannot authenticate"
+            )
     auth = load_state().get("auth")
     if tokens_valid(auth):
         ok("tokens reused (still valid)")
