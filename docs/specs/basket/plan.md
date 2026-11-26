@@ -8,17 +8,20 @@ Session: `2026-11-26T20:18:12Z` · branch `feat/basket` off `main` @ `62fed7a` �
 - Plan ticket: [#83 basket — implementation plan](https://github.com/michal-michaluk/ecommerce-eval/issues/83)
 - Impl: sub-tasks created by the `implement` skill; report and PRs recorded there
 
-## Available Infrastructure
+## Implementation Plan
+
+### Available Infrastructure
 
 - **Build:** Gradle 9.5.1 (wrapper per service), Java 25 toolchain, Spring Boot 4.1.0 — the new service is generated from the `microservice-java-spring` blueprint
 - **Test:** JUnit 5 + AssertJ, Testcontainers (PostgreSQL), MockMvc, ArchUnit 1.4.2, hurl e2e, `prove` (0.1.0)
 - **Lint / static:** `sqt check .` (project + `src/main/java` + `src/test/java` + per-slice configs), SpotBugs + findsecbugs, jacoco **80 % INSTRUCTION** (blueprint gate, `check.dependsOn jacocoTestCoverageVerification`)
 - **Cluster:** `run-apps` skill (`.agents/skills/run-apps/scripts/run-apps`) — k3s in podman, one shared Postgres/Keycloak/Kafka, host port `<service>` = 8080 catalog, 8081 fulfillment, **8082 shopping**
+- **Gate standard for every node:** a Java node runs `sqt check .` (the `.sqt.yaml` set is where the architecture instructions are encoded — aggregate/vo/event/controller/projection suffixes, `structure.slice-package-private`, `contract.value-objects-only`, `api.*`) and, once it exists, `./gradlew test --tests '*Architecture*'` (the six ArchUnit factories); a wire node also runs the `prove` gates (`validate` after any change, `run` against the cluster in the contract phase).
 - **Verification skills available:** `prove`, `run-apps` (repo-local), `review`, `demo`, `sqt`, `software-delivery-platform`, `implement`
 - **Architecture docs:** `docs/arch/microservice-java-spring/` — `index.md` (phase gates, golden rule: never lower a gate), `code-structure.md`, `adding-a-bounded-context.md`, `arch-unit.md`, `ports.md`, `persistence-adapters.md`, `projection.md`, `http-adapter.md`, `error-handling.md`, `security.md`, `testing.md`, `integration-events.md`, `context-boundaries.md`, `infrastructure-json.md`, `domain-model-{aggregate,value-object,events,policy}.md`
 - **Scope authority:** `docs/specs/basket/index.md` (36 DoD rows) and the register decisions `log.md` D38–D46 — no other service is integrated in this increment (no Kafka transport, no catalog HTTP client, no Pact)
 
-## Plan
+### Plan
 
 1. Prepare the service
 - scaffold-shopping (index §Prove DoD, 07, test matrix)
@@ -73,6 +76,7 @@ Session: `2026-11-26T20:18:12Z` · branch `feat/basket` off `main` @ `62fed7a` �
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce && python3 -c "import json; d=json.load(open('services/shopping/src/test/resources/shopping-realm.json')); assert d['realm']=='shopping'; assert any(s['name']=='customer' and s['attributes']['include.in.token.scope'] in ('true', True) for s in d['clientScopes']); assert any(c['clientId']=='customer-client' for c in d['clients']); assert any(u['username']=='customer' for u in d['users'])"`
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce && grep -q 'customer-client' .agents/skills/run-apps/scripts/run-apps`
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/shopping && ! grep -rqE 'keycloak\.auth|realms/iot' src/main && grep -q 'JWT_ISSUER_URI' src/main/resources/application.yml`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/shopping && sqt check .`
 - **review_prompt:** Review the work in /Users/michal/workspace/bottega-ai-mind/eval/ecommerce; do not inspect any other repository. Check the customer identity against element 07 §Contract decisions and `docs/arch/microservice-java-spring/security.md`: the scope is named `customer` and reaches the token as `SCOPE_customer`; one client per scope with a secret and direct access grants; the realm document is the service's own `shopping-realm.json` and is the one `run-apps` imports; the issuer comes from `JWT_ISSUER_URI` and is never hardcoded to `realms/iot` or to a `https://keycloak.auth` placeholder; the service token the fulfillment slice uses must **not** satisfy a customer route (DoD16); and no route relies on Spring Security defaults. Report every piece of the identity that exists only in a test but not in the cluster wiring, or the other way round. If a premise below is false, say so and stop. Do not edit files — report only.
 
 #### kernel-money
@@ -82,6 +86,7 @@ Session: `2026-11-26T20:18:12Z` · branch `feat/basket` off `main` @ `62fed7a` �
 - **IN / OUT:** IN: element 03, `02-basket.md` §Instance A amounts; OUT: `services/shopping/src/main/java/shop/shopping/kernel/Money.java`, `kernel/MoneyKind.java` (or nested), `src/test/java/shop/shopping/kernel/{MoneyTest,MoneyFixture}.java`. No other file touched
 - **checks:**
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/shopping && ./gradlew test --tests '*Money*'`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/shopping && sqt check .`
 - **review_prompt:** Review the work in /Users/michal/workspace/bottega-ai-mind/eval/ecommerce; do not inspect any other repository. Check `kernel/Money` against element 03 of `docs/specs/basket/03-money.md` row by row: the scale rule (`10^(decimals+1)`, never a hard-coded 1000), exact integer addition and multiplication, single half-up rounding (the `33333 → 3333` case), no negative storage, discount as `kind`, zero as a valid amount, and the exact `pl-PL` rendering `99,89 zł` with a non-breaking space. Report every rule without a test and every place a `double`/`BigDecimal` sneaks in. If a premise below is false, say so and stop. Do not edit files — report only.
 
 ### The basket
@@ -105,6 +110,7 @@ Session: `2026-11-26T20:18:12Z` · branch `feat/basket` off `main` @ `62fed7a` �
 - **IN / OUT:** IN: elements 03/04, `kernel/Money`, `basket/{Basket,BasketItem}`; OUT: `basket/BasketPriceCalculation.java`, `basket/BasketPrice.java`, `basket/DeliveryRates.java` (config record), `src/test/java/shop/shopping/basket/BasketPriceCalculationTest.java` (± `BasketPriceFixture`). Not touched: aggregate, controllers, other calculations
 - **checks:**
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/shopping && ./gradlew test --tests '*BasketPriceCalculation*'`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/shopping && sqt check .`
 - **review_prompt:** Review the work in /Users/michal/workspace/bottega-ai-mind/eval/ecommerce; do not inspect any other repository. Map every row S1–S12 of `docs/specs/basket/04-basket-price-calculation.md` to a test and report each missing or mis-expected row. Check that `discountValue` is reported but never added to `total`, that `currentPrice` is never recomputed from price and discount, that delivery is charged once per seller shipment with ≥1 selected item, that the SMART channel makes it zero, and that empty selection yields `0,00 zł` rather than "unknown". If a premise below is false, say so and stop. Do not edit files — report only.
 
 #### basket-availability-decision
@@ -114,6 +120,7 @@ Session: `2026-11-26T20:18:12Z` · branch `feat/basket` off `main` @ `62fed7a` �
 - **IN / OUT:** IN: element 06, `kernel/Money` only if an observation carries a price (otherwise not); OUT: `basket/OfferAvailabilityDecision.java`, `basket/Availability.java` (kernel-visible status/reason/stale), `basket/OfferObservation.java`, `src/test/java/shop/shopping/basket/OfferAvailabilityDecisionTest.java`. Not touched: aggregate, price, estimate, controllers
 - **checks:**
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/shopping && ./gradlew test --tests '*OfferAvailabilityDecision*'`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/shopping && sqt check .`
 - **review_prompt:** Review the work in /Users/michal/workspace/bottega-ai-mind/eval/ecommerce; do not inspect any other repository. Check `OfferAvailabilityDecision` against element 06 A1–A5 and the interface scenarios I1–I7 of `docs/specs/basket/06-offer-availability-decision.md` one row at a time, naming any row without a test. Verify the decision is total (no `Optional`, no `null` fallthrough, no exception), that a failed read never keeps a previous `available` (A4 fail-closed), that `stale` alone never blocks and only `outOfStock`/`unavailable` do, and that the blocking set is a property of the outcome rather than of a caller. If a premise below is false, say so and stop. Do not edit files — report only.
 
 #### basket-delivery-estimate
@@ -123,6 +130,7 @@ Session: `2026-11-26T20:18:12Z` · branch `feat/basket` off `main` @ `62fed7a` �
 - **IN / OUT:** IN: elements 02/05/06, aggregate's availability value; OUT: `basket/BasketDeliveryEstimate.java`, `basket/Estimate.java`, `basket/EstimateSettings.java` (`@ConfigurationProperties`), `src/test/java/shop/shopping/basket/BasketDeliveryEstimateTest.java`. Not touched: aggregate, price, availability, controllers
 - **checks:**
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/shopping && ./gradlew test --tests '*BasketDeliveryEstimate*'`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/shopping && sqt check .`
 - **review_prompt:** Review the work in /Users/michal/workspace/bottega-ai-mind/eval/ecommerce; do not inspect any other repository. Check `BasketDeliveryEstimate` against element 05 I1–I7 with a fixed `Clock` in `Europe/Warsaw`: `today+2 … today+4` calendar days, `unknown` when nothing is handable or the config is absent, blocked rows contributing nothing, SMART not changing the range, one estimate per seller shipment and the latest `to` shown. Report any use of `Instant.now()`/`LocalDate.now()` instead of the injected clock, and any place the estimate feeds a price. If a premise below is false, say so and stop. Do not edit files — report only.
 
 ### Offer read and handover
@@ -134,6 +142,7 @@ Session: `2026-11-26T20:18:12Z` · branch `feat/basket` off `main` @ `62fed7a` �
 - **IN / OUT:** IN: elements 06/08/10, `basket/{Basket,BasketService,Availability}`, `kernel/Money`; OUT: `basket/OfferCatalog.java` (public contract port), `basket/FixtureOfferCatalog.java`, `basket/OfferReadSettings.java`, `basket/OfferObservationCommand.java` + the service method applying it, `src/test/java/shop/shopping/basket/{OfferCatalogTest,OfferIngestionTest,RecordingOfferCatalog.java}`. Not touched: price, estimate, controllers, `OfferAvailabilityDecision`
 - **checks:**
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/shopping && ./gradlew test --tests '*OfferCatalog*' --tests '*OfferIngestion*'`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/shopping && sqt check .`
 - **review_prompt:** Review the work in /Users/michal/workspace/bottega-ai-mind/eval/ecommerce; do not inspect any other repository. Check the `OfferCatalog` port and its application against element 08 §Failure mapping and element 10 EVT-2…EVT-6: batched read (never one call per item), one observation applied by snapshot replacement, the same observation twice changes nothing (DoD20), an observation older than the item's `readAt` is discarded (DoD21), an unknown offer never creates an item, a failed read greys the row instead of failing the basket, and no reservation operation exists on the port or anywhere in `shop.shopping` (DoD17). Report any Kafka, HTTP-client or `@KafkaListener` code — the transport is out of scope (D39). If a premise below is false, say so and stop. Do not edit files — report only.
 
 #### checkout-handover
@@ -143,6 +152,7 @@ Session: `2026-11-26T20:18:12Z` · branch `feat/basket` off `main` @ `62fed7a` �
 - **IN / OUT:** IN: elements 02/04/05/06/09, `kernel/Money`, `basket/{BasketService,BasketPriceCalculation,BasketDeliveryEstimate}`, `basket/Availability`; OUT: `kernel/CheckoutHandovers.java`, `kernel/CheckoutHandover.java`, `kernel/HandoverRefusal.java`, `checkout/CheckoutService.java`, `checkout/package-info.java`, `checkout/.sqt.yaml`, `src/test/java/shop/shopping/{checkout/CheckoutServiceTest.java,basket/BasketHandoverTest.java}`. Not touched: controllers, price/estimate/availability internals
 - **checks:**
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/shopping && ./gradlew test --tests '*Handover*' --tests '*CheckoutService*' --tests '*Architecture*'`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/shopping && sqt check .`
 - **review_prompt:** Review the work in /Users/michal/workspace/bottega-ai-mind/eval/ecommerce; do not inspect any other repository. Check the handover against element 09 HAND-1…HAND-6 and its §Shape of record: only handable rows cross (no `outOfStock`, no `unavailable`; `stale` alone does not block), unselected rows are absent rather than zero, the basket is neither cleared nor locked, `revision` and `lastHandover` identity make a repeat return the same handover, and the basket never creates an order. Verify the slice boundary: `basket` names no `checkout` type, the contract lives in `kernel/` and mentions value objects only, and the checkout slice's service is the only implementation. If a premise below is false, say so and stop. Do not edit files — report only.
 
 ### HTTP API
@@ -155,6 +165,8 @@ Session: `2026-11-26T20:18:12Z` · branch `feat/basket` off `main` @ `62fed7a` �
 - **checks:**
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/shopping && ./gradlew test --tests '*ControllerTest' --tests '*ProjectionTest'`
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/shopping && sqt check .`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/docs/specs/basket && prove validate prototypes/*.prove.md`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/shopping && ./gradlew test --tests '*Architecture*'`
 - **review_prompt:** Review the work in /Users/michal/workspace/bottega-ai-mind/eval/ecommerce; do not inspect any other repository. Compare the controllers and payloads with `docs/specs/basket/prototypes/basket-api.prove.md` step by step (24 steps) and with element 07 §Error contract: verbs, paths, response key sets, money shape `{amount, currency, kind}`, `deliveryEstimate` null-vs-range, `reasons[]` always an array of objects, and the five `422` codes. Check that `422`-over-`409` and the `GET /baskets` write are documented deviations (element 07 §Recorded deviations), that `BasketsProjection` is the only write behind a read, that every route has an explicit security rule with `denyAll()` as the fallback, that 401/403 bodies are empty, and that no controller injects a repository. If a premise below is false, say so and stop. Do not edit files — report only.
 
 ### Contract on the cluster
@@ -177,9 +189,11 @@ Session: `2026-11-26T20:18:12Z` · branch `feat/basket` off `main` @ `62fed7a` �
 - **Docs:** spec element 07 and the scenario; index DoD5–DoD7, DoD10–DoD16, DoD28–DoD30, DoD19
 - **IN / OUT:** IN: nodes 2–6, `.agents/skills/run-apps/scripts/run-apps`; OUT: `services/shopping/**` fixes discovered by the contract, `docs/specs/basket/prototypes/prove.yaml` only if the harness is wrong. Not touched: any golden body of the scenario (a wrong golden is a spec change, reported not edited)
 - **checks:**
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/shopping && sqt check .`
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce && .agents/skills/run-apps/scripts/run-apps deploy shopping`
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce && .agents/skills/run-apps/scripts/run-apps status`
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce && bash docs/specs/basket/prototypes/prove-local.sh`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/docs/specs/basket && prove validate prototypes/*.prove.md`
 - **review_prompt:** Review the work in /Users/michal/workspace/bottega-ai-mind/eval/ecommerce; do not inspect any other repository. Check the passing contract against `docs/specs/basket/index.md` §Prove Definition of Done and `07-basket-http-api.md`: every one of the 24 steps executes (none skipped), the totals in steps 4/6/12/17 equal the spec's arithmetic, the two handover steps prove `handoverId == basketId` and a stable `revision`, the out-of-stock and unavailable rows block with `reasons[]`, 401/403 are empty, and no step was weakened, marked `ignore others`, or reordered to hide a failure. If a premise below is false, say so and stop. Do not edit files — report only.
 
 #### service-gates
