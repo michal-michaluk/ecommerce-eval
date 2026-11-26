@@ -21,21 +21,26 @@ Session: `2026-11-26T20:18:12Z` · branch `feat/basket` off `main` @ `62fed7a` �
 ## Plan
 
 1. Prepare the service
-- scaffold-shopping (index §Prove DoD, 07, test matrix) -> kernel-money (03, DoD8/8b/9) -> basket-aggregate (02, 09, DoD20–22/28)
-2. Calculations and decisions (parallel, after basket-aggregate)
+- scaffold-shopping (index §Prove DoD, 07, test matrix)
+2. Identity and money (parallel)
+- customer-security (07 §Auth, DoD15/16, 24),
+- kernel-money (03, DoD8/8b/9)
+3. The basket
+- basket-editor (02, 09, DoD20–22/28)
+4. Calculations and decisions (parallel, after basket-editor)
 - basket-price-calculation (04, DoD5/7/8b),
 - basket-availability-decision (06, DoD27),
 - basket-delivery-estimate (05, DoD26)
-3. Offer read and handover (parallel, after basket-aggregate)
+5. Offer read and handover (parallel, after basket-editor)
 - offer-catalog-port (08, 10, DoD17–21),
 - checkout-handover (09, DoD29/30)
-4. HTTP API
+6. HTTP API
 - basket-http-api (07, 01, DoD10–16)
-5. Contract on the cluster
+7. Contract on the cluster
 - prove-harness (07, DoD3b/3c) -> prove-contract (07, DoD5–7/10–16/28–30) -> service-gates (DoD4/23/24/25)
-6. Prove of done
+8. Prove of done
 - prove-dod (index §Prove DoD, 36 rows)
-7. Evidence
+9. Evidence
 - demo-recording (DoD rows → scenarios),
 - review-branch (whole `feat/basket` diff)
 
@@ -44,18 +49,31 @@ Session: `2026-11-26T20:18:12Z` · branch `feat/basket` off `main` @ `62fed7a` �
 ### Prepare the service
 
 #### scaffold-shopping
-- **Goal:** create `services/shopping` from the `microservice-java-spring` blueprint (root package `shop.shopping`, db `shopping`), wired into the local shop cluster: `run-apps` app entry + `manifests/shopping` + one shared-Postgres database line + its own realm document carrying `customer`.
+- **Goal:** create `services/shopping` from the `microservice-java-spring` blueprint (root package `shop.shopping`, db `shopping`), wired into the local shop cluster: `run-apps` app entry + `manifests/shopping` + one shared-Postgres database line.
 - **Executor:** general
-- **Docs:** `docs/arch/microservice-java-spring/index.md` (phase gates), `code-structure.md` (package layout, role suffixes), `arch-unit.md` (§split context), `security.md`, `testing.md`; spec `index.md` §Current code, element 07 §Auth
-- **IN / OUT:** IN: blueprint `microservice-java-spring` template, `services/fulfillment` as the live reference, `.agents/skills/run-apps/{SKILL.md,scripts/run-apps,manifests}`; OUT: `services/shopping/**` (build.gradle, settings.gradle, wrapper, `src/main/java/shop/shopping/{AppRunner,AppConfiguration,package-info}.java`, `tools/`, `mediators/package-info.java`, `src/test/java/**` kit, `src/test/resources/{application-integration-test.yml,shopping-realm.json}`, `k8s/{base,overlays/k3d}`, `.sqt.yaml` ×4, `config/spotbugs/`, `e2e/healthcheck.hurl`, `AGENTS.md`, `docs/`), plus `.agents/skills/run-apps/scripts/run-apps` (`SHOPPING` App + `APP_ORDER`), `.agents/skills/run-apps/manifests/shopping/kustomization.yaml`, `.agents/skills/run-apps/manifests/infra/postgres.yaml` (`shopping:shopping:shopping`), `README.md` service table row. OUT excludes: any business class (nodes 2–4 own those)
+- **Docs:** `docs/arch/microservice-java-spring/index.md` (phase gates), `code-structure.md` (package layout, role suffixes), `arch-unit.md` (§split context), `testing.md`; spec `index.md` §Current code
+- **IN / OUT:** IN: blueprint `microservice-java-spring` template, `services/fulfillment` as the live reference, `.agents/skills/run-apps/{SKILL.md,scripts/run-apps,manifests}`; OUT: `services/shopping/**` (build.gradle, settings.gradle, wrapper, `src/main/java/shop/shopping/{AppRunner,AppConfiguration,package-info}.java`, `tools/`, `mediators/package-info.java`, `src/test/java/**` kit, `src/test/resources/application-integration-test.yml`, `k8s/{base,overlays/k3d}`, `.sqt.yaml` ×4, `config/spotbugs/`, `e2e/healthcheck.hurl`, `AGENTS.md`, `docs/`), plus `.agents/skills/run-apps/scripts/run-apps` (`SHOPPING` App + `APP_ORDER`), `.agents/skills/run-apps/manifests/shopping/kustomization.yaml`, `.agents/skills/run-apps/manifests/infra/postgres.yaml` (`shopping:shopping:shopping`), `README.md` service table row. OUT excludes: any business class (later nodes own those) and the customer identity, realm document included (`customer-security`)
 - **checks:**
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/shopping && ./gradlew compileJava`
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/shopping && sqt check .`
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce && test -f .agents/skills/run-apps/manifests/shopping/kustomization.yaml`
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce && grep -q 'shopping:shopping:shopping' .agents/skills/run-apps/manifests/infra/postgres.yaml`
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce && grep -q '"shopping"' .agents/skills/run-apps/scripts/run-apps`
-  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/shopping && test -f src/test/resources/shopping-realm.json`
-- **review_prompt:** Review the work in /Users/michal/workspace/bottega-ai-mind/eval/ecommerce; do not inspect any other repository. Compare `services/shopping` against the `microservice-java-spring` blueprint output and against `services/fulfillment` (the live reference), and report every deviation in build.gradle gates (jacoco 80 %, spotbugs filters, jitpack/jib image name `shopping`, main class `shop.shopping.AppRunner`), package layout, `.sqt.yaml` inheritance, k8s overlay shape (`overlays/k3d`, no `../../infra`), realm document, and `run-apps` registration. Also report anything the blueprint generated that the spec does not need. If a premise below is false, say so and stop. Do not edit files — report only.
+- **review_prompt:** Review the work in /Users/michal/workspace/bottega-ai-mind/eval/ecommerce; do not inspect any other repository. Compare `services/shopping` against the `microservice-java-spring` blueprint output and against `services/fulfillment` (the live reference), and report every deviation in build.gradle gates (jacoco 80 %, spotbugs filters, jib image name `shopping`, main class `shop.shopping.AppRunner`), package layout, `.sqt.yaml` inheritance, k8s overlay shape (`overlays/k3d`, no `../../infra`), and `run-apps` registration. Also report anything the blueprint generated that the spec does not need. If a premise below is false, say so and stop. Do not edit files — report only.
+
+### Identity and money
+
+#### customer-security
+- **Goal:** the customer identity, end to end — the service's own realm document (realm `shopping`, client scope `customer` included in the token, client `customer-client` with secret and direct access grant, user `customer`), the issuer wiring for the cluster, an `AuthFixture` that mints real tokens from a Keycloak Testcontainer, and a test proving the customer token carries `SCOPE_customer` while the service token does not.
+- **Executor:** general
+- **Docs:** spec element 07 §Contract decisions (auth row) and §Error contract (`401`/`403` empty), element 07 Q25/D27, index DoD15/DoD16; `docs/arch/microservice-java-spring/security.md` (per-endpoint decision procedure, issuer from an env var, never rely on Spring defaults), `testing.md` §auth profile; precedent `services/fulfillment/src/test/java/shop/fulfillment/auth/AuthFixture.java` + `services/fulfillment/src/test/resources/iot-realm.json`
+- **IN / OUT:** IN: element 07 §Auth, the scaffolded service; OUT: `services/shopping/src/test/resources/shopping-realm.json`, `services/shopping/src/test/java/shop/shopping/auth/AuthFixture.java`, `services/shopping/src/test/java/shop/shopping/auth/CustomerIdentityTest.java`, `services/shopping/src/main/resources/application.yml` (`spring.security.oauth2.resourceserver.jwt.issuer-uri: ${JWT_ISSUER_URI:…}` only), `k8s/base/configmap.yaml` + `k8s/overlays/k3d/kustomization.yaml` (`JWT_ISSUER_URI=http://catalog-keycloak.catalog.svc.cluster.local:8080/realms/shopping`), `.agents/skills/run-apps/scripts/run-apps` (`SHOPPING.users = (("customer", "customer-client"),)`, `variables = (("customerToken", "customer"),)`, `App.realm_documents`). Not touched: `AppConfiguration.java`'s route matrix and every controller (`basket-http-api` owns the per-route decision), `kernel/`
+- **checks:**
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/shopping && ./gradlew test --tests '*CustomerIdentity*'`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce && python3 -c "import json; d=json.load(open('services/shopping/src/test/resources/shopping-realm.json')); assert d['realm']=='shopping'; assert any(s['name']=='customer' and s['attributes']['include.in.token.scope'] in ('true', True) for s in d['clientScopes']); assert any(c['clientId']=='customer-client' for c in d['clients']); assert any(u['username']=='customer' for u in d['users'])"`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce && grep -q 'customer-client' .agents/skills/run-apps/scripts/run-apps`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/shopping && ! grep -rqE 'keycloak\.auth|realms/iot' src/main && grep -q 'JWT_ISSUER_URI' src/main/resources/application.yml`
+- **review_prompt:** Review the work in /Users/michal/workspace/bottega-ai-mind/eval/ecommerce; do not inspect any other repository. Check the customer identity against element 07 §Contract decisions and `docs/arch/microservice-java-spring/security.md`: the scope is named `customer` and reaches the token as `SCOPE_customer`; one client per scope with a secret and direct access grants; the realm document is the service's own `shopping-realm.json` and is the one `run-apps` imports; the issuer comes from `JWT_ISSUER_URI` and is never hardcoded to `realms/iot` or to a `https://keycloak.auth` placeholder; the service token the fulfillment slice uses must **not** satisfy a customer route (DoD16); and no route relies on Spring Security defaults. Report every piece of the identity that exists only in a test but not in the cluster wiring, or the other way round. If a premise below is false, say so and stop. Do not edit files — report only.
 
 #### kernel-money
 - **Goal:** `Money` in `kernel/` — `long amount` in units of `10^-(decimals+1)`, explicit currency, `kind charge|discount`, exact addition, exact multiplication by quantity, one half-up rounding step at the boundary, `pl-PL` rendering with a non-breaking space.
@@ -66,15 +84,17 @@ Session: `2026-11-26T20:18:12Z` · branch `feat/basket` off `main` @ `62fed7a` �
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/shopping && ./gradlew test --tests '*Money*'`
 - **review_prompt:** Review the work in /Users/michal/workspace/bottega-ai-mind/eval/ecommerce; do not inspect any other repository. Check `kernel/Money` against element 03 of `docs/specs/basket/03-money.md` row by row: the scale rule (`10^(decimals+1)`, never a hard-coded 1000), exact integer addition and multiplication, single half-up rounding (the `33333 → 3333` case), no negative storage, discount as `kind`, zero as a valid amount, and the exact `pl-PL` rendering `99,89 zł` with a non-breaking space. Report every rule without a test and every place a `double`/`BigDecimal` sneaks in. If a premise below is false, say so and stop. Do not edit files — report only.
 
-#### basket-aggregate
-- **Goal:** the basket aggregate and its persistence — `BasketEditor` + `Basket` snapshot + items + selection, commands `AddToBasket`/`ChangeBasketQuantity`/`RemoveFromBasket`/`Select`/`HandOver`, `revision` monotonic per mutation, `lastHandover` derived field, JSONB document adapter with `@Version`, one active basket per customer enforced by a unique index, and the split-context test scaffolding (root `ArchitectureTest` + per-slice `structure.slice-package-private`).
+### The basket
+
+#### basket-editor
+- **Goal:** the `BasketEditor` aggregate and its persistence — `BasketEditor` + `Basket` snapshot + items + selection, commands `AddToBasket`/`ChangeBasketQuantity`/`RemoveFromBasket`/`Select`/`HandOver`, `revision` monotonic per mutation, `lastHandover` derived field, JSONB document adapter with `@Version`, one active basket per customer enforced by a unique index, and the split-context test scaffolding (root `ArchitectureTest` + per-slice `structure.slice-package-private`).
 - **Executor:** general
 - **Docs:** spec element 02 (RULE-1…RULE-10, domain events), element 07 §Auto-creation, element 09 HAND-4/6; `docs/arch/microservice-java-spring/domain-model-aggregate.md`, `domain-model-events.md`, `persistence-adapters.md`, `arch-unit.md` §split context, `code-structure.md` §kernel and slices, `testing.md`
 - **IN / OUT:** IN: elements 02/09, `kernel/Money`; OUT: `basket/{BasketEditor,Basket,BasketItem,BasketSelection,BasketException,BasketRepository,DocumentBasketRepository,BasketService,DomainEvent}.java`, `basket/.sqt.yaml`, `src/test/java/shop/shopping/{ArchitectureTest,ArchitectureDescription}.java`, `basket/*Test`, `basket/BasketFixture.java`, `src/main/resources/db/changelog/0001-basket.yaml` + `db.changelog.yaml` include, `src/test/resources/application-integration-test.yml` (liquibase drop-first). Not touched: `kernel/Money.java`, `basket/*Calculation*`, any controller
 - **checks:**
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/shopping && ./gradlew test --tests '*BasketEditor*' --tests '*DocumentBasketRepository*' --tests '*Architecture*'`
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/shopping && sqt check .`
-- **review_prompt:** Review the work in /Users/michal/workspace/bottega-ai-mind/eval/ecommerce; do not inspect any other repository. Check the basket aggregate against element 02 RULE-1…RULE-10 and element 09 HAND-4/HAND-6: merge on repeat add, quantity ≥ 1, one item per offer, `unavailable` rows kept with their last-known snapshot, selection never exceeding the basket, no clearing on handover, `revision` monotonic per mutation, `lastHandover` digest identity, and the unique `(customerId, active)` index with the concurrent-create path. Then check the architecture: aggregate/editor/snapshot package-private, events nested in one `DomainEvent` union with `_v1` names, JPA entity and Spring Data interface nested in the adapter, `@Version` present, no `tools/` or `org.` import in model code, slices package-private per `.sqt.yaml`. If a premise below is false, say so and stop. Do not edit files — report only.
+- **review_prompt:** Review the work in /Users/michal/workspace/bottega-ai-mind/eval/ecommerce; do not inspect any other repository. Check `BasketEditor` against element 02 RULE-1…RULE-10 and element 09 HAND-4/HAND-6: merge on repeat add, quantity ≥ 1, one item per offer, `unavailable` rows kept with their last-known snapshot, selection never exceeding the basket, no clearing on handover, `revision` monotonic per mutation, `lastHandover` digest identity, and the unique `(customerId, active)` index with the concurrent-create path. Then check the architecture: `BasketEditor` and `Basket` package-private, one all-args constructor, a static business-sentence factory, no getters/setters, events nested in one `DomainEvent` union with `_v1` names, JPA entity and Spring Data interface nested in the adapter, `@Version` present, no `tools/` or `org.` import in model code, slices package-private per `.sqt.yaml`. If a premise below is false, say so and stop. Do not edit files — report only.
 
 ### Calculations and decisions
 
@@ -128,10 +148,10 @@ Session: `2026-11-26T20:18:12Z` · branch `feat/basket` off `main` @ `62fed7a` �
 ### HTTP API
 
 #### basket-http-api
-- **Goal:** the six routes of element 07 — `GET /baskets`, `GET /baskets/{basketId}`, `PATCH …/items/{offerId}`, `PATCH …/items`, `PATCH …/selection`, `PATCH …/checkout` — with the `BasketsProjection` read model, the error advice, and the `SCOPE_customer` matrix (401/403 empty bodies).
+- **Goal:** the six routes of element 07 — `GET /baskets`, `GET /baskets/{basketId}`, `PATCH …/items/{offerId}`, `PATCH …/items`, `PATCH …/selection`, `PATCH …/checkout` — with the `BasketsProjection` read model, the error advice, and the `SCOPE_customer` matrix (401/403 empty bodies, `denyAll` fallback).
 - **Executor:** general
 - **Docs:** spec element 07 (all contract decisions, error contract, §Recorded deviations), element 01 (payload shape, `pl-PL` rendering), `prototypes/basket-api.prove.md` (the contract of record); `docs/arch/microservice-java-spring/http-adapter.md`, `error-handling.md`, `projection.md`, `security.md`, `code-structure.md` §adapters, plus `services/fulfillment/src/main/java/shop/fulfillment/{AppConfiguration,FulfillmentErrorAdvice}.java` as the live precedent
-- **IN / OUT:** IN: everything from nodes 2–5; OUT: `basket/{BasketController,BasketItemsController,BasketSelectionController,BasketCheckoutController,BasketErrorAdvice,BasketsProjection,BasketContent,BasketSummary}.java`, `AppConfiguration.java` (security matrix only), `src/test/java/shop/shopping/basket/{Basket*ControllerTest,BasketsProjectionTest,HttpFixture}.java`. Not touched: `kernel/`, calculations, aggregate internals
+- **IN / OUT:** IN: everything above, plus the realm and `AuthFixture` from `customer-security`; OUT: `basket/{BasketController,BasketItemsController,BasketSelectionController,BasketCheckoutController,BasketErrorAdvice,BasketsProjection,BasketContent,BasketSummary}.java`, `AppConfiguration.java` — the per-route matrix only, one `hasAuthority(Scopes.CUSTOMER)` per route with `anyRequest().denyAll()` as the fallback and empty 401/403 bodies — and `src/test/java/shop/shopping/basket/{Basket*ControllerTest,BasketsProjectionTest,HttpFixture}.java`. Not touched: `kernel/`, calculations, `BasketEditor` internals, the realm document (`customer-security`)
 - **checks:**
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/shopping && ./gradlew test --tests '*ControllerTest' --tests '*ProjectionTest'`
   - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce/services/shopping && sqt check .`
