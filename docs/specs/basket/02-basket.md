@@ -68,7 +68,7 @@ items:
 ## Domain rules
 
 - **State.** A basket is `active` while the customer can change it; `archived` is the terminal state after a checkout completes (the checkout slice owns that transition, element 09).
-- **RULE-1 Identity.** A customer may own **several active baskets**, and always owns at least one: the backend creates a basket when none exists, so an empty list is impossible (D29, revises A2). `basketId` is synthetic and appears in every API path; `customerId` always comes from the token.
+- **RULE-1 Identity.** A customer owns **one active basket** and always has one: the backend creates it when none exists, so an empty list is impossible (D42, refining D29; several active baskets are deferred). Enforced by a unique index on `(customerId, active)` so two concurrent reads cannot create two baskets. `GET /baskets` still answers a **list** — of length one today. `basketId` is synthetic and appears in every API path; `customerId` always comes from the token.
 - **RULE-2 No reservation.** No basket operation reserves stock — not add, not quantity change, not handover (R6, `[seg 66-68]`).
 - **RULE-3 Quantity is ≥ 1.** Zero is not a quantity; removal is the only exit (capture: minus disabled at 1).
 - **RULE-4 One item per offer.** An offer appears at most once; a repeat add merges quantities (D19).

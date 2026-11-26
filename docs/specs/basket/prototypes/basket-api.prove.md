@@ -16,11 +16,13 @@ prove run      prototypes/basket-api.prove.md --config prove.yaml --env local --
 - base_url: http://127.0.0.1:8080
 - est_from: 2026-11-28
 - est_to: 2026-12-02
+- customer_token: override-with---var-customer_token
 - service_token: override-with---var-service_token
 
 ## 1. List active baskets — always one, created on demand (D29)
 
 **HTTP request: GET {{base_url}}/baskets**
+Authorization: Bearer {{customer_token}}
 
 **response:**
 Status: 200
@@ -42,6 +44,7 @@ Status: 200
 ## 2. Clear the basket — every later golden is deterministic
 
 **HTTP request: PATCH {{base_url}}/baskets/{{basketId}}/items**
+Authorization: Bearer {{customer_token}}
 Content-Type: application/json
 
 ```json request
@@ -90,6 +93,7 @@ Status: 200
 ## 3. Add the first offer — PATCH carries the absolute quantity (D28, F16)
 
 **HTTP request: PATCH {{base_url}}/baskets/{{basketId}}/items/OF-1001**
+Authorization: Bearer {{customer_token}}
 Content-Type: application/json
 
 ```json request
@@ -187,6 +191,7 @@ Status: 200
 ## 4. Add the second offer — same seller, one shipment, totals as the capture (S1, DoD5)
 
 **HTTP request: PATCH {{base_url}}/baskets/{{basketId}}/items/OF-1002**
+Authorization: Bearer {{customer_token}}
 Content-Type: application/json
 
 ```json request
@@ -310,6 +315,7 @@ Status: 200
 ## 5. Repeating the same PATCH is idempotent — quantity does not double (DoD6)
 
 **HTTP request: PATCH {{base_url}}/baskets/{{basketId}}/items/OF-1001**
+Authorization: Bearer {{customer_token}}
 Content-Type: application/json
 
 ```json request
@@ -433,6 +439,7 @@ Status: 200
 ## 6. Change the quantity — the line total follows it (S3, DoD7)
 
 **HTTP request: PATCH {{base_url}}/baskets/{{basketId}}/items/OF-1001**
+Authorization: Bearer {{customer_token}}
 Content-Type: application/json
 
 ```json request
@@ -556,6 +563,7 @@ Status: 200
 ## 7. A catalog discount passes through flattened, never recomputed (D22, S7)
 
 **HTTP request: PATCH {{base_url}}/baskets/{{basketId}}/items/OF-1001**
+Authorization: Bearer {{customer_token}}
 Content-Type: application/json
 
 ```json request
@@ -679,6 +687,7 @@ Status: 200
 ## 8. Quantity 0 is not a quantity — 422 with the reason (S10, DoD11)
 
 **HTTP request: PATCH {{base_url}}/baskets/{{basketId}}/items/OF-1001**
+Authorization: Bearer {{customer_token}}
 Content-Type: application/json
 
 ```json request
@@ -699,6 +708,7 @@ Status: 422
 ## 9. Currency mismatch — one currency per basket (03 RULE-2, D21, DoD10)
 
 **HTTP request: PATCH {{base_url}}/baskets/{{basketId}}/items/OF-9001**
+Authorization: Bearer {{customer_token}}
 Content-Type: application/json
 
 ```json request
@@ -719,6 +729,7 @@ Status: 422
 ## 10. Offer unknown to the catalog — 404 (DoD14a)
 
 **HTTP request: PATCH {{base_url}}/baskets/{{basketId}}/items/OF-0000**
+Authorization: Bearer {{customer_token}}
 Content-Type: application/json
 
 ```json request
@@ -740,6 +751,7 @@ Status: 404
 ## 11. Read one basket — content, totals and estimate in a single call (D10)
 
 **HTTP request: GET {{base_url}}/baskets/{{basketId}}**
+Authorization: Bearer {{customer_token}}
 
 **response:**
 Status: 200
@@ -856,6 +868,7 @@ Status: 200
 ## 12. Deselect the second item — the totals follow the selection (VIEW-1, S2)
 
 **HTTP request: PATCH {{base_url}}/baskets/{{basketId}}/selection**
+Authorization: Bearer {{customer_token}}
 Content-Type: application/json
 
 ```json request
@@ -980,6 +993,7 @@ Status: 200
 ## 13. A handover with an empty selection is refused — 422 (RULE-9)
 
 **HTTP request: PATCH {{base_url}}/baskets/{{basketId}}/selection**
+Authorization: Bearer {{customer_token}}
 Content-Type: application/json
 
 ```json request
@@ -1086,6 +1100,7 @@ Status: 200
 ## 14. Handover with nothing selected — 422
 
 **HTTP request: PATCH {{base_url}}/baskets/{{basketId}}/checkout**
+Authorization: Bearer {{customer_token}}
 
 **response:**
 Status: 422
@@ -1099,6 +1114,7 @@ Status: 422
 ## 15. Out-of-stock selected still prices the basket (S4) but blocks the handover (D33, DoD12)
 
 **HTTP request: PATCH {{base_url}}/baskets/{{basketId}}/selection**
+Authorization: Bearer {{customer_token}}
 Content-Type: application/json
 
 ```json request
@@ -1223,6 +1239,7 @@ Status: 200
 ## 16. The handover is blocked, naming the row
 
 **HTTP request: PATCH {{base_url}}/baskets/{{basketId}}/checkout**
+Authorization: Bearer {{customer_token}}
 
 **response:**
 Status: 422
@@ -1243,6 +1260,7 @@ Status: 422
 ## 17. Deselecting the blocked row enables checkout for the remaining subset (S12, DoD13)
 
 **HTTP request: PATCH {{base_url}}/baskets/{{basketId}}/selection**
+Authorization: Bearer {{customer_token}}
 Content-Type: application/json
 
 ```json request
@@ -1367,6 +1385,7 @@ Status: 200
 ## 18. The handover goes through, keyed by basketId (D32)
 
 **HTTP request: PATCH {{base_url}}/baskets/{{basketId}}/checkout**
+Authorization: Bearer {{customer_token}}
 
 **response:**
 Status: 200
@@ -1414,6 +1433,7 @@ Status: 200
 ## 19. Repeating the handover is the same handover while the content is unchanged (HAND-4)
 
 **HTTP request: PATCH {{base_url}}/baskets/{{basketId}}/checkout**
+Authorization: Bearer {{customer_token}}
 
 **response:**
 Status: 200
@@ -1460,6 +1480,7 @@ Status: 200
 ## 20. An unavailable item blocks the handover and is named (HAND-1, DoD14)
 
 **HTTP request: PATCH {{base_url}}/baskets/{{basketId}}/items/OF-2007**
+Authorization: Bearer {{customer_token}}
 Content-Type: application/json
 
 ```json request
@@ -1607,6 +1628,7 @@ Status: 200
 ## 21. The handover is blocked by the unavailable row
 
 **HTTP request: PATCH {{base_url}}/baskets/{{basketId}}/checkout**
+Authorization: Bearer {{customer_token}}
 
 **response:**
 Status: 422
@@ -1627,6 +1649,7 @@ Status: 422
 ## 22. Remove the unavailable item — the basket is never cleared by a handover (D19)
 
 **HTTP request: PATCH {{base_url}}/baskets/{{basketId}}/items**
+Authorization: Bearer {{customer_token}}
 Content-Type: application/json
 
 ```json request

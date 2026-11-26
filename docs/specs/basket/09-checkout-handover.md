@@ -32,14 +32,16 @@ totals:
 deliveryEstimate: { kind: estimate, from: "2026-11-28", to: "2026-11-30", source: configured }   # element 05, D36
 ```
 
-Returned: `{ handoverId, revision, checkoutId }`. `handoverId` equals `basketId` (D32), `revision` is the one echoed in the request (D35), and the basket stores nothing of it and is **not cleared** (D19).
+**Shape of record (D41).** The `yaml` above is the **in-process command payload**, not the HTTP answer. The answer is fixed by [`prototypes/basket-api.prove.md`](prototypes/basket-api.prove.md) steps 18–19: `{ handoverId, basketId, createdAt, customerId, currency, selection: [offerId], revision, totals }` — no `checkoutId`, no `deliveryEstimate`. `checkoutId` stays inside the service: the receiving slice returns it, the basket does not publish it. `handoverId` equals `basketId` (D32), `revision` is the one captured in step 18 and echoed in step 19 (D35), and the basket is **not cleared** (D19).
+
+The basket keeps exactly one derived field of it — `lastHandover { revision, contentDigest, handoverId, createdAt }` — so a repeat of an unchanged basket returns the same handover (HAND-4, DoD30) without the basket ever depending on checkout's state. The digest is computed over the canonical handover payload, the way `Order.canonicalDigest()` is the idempotency key of `POST /orders` (`services/fulfillment/src/main/java/shop/fulfillment/kernel/Order.java:91`).
 
 ## Rules
 
 - **HAND-1 Nothing blocked crosses.** Refused while any **selected** item's status is `unavailable` or `outOfStock` (element 06 blocking set, **D33**); a row that is `available` with `stale: true` (stock unread) does **not** block. The customer deselects the offending row and hands over the remaining subset; the materials called out-of-stock non-blocking (`[seg 70-71]`), the operator decided otherwise, and D33 records the divergence.
 - **HAND-2 Selection only.** Unselected items are absent, not zero-quantity.
 - **HAND-3 The basket never creates the order.** Order creation and the downstream `ordered` crossing into fulfilment (`boundaries[3]`, `POST /orders` with `SCOPE_shopping-service`) belong to the checkout slice.
-- **HAND-4 One active handover per basket.** The key is `basketId` (D32): repeating the command returns the same `handoverId` while the basket content is unchanged, and a **changed** basket produces a new handover that supersedes the old one.
+- **HAND-4 One active handover per basket.** The key is `basketId` (D32): repeating the command returns the same `handoverId` while the basket content is unchanged, and a **changed** basket produces a new handover that supersedes the old one. The identity is the content digest stored in `lastHandover` (D41): same digest ⇒ same `handoverId` and the same `revision`; different digest ⇒ the next `revision` and a new handover.
 - **HAND-5 Snapshot, not authority.** Prices cross as the basket computed them; the checkout slice **re-prices and reports the difference** (**D31**). The basket never claims its price is final.
 - **HAND-6 No clearing, no locking.** The basket stays `active` and editable (D19); a failing checkout must not cost the customer the basket.
 

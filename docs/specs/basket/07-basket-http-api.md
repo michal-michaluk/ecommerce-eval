@@ -16,7 +16,7 @@
 | Auto-creation | `GET /baskets` creates a basket when the customer has none and returns it | D29 "backend creates one always, when none" |
 | Selection | `PATCH /baskets/{basketId}/selection` with `scope` ∈ `item` / `shipment` / `all` | mirrors `basket.json` `selection` and the three checkboxes |
 | Removal | `PATCH /baskets/{basketId}/items` with `{ "scope": "item" \| "selection" \| "all", "offerId": <required when scope=item>, "quantity": null }` — `quantity: null` is what removes | one endpoint owns every removal scope; the item endpoint `PATCH …/items/{offerId}` only ever sets a quantity ≥ 1, so a path carrying an offer can never mean "clear the basket" |
-| Handover | `PATCH /baskets/{basketId}/checkout` → handover payload keyed by `basketId` (element 09, D32) | `go to checkout` is a command, not a navigation |
+| Handover | `PATCH /baskets/{basketId}/checkout` → handover payload keyed by `basketId` (element 09, D32). The **response** shape is `prototypes/basket-api.prove.md` steps 18–19 — that is the shape of record (D41) | `go to checkout` is a command, not a navigation |
 | Auth | bearer token, authority **`SCOPE_customer`** (D27) | operator: "just `customer`"; `fulfillment` keeps `SCOPE_shopping-service` for the service hop |
 | Money in the payload | `{ "amount": 174870, "currency": "PLN" }` plus a display-only `label` | element 03; a client never parses `label` |
 | Status vocabulary | `available` / `outOfStock` / `unavailable` + `stale` | element 06; the client renders, never re-derives |
@@ -31,6 +31,11 @@
 | `404` | basket or offer unknown | `{ "error": "BASKET_NOT_FOUND" \| "OFFER_NOT_FOUND", … }` |
 | `422` | quantity ≤ 0; quantity change on `unavailable`; empty selection on checkout; checkout blocked by a selected row whose status is `unavailable` or `outOfStock` (`stale` alone never blocks); currency mismatch; basket not `active` | `{ "error": …, "reasons": [ { "offerId", "status", "stale" } ] }` — `reasons[]` is **always** an array of objects; `BLOCKED_BY_ITEMS` uses it (D33). There is no `missing[]` |
 | `503` | `OfferCatalog` unreachable **and** the item has no snapshot — otherwise D26 applies (grey + `unavailable`) | `{ "error": "OFFER_READ_UNAVAILABLE" }` |
+
+### Two recorded deviations from the architecture doctrine (D44)
+
+- **`422`, not `409`, for a refused command.** `docs/arch/microservice-java-spring/http-adapter.md:38-47` assigns a well-formed but refused command `409` and reserves `422` for a syntactic/semantic split used *everywhere*. The basket keeps `422` because the contract of record — `prototypes/basket-api.prove.md` — and its five error goldens are written that way; the deviation is deliberate, not an oversight.
+- **`GET /baskets` writes.** `http-adapter.md:58` requires every `GET` to be served from a read model that cannot reach the write model. D29 makes the first read create the basket, so the read model owns exactly one write path: `BasketsProjection` delegates creation to the basket service and then answers from its own row. No other read writes.
 
 ## Resolved questions
 

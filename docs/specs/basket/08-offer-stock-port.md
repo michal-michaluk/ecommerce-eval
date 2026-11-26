@@ -6,6 +6,11 @@
 
 **Artifact:** [`prototypes/offer-catalog-port.prove.md`](prototypes/offer-catalog-port.prove.md) — a `prove` scenario marked **assumption**, because no such endpoint exists yet. It becomes runnable the day the browsing slice publishes the contract; `validate` and `explain` gate it today.
 
+**Increments (D38/D39).** The `catalog` HTTP surface exists only on the unmerged `feat/catalog-domain-model` branch and carries no shop-facing offer read, and no service publishes an event yet. So this increment ships the **port and the application path**, not an HTTP client:
+
+- `OfferCatalog` is implemented by a fixture adapter seeded per test and per cluster run, with fault injection (`503`, `401`, `stock: notRead`) — that adapter is also the simulator the negative rows (DoD17–DoD19) need.
+- The basket **applies** an observation in one in-process command (idempotent snapshot replacement, `readAt` ordering, EVT-2/EVT-3/EVT-4). Element 10's transport is deferred; the command is what DoD20/DoD21 prove.
+
 ## Port
 
 ```text
@@ -30,7 +35,7 @@ OfferObservation = { offerId, seller, title, pictureUrl,
 | `offerId` | item identity | the item cannot be read at all → `503` (element 07 error contract) |
 | `seller` | shipment grouping (02 RULE-7) | item renders in a shipment labelled `unknown seller`; never merged with another |
 | `title`, `pictureUrl` | item row (element 01, board annotation "product title, one picture, price") | last-known snapshot (02 RULE-8) |
-| `currentPrice`, `discount` | line total and discount line (element 04) | last-known snapshot; a price that cannot be read is never recomputed. Catalog owns the discount model — the basket only displays the flattened result (D22) |
+| `currentPrice`, `discount` | line total and discount line (element 04) | last-known snapshot; a price that cannot be read is never recomputed. Catalog owns the discount model — the basket only displays the flattened result (D22, D40) |
 | `offerState` | availability decision (element 06 A3) | treated as `notRead` → A4 |
 | `stock` | availability decision (A2/A5) | `notRead` → A5 |
 

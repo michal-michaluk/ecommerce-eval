@@ -36,7 +36,8 @@ Estimate = { kind: estimate | unknown,
 
 | Key | Meaning | Default (D7 — no invented numbers) |
 |---|---|---|
-| `basket.estimate.defaultDays` | the estimate, in days from `now` | **`{ from: 2, to: 4 }` — hardcoded by decision (D36)**: the estimate is `today + 2 days` … `today + 4 days` |
+| `basket.estimate.defaultDays` | the estimate, in **calendar** days from `today` | **`{ from: 2, to: 4 }` — hardcoded by decision (D36)**: the estimate is `today + 2 days` … `today + 4 days` |
+| `basket.estimate.zone` | the zone whose `today` the range counts from | **`Europe/Warsaw`** (D43) — the customer's calendar day, not UTC |
 | `basket.estimate.fallback` | what to return when configuration is missing | `unknown` |
 
 ## Interface scenarios
