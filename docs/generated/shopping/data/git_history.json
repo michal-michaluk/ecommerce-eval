@@ -1,12 +1,12 @@
 {
-  "commits_read": 34,
+  "commits_read": 35,
   "quality": {
-    "conventional": 34,
+    "conventional": 35,
     "conventional_share": 1.0,
     "counts": {
       "chore": 5,
       "docs": 2,
-      "feat": 22,
+      "feat": 23,
       "fix": 3,
       "refactor": 1,
       "test": 1
@@ -17,10 +17,22 @@
     "other": 0,
     "other_share": 0.0,
     "path_classified": 0,
-    "rows": 34
+    "rows": 35
   },
   "repository": "ecommerce",
   "rows": [
+    {
+      "category": "feat",
+      "change": "the 400 contract, and the risks the branch review ranked",
+      "date": "2026-11-27",
+      "evidence": [
+        "git:bddf899d320b3e2f4551d6e6cb411802ffe55af8"
+      ],
+      "ref": {
+        "sha": "bddf899"
+      },
+      "scope": "."
+    },
     {
       "category": "docs",
       "change": "correct the drifts the branch review found",
