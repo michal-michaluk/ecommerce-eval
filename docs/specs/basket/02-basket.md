@@ -68,7 +68,7 @@ items:
 |---|---|---|---|
 | `AddToBasket(offerId, quantity≥1)` | basket `active`, customer identified | item appended; if the offer is already there the quantity is **merged** (D19) | `added to basket` |
 | `ChangeBasketQuantity(offerId, quantity≥1)` | item exists; `availability ≠ unavailable` (D19) | quantity replaced | `basket quantity changed` — **not on the board (R4)** |
-| `RemoveFromBasket(scope)` | scope = item / selection / all (element 07, the contract of record — a shipment is emptied by removing its items; D50) | items removed; an emptied basket stays `active` with no items | `removed from basket` |
+| `RemoveFromBasket(scope)` | scope = item / selection / all (element 07, the contract of record — a shipment is emptied by removing its items; D50) | items removed; an emptied basket stays `active` with no items | `removed from basket` — **one event per removed row** when the scope names many |
 | `Select(scope, on/off)` | — | selection flags only; no event | — |
 | `HandOver()` | ≥1 selected item and no blocking problem | exposes the selection to the checkout slice (element 09); basket **not** cleared (D19) | `go to checkout` |
 

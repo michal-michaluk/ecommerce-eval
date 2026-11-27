@@ -277,7 +277,7 @@ A full cycle, observed end to end with both services.
 - **`catalog`'s `e2e/healthcheck.hurl` expects `401` on `GET /actuator/info`.**
   `services/catalog/src/main/java/shop/catalog/AppConfiguration.java:29` permits that path, so the deployed app answers `200` and the suite fails on its second request. Element 12 (offers, the four scopes) lives on `feat/catalog-domain-model`, not on `main`; the same branch carries the 106-request `e2e/catalog-http-api.hurl` that `--suite` can run once it lands.
 - **`shopping`'s `e2e/healthcheck.hurl` has the same `401`-on-`/actuator/info` assertion.**
-  `services/shopping/src/main/java/shop/shopping/AppConfiguration.java:30` permits that path, so `test shopping` stops at request 2. The route matrix is owned by `basket-http-api`; until it lands the blueprint suite and the blueprint permit-list disagree, exactly as they do in `catalog`.
+  `services/shopping/src/main/java/shop/shopping/AppConfiguration.java:30` permits that path, so `test shopping` stops at request 2. The route matrix has landed and the disagreement is **permanent**: `AppConfiguration` permits `/actuator/info` by design, so the blueprint's healthcheck suite will always stop at request 2 for this service — exactly as it does in `catalog`. The service's real contract is the prove scenario, not that healthcheck.
 - **A changed realm document does not re-import on its own.**
   Keycloak's `--import-realm` skips a realm that already exists, so `deploy` restarts Keycloak after a
   ConfigMap change and the new document is still not applied to a realm that is already there. Editing
