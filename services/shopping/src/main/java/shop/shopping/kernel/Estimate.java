@@ -1,4 +1,4 @@
-package shop.shopping.basket;
+package shop.shopping.kernel;
 
 import java.time.LocalDate;
 import java.util.Objects;
@@ -14,24 +14,27 @@ import java.util.Objects;
  * <p>{@code from} and {@code to} are calendar days of {@code basket.estimate.zone}, inclusive at both ends (D43, Q21/D36), and
  * they are present exactly when {@code kind} is {@link Kind#estimate}. An {@code unknown} carries no range at all: a range
  * beside "there is nothing to say" is a number a reader could trust by mistake. The pairing is checked once, here, so no caller
- * repeats it — it is a programming error, because an {@code Estimate} is built by {@link BasketDeliveryEstimate} and never by a
- * client, and it reaches the caller the way an absent component does: a JDK exception, {@link IllegalArgumentException} for the
- * mispairing and {@link NullPointerException} for a missing component (the split {@link shop.shopping.kernel.Money} states —
- * a client-supplied value refuses with {@link shop.shopping.kernel.ShoppingException}, a programming error with a JDK type).
+ * repeats it — it is a programming error, because an {@code Estimate} is built by element 05's policy and never by a client,
+ * and it reaches the caller the way an absent component does: a JDK exception, {@link IllegalArgumentException} for the
+ * mispairing and {@link NullPointerException} for a missing component (the split {@link Money} states — a client-supplied value
+ * refuses with {@link ShoppingException}, a programming error with a JDK type).
  *
- * <p>The estimate is <em>when</em> and never <em>how much</em>: it carries no {@link shop.shopping.kernel.Money}, and no line
- * of element 04 reads it, because {@code Dostawa od 9,99 zł} comes from {@code DeliveryRate} (element 05 §Recommendations 2).
- * It is also not a promise — the deferred algorithm (issue #71) may replace the range; what it must keep is this shape.
+ * <p>The estimate is <em>when</em> and never <em>how much</em>: it carries no {@link Money}, and no line of element 04 reads
+ * it, because {@code Dostawa od 9,99 zł} comes from the delivery rate (element 05 §Recommendations 2). It is also not a promise
+ * — the deferred algorithm (issue #71) may replace the range; what it must keep is this shape.
+ *
+ * <p>It lives in {@code kernel/} because it is part of the handover payload: the basket composes it, the checkout slice reads it,
+ * and no slice type may cross (element 09 §Recommendations 1, {@code structure.kernel-public}).
  *
  * @param kind   whether there is a range to render
  * @param from   the first day of the inclusive range, absent when {@code kind} is {@link Kind#unknown}
  * @param to     the last day of the inclusive range, absent when {@code kind} is {@link Kind#unknown}
  * @param source which input produced the answer
  */
-record Estimate(Kind kind, LocalDate from, LocalDate to, Source source) {
+public record Estimate(Kind kind, LocalDate from, LocalDate to, Source source) {
 
     /** Whether there is a range to render — element 05 §Interface, {@code kind: estimate | unknown}. */
-    enum Kind {
+    public enum Kind {
         estimate,
         unknown
     }
@@ -51,12 +54,12 @@ record Estimate(Kind kind, LocalDate from, LocalDate to, Source source) {
      * {@code unknown} as evidence that a rule computed something: on a non-answer it records only which side of the interface
      * the non-answer came from, and a renderer hides the line either way (Q22).
      */
-    enum Source {
+    public enum Source {
         configured,
         observed
     }
 
-    Estimate {
+    public Estimate {
         Objects.requireNonNull(kind, "kind");
         Objects.requireNonNull(source, "source");
         if (kind == Kind.estimate) {
@@ -74,7 +77,7 @@ record Estimate(Kind kind, LocalDate from, LocalDate to, Source source) {
      * @param source whether a rule or an observation produced it
      * @return the renderable estimate
      */
-    static Estimate estimatedBetween(LocalDate from, LocalDate to, Source source) {
+    public static Estimate estimatedBetween(LocalDate from, LocalDate to, Source source) {
         return new Estimate(Kind.estimate, from, to, source);
     }
 
@@ -84,8 +87,13 @@ record Estimate(Kind kind, LocalDate from, LocalDate to, Source source) {
      * @param source which input produced the non-answer; this increment always answers {@link Source#configured}
      * @return the named non-answer, never {@code null}
      */
-    static Estimate unknown(Source source) {
+    public static Estimate unknown(Source source) {
         return new Estimate(Kind.unknown, null, null, source);
+    }
+
+    /** Whether a range is renderable — the one question a caller asks before printing a delivery line (Q22, D24). */
+    public boolean isARange() {
+        return kind == Kind.estimate;
     }
 
     private static void ensureOrderedRange(LocalDate from, LocalDate to) {

@@ -188,11 +188,31 @@ sealed interface OfferObservationCommand
          */
         BasketItem.LastKnown filledWith(BasketItem.LastKnown lastKnown) {
             Objects.requireNonNull(lastKnown, "lastKnown");
+            boolean keepsItsPrices = pricedInAnotherCurrencyThan(lastKnown);
             return new BasketItem.LastKnown(
                     title == null ? lastKnown.title() : title,
                     pictureUrl == null ? lastKnown.picture() : pictureUrl,
-                    currentPrice == null ? lastKnown.currentPrice() : asCharge(currentPrice),
-                    discount == null ? lastKnown.discount() : asDiscount(discount));
+                    currentPrice == null || keepsItsPrices ? lastKnown.currentPrice() : asCharge(currentPrice),
+                    discount == null || keepsItsPrices ? lastKnown.discount() : asDiscount(discount));
+        }
+
+        /**
+         * Whether this answer prices the offer in a currency the row cannot take (D63).
+         *
+         * <p>It is the one question the application path asks about currency, because element 03 RULE-2 makes conversion
+         * impossible: an answer pegged in another currency is applied as content unchanged — the row keeps the prices it
+         * already holds — and the row says so by staying stale. The same predicate decides both halves, so a row can never keep
+         * one price of a foreign answer beside a fresh one.
+         *
+         * @param lastKnown the snapshot the row already holds, whose currency it is priced in
+         * @return true when either price names a currency other than the row's
+         */
+        boolean pricedInAnotherCurrencyThan(BasketItem.LastKnown lastKnown) {
+            return namesAnotherCurrency(currentPrice, lastKnown) || namesAnotherCurrency(discount, lastKnown);
+        }
+
+        private static boolean namesAnotherCurrency(Money amount, BasketItem.LastKnown lastKnown) {
+            return amount != null && !amount.currency().equals(lastKnown.currentPrice().currency());
         }
 
         private static Money asCharge(Money amount) {

@@ -7,8 +7,10 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 
+import shop.shopping.basket.BasketConfiguration.Settings;
 import shop.shopping.basket.BasketConfiguration.Settings.EstimateSettings;
 import shop.shopping.basket.BasketConfiguration.Settings.EstimateSettings.DefaultDays;
+import shop.shopping.kernel.Estimate;
 
 /**
  * Element 05's interface scenarios I1–I7 and the edges the day range makes possible to get wrong, as test data: the request of
@@ -58,6 +60,10 @@ public class BasketDeliveryEstimateFixture {
 
     public static final String UNKNOWN = "unknown";
 
+    public static final long DELIVERY_RATE = 9990;
+
+    public static final boolean FREE_WHEN_SMART = true;
+
     private static final int ANOTHER_FROM_DAYS = 1;
 
     private static final int ANOTHER_TO_DAYS = 3;
@@ -84,6 +90,16 @@ public class BasketDeliveryEstimateFixture {
 
     public static EstimateSettings theConfiguredSettings() {
         return new EstimateSettings(new DefaultDays(FROM_DAYS, TO_DAYS), ZONE, UNKNOWN);
+    }
+
+    /** The {@code basket.*} block with the delivery half a deployment may state, half-stated included. */
+    public static Settings settingsWithDelivery(Long rate, Boolean freeWhenSmart) {
+        return new Settings("PLN", null, new Settings.DeliverySettings(rate, freeWhenSmart));
+    }
+
+    /** The same block before the deployment states any delivery key. */
+    public static Settings settingsWithoutDelivery() {
+        return new Settings("PLN", null, null);
     }
 
     /** A range the hardcoded default does not hold, so a test can tell a configured range from the D36 constant. */
@@ -120,6 +136,8 @@ public class BasketDeliveryEstimateFixture {
     public static Map<String, String> theDeployedProperties() {
         return Map.of(
                 "basket.currency", "PLN",
+                "basket.delivery.rate", String.valueOf(DELIVERY_RATE),
+                "basket.delivery.free-when-smart", String.valueOf(FREE_WHEN_SMART),
                 "basket.estimate.default-days.from", String.valueOf(FROM_DAYS),
                 "basket.estimate.default-days.to", String.valueOf(TO_DAYS),
                 "basket.estimate.zone", ZONE,

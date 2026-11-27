@@ -110,6 +110,12 @@ record BasketItem(
      * (R13, element 10 §Events consumed). An observation of the same instant is applied: it replaces the row with an equal one,
      * which is how a duplicate delivery costs nothing (EVT-4, DoD20).
      *
+     * <p>An answer in another currency keeps the prices this row already holds and marks it stale (D63): element 03 RULE-2 makes
+     * conversion impossible, so the row cannot move into that currency, and the flag is how it says that what it shows is
+     * last-known. What D63 freezes is the prices, not the rest of the answer: the availability is still decided from that
+     * answer's own state and stock, and the row is still regrouped under the seller it reports — a seller is a shipment, not a
+     * price.
+     *
      * @param command the observation, already mapped from the port's read record
      * @return the refreshed row, or this row when the observation is still older than {@link #readAt}
      */
@@ -134,13 +140,23 @@ record BasketItem(
 
     private BasketItem observedAs(OfferObservationCommand command) {
         return switch (command) {
-            case OfferObservationCommand.Answered answered -> refreshed(answered.snapshot().filledWith(lastKnown),
-                    OfferAvailabilityDecision.decide(answered.observation()), answered.seller(), answered.readAt());
+            case OfferObservationCommand.Answered answered -> observedAs(answered);
             case OfferObservationCommand.Unanswered unanswered -> refreshed(lastKnown,
                     OfferAvailabilityDecision.decide(unanswered.observation()), seller, unanswered.readAt());
             case OfferObservationCommand.Refreshed repriced -> refreshed(repriced.snapshot().filledWith(lastKnown),
                     availability, seller, repriced.readAt());
         };
+    }
+
+    private BasketItem observedAs(OfferObservationCommand.Answered answered) {
+        Availability decided = OfferAvailabilityDecision.decide(answered.observation());
+        return answered.snapshot().pricedInAnotherCurrencyThan(lastKnown)
+                ? refreshed(lastKnown, pricedAsLastKnown(decided), answered.seller(), answered.readAt())
+                : refreshed(answered.snapshot().filledWith(lastKnown), decided, answered.seller(), answered.readAt());
+    }
+
+    private static Availability pricedAsLastKnown(Availability decided) {
+        return new Availability(decided.status(), decided.reason(), true);
     }
 
     private BasketItem refreshed(LastKnown snapshot, Availability decided, String groupedUnder, Instant obtainedAt) {

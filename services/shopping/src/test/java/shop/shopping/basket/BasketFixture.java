@@ -1,11 +1,14 @@
 package shop.shopping.basket;
 
+import java.time.Clock;
 import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 import shop.shopping.kernel.Availability;
+import shop.shopping.kernel.CheckoutHandovers;
 import shop.shopping.kernel.Money;
 import shop.shopping.kernel.MoneyFixture;
 
@@ -21,6 +24,7 @@ public class BasketFixture {
     public static final BasketId BASKET_ID = new BasketId("B-7f3a");
     public static final CustomerId CUSTOMER_ID = new CustomerId("C-42");
     public static final String PLN = MoneyFixture.PLN;
+    public static final String EUR = "EUR";
     public static final Instant NOW = Instant.parse("2026-11-26T10:00:00Z");
     public static final String UGREEN = "UGREEN_POLSKA";
     public static final String ANKER = "ANKER_STORE";
@@ -37,6 +41,17 @@ public class BasketFixture {
 
     public static BasketEditor aBasketWith(BasketItem... items) {
         return new BasketEditor(BASKET_ID, new ArrayList<>(), CUSTOMER_ID, PLN,
+                new ArrayList<>(List.of(items)), BasketState.active, 0, null);
+    }
+
+    public static BasketEditor aBasketWithIn(String currency, BasketItem... items) {
+        return new BasketEditor(BASKET_ID, new ArrayList<>(), CUSTOMER_ID, currency,
+                new ArrayList<>(List.of(items)), BasketState.active, 0, null);
+    }
+
+    /** The basket of one test, under an identity no other test hands over — the handover key is the basket's (D32). */
+    public static BasketEditor aBasketOf(BasketId basketId, CustomerId customerId, BasketItem... items) {
+        return new BasketEditor(basketId, new ArrayList<>(), customerId, PLN,
                 new ArrayList<>(List.of(items)), BasketState.active, 0, null);
     }
 
@@ -72,6 +87,17 @@ public class BasketFixture {
 
     public static BasketItem anItem(String offerId, String seller, int quantity, Availability availability) {
         return new BasketItem(offerId, seller, quantity, true, availability, aLastKnown(), NOW);
+    }
+
+    public static BasketItem anItemReadAt(String offerId, Instant readAt) {
+        return new BasketItem(offerId, UGREEN, 1, true, Availability.available(), aLastKnown(), readAt);
+    }
+
+    /** The same capture offer priced in another currency — the one a row of a non-PLN basket holds (D21). */
+    public static BasketItem anItemPricedIn(String offerId, String currency) {
+        return new BasketItem(offerId, UGREEN, 1, true, Availability.available(),
+                new BasketItem.LastKnown("UGREEN Nexode 65W", "img-1001", new Money(99890, currency),
+                        Money.zero(currency, Money.Kind.discount)), NOW);
     }
 
     public static BasketItem anItemReadAsStale() {
@@ -120,6 +146,34 @@ public class BasketFixture {
 
     public static BasketCurrency aBasketCurrency() {
         return new BasketCurrency(PLN);
+    }
+
+    /** The primary port as a test drives it: the fake storage, the two policies of elements 04 and 05, and a recording port. */
+    public static BasketService aServiceWith(FakeBasketRepository baskets, CheckoutHandovers checkouts) {
+        return aServiceAt(NOW, baskets, checkouts);
+    }
+
+    /** The same port reading another instant — the only thing a calendar day changes. */
+    public static BasketService aServiceAt(Instant now, FakeBasketRepository baskets, CheckoutHandovers checkouts) {
+        return aServiceOf(aBasketCurrency(), now, baskets, checkouts);
+    }
+
+    public static BasketService aServiceOf(BasketCurrency currency, FakeBasketRepository baskets,
+            CheckoutHandovers checkouts) {
+        return aServiceOf(currency, NOW, baskets, checkouts);
+    }
+
+    public static BasketService aServiceOf(BasketCurrency currency, Instant now, FakeBasketRepository baskets,
+            CheckoutHandovers checkouts) {
+        return new BasketService(baskets, currency, BasketPriceCalculation.defaultCalculation(),
+                BasketDeliveryEstimate.defaultEstimate(), checkouts, Clock.fixed(now, ZoneOffset.UTC));
+    }
+
+    /** The primary port charging a delivery another deployment states — the same rows, another payload. */
+    public static BasketService aServiceCharging(DeliveryRates rates, FakeBasketRepository baskets,
+            CheckoutHandovers checkouts) {
+        return new BasketService(baskets, aBasketCurrency(), new BasketPriceCalculation(rates),
+                BasketDeliveryEstimate.defaultEstimate(), checkouts, Clock.fixed(NOW, ZoneOffset.UTC));
     }
 
     public static CustomerId aFreshCustomer() {

@@ -50,6 +50,7 @@ OfferObservation = { offerId, seller, title, pictureUrl,
 | `401`/`403` | `unavailable`, `stale: true` (A4 — a failed read never keeps a previous `available`) plus a logged configuration fault. The basket never hides itself because our credential is wrong | D26 |
 | timeout / `5xx` | row greyed, `unavailable`, `stale: true` (A4) | Q24 → **D26**, R13 |
 | warehouse unavailable (`stock: notRead`) | `available`, `stale: true` (A5) | A5/R14 |
+| an observation prices the offer in **another currency** | the row keeps its last-known prices, availability is re-decided from the observation's own state and stock, and the row is marked `stale: true` — never an exception out of a render, never a silent move into the foreign currency (D63) | D63 |
 | provider answers a count **below zero** (malformed) | the count is **passed through unchanged**; the decision reads it as none left → `outOfStock` (fail-closed). Never mapped to `notRead` — that would read as `available` + `stale`, which is fail-open and contradicts A4 | D56 |
 
 ## Open questions

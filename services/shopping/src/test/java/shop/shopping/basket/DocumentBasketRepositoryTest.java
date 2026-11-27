@@ -36,6 +36,7 @@ import static shop.shopping.basket.BasketFixture.SECOND_OFFER;
 import static shop.shopping.basket.BasketFixture.aBasketFor;
 import static shop.shopping.basket.BasketFixture.aBasketWith;
 import static shop.shopping.basket.BasketFixture.aFirstItem;
+import static shop.shopping.kernel.HandoverFixture.theTotalsOfOneItem;
 import static shop.shopping.basket.BasketFixture.aFreshCustomer;
 import static shop.shopping.basket.BasketFixture.aSecondItem;
 import static shop.shopping.basket.BasketFixture.anArchivedBasketFor;
@@ -152,16 +153,17 @@ class DocumentBasketRepositoryTest {
     void readsTheHandoverIdentityBackOutOfTheStoredDocument() {
         BasketEditor basket = anEmptyBasket();
         basket.addToBasket(aFirstItem());
-        Handover first = basket.handOver(NOW);
+        HandoverDraft first = basket.handOver(NOW, theTotalsOfOneItem());
         baskets.save(basket);
         entityManager.flush();
         entityManager.clear();
 
-        Handover repeated = baskets.get(BASKET_ID.value()).orElseThrow().handOver(NOW);
+        HandoverDraft repeated = baskets.get(BASKET_ID.value()).orElseThrow().handOver(NOW, theTotalsOfOneItem());
 
-        assertThat(first.createdAt()).isEqualTo(NOW);
-        assertThat(repeated).isEqualTo(first);
-        assertThat(repeated.revision()).isEqualTo(first.revision());
+        assertThat(first.identity().createdAt()).isEqualTo(NOW);
+        assertThat(repeated.repeated()).isTrue();
+        assertThat(repeated.identity()).isEqualTo(first.identity());
+        assertThat(repeated.selection()).isEqualTo(first.selection());
     }
 
     @Test

@@ -2,10 +2,6 @@ package shop.shopping.basket;
 
 import org.junit.jupiter.api.Test;
 
-import java.time.Clock;
-import java.time.ZoneOffset;
-
-import shop.shopping.kernel.Handover;
 import shop.shopping.kernel.ShoppingException;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -15,9 +11,9 @@ import static shop.shopping.basket.BasketFixture.CUSTOMER_ID;
 import static shop.shopping.basket.BasketFixture.FIRST_OFFER;
 import static shop.shopping.basket.BasketFixture.NOW;
 import static shop.shopping.basket.BasketFixture.PLN;
-import static shop.shopping.basket.BasketFixture.aBasketCurrency;
 import static shop.shopping.basket.BasketFixture.aBasketFor;
 import static shop.shopping.basket.BasketFixture.aFirstItem;
+import static shop.shopping.basket.BasketFixture.aServiceWith;
 import static shop.shopping.basket.BasketFixture.anEmptyBasket;
 
 /**
@@ -27,7 +23,7 @@ import static shop.shopping.basket.BasketFixture.anEmptyBasket;
 class BasketServiceTest {
 
     final FakeBasketRepository baskets = new FakeBasketRepository();
-    final BasketService service = new BasketService(baskets, aBasketCurrency(), Clock.fixed(NOW, ZoneOffset.UTC));
+    final BasketService service = aServiceWith(baskets, new FakeCheckoutHandovers());
 
     @Test
     void createsTheEmptyBasketOfACustomerWhoHasNone() {
@@ -69,19 +65,6 @@ class BasketServiceTest {
         assertThat(basket.items()).singleElement()
                 .satisfies(item -> assertThat(item.offerId()).isEqualTo(FIRST_OFFER));
         assertThat(baskets.emitted).singleElement().isInstanceOf(DomainEvent.AddedToBasket.class);
-    }
-
-    @Test
-    void handsOverTheSelectionAndAnswersThePayload() {
-        BasketId basketId = service.basketOf(CUSTOMER_ID).basketId();
-        service.addToBasket(basketId, aFirstItem());
-
-        Handover handover = service.handOver(basketId);
-
-        assertThat(handover.handoverId()).isEqualTo(basketId.value());
-        assertThat(handover.revision()).isEqualTo(2);
-        assertThat(handover.createdAt()).isEqualTo(NOW);
-        assertThat(service.handOver(basketId)).isEqualTo(handover);
     }
 
     @Test

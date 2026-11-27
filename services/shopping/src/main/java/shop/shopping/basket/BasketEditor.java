@@ -11,7 +11,7 @@ import java.util.function.Predicate;
 
 import shop.shopping.kernel.Availability;
 import shop.shopping.kernel.Handover;
-import shop.shopping.kernel.LastHandover;
+import shop.shopping.kernel.HandoverRefusal;
 import shop.shopping.kernel.Money;
 import shop.shopping.kernel.ShoppingException;
 
@@ -143,17 +143,28 @@ class BasketEditor {
      * <p>The basket is neither cleared nor locked (HAND-6): only {@code revision} and {@code lastHandover} move, and only when
      * the content differs from the handover already recorded.
      *
-     * @param now the instant the handover is composed at
-     * @return the payload, carrying the identity of this content
+     * <p>The totals arrive from the caller because they are a policy over configuration this aggregate may not hold — and they
+     * are data here in the strictest sense: nothing is computed from them, they are handed straight to
+     * {@link Handover#contentDigestOf} so that the identity covers what a client sees. The delivery estimate is deliberately not
+     * here: it is clock-derived, and an identity that moved at midnight would make every handover of an untouched basket a new
+     * one (D64).
+     *
+     * @param now    the instant the handover is composed at
+     * @param totals what the selection is worth, as element 04 computed it
+     * @return the rows that cross, the identity of this content and whether it had already crossed
      */
-    Handover handOver(Instant now) {
+    HandoverDraft handOver(Instant now, Handover.Totals totals) {
         Objects.requireNonNull(now, "now");
+        Objects.requireNonNull(totals, "totals");
         ensureBasketIsActive();
         ensureSelectionCanCross();
-        List<Handover.Line> selection = handoverLines();
-        LastHandover recorded = recordedFor(selection, now);
-        return new Handover(recorded.handoverId(), basketId.value(), customerId.value(), currency,
-                recorded.revision(), recorded.createdAt(), selection);
+        return draftOf(handoverLines(), totals, now);
+    }
+
+    private HandoverDraft draftOf(List<Handover.Line> selection, Handover.Totals totals, Instant now) {
+        String digest = Handover.contentDigestOf(basketId.value(), customerId.value(), selection, totals);
+        boolean repeated = isAlreadyRecorded(digest);
+        return new HandoverDraft(selection, repeated ? lastHandover : recordHandover(digest, now), repeated);
     }
 
     /**
@@ -238,19 +249,14 @@ class BasketEditor {
         }
     }
 
-    private LastHandover recordedFor(List<Handover.Line> selection, Instant now) {
-        String digest = Handover.contentDigestOf(basketId.value(), customerId.value(), currency, selection);
-        LastHandover recorded = isAlreadyRecorded(digest) ? lastHandover : recordHandover(digest, now);
-        return recorded;
-    }
-
     private List<Handover.Line> handoverLines() {
         return selectedItems().stream().map(BasketEditor::lineOf).toList();
     }
 
     private static Handover.Line lineOf(BasketItem item) {
+        Money currentPrice = item.lastKnown().currentPrice();
         return new Handover.Line(item.offerId(), item.seller(), item.quantity(), item.availability(),
-                item.lastKnown().currentPrice(), item.lastKnown().discount());
+                currentPrice, item.lastKnown().discount(), currentPrice.times(item.quantity()));
     }
 
     private LastHandover recordHandover(String digest, Instant now) {
@@ -316,7 +322,10 @@ class BasketEditor {
         if (selected.isEmpty()) {
             throw new ShoppingException(ShoppingException.Error.NOTHING_SELECTED, basketId.value());
         }
-        List<BasketItem> blocked = selected.stream().filter(item -> item.availability().blocksHandover()).toList();
+        List<HandoverRefusal> blocked = selected.stream()
+                .filter(item -> item.availability().blocksHandover())
+                .map(item -> HandoverRefusal.of(item.offerId(), item.availability()))
+                .toList();
         if (!blocked.isEmpty()) {
             throw new ShoppingException(ShoppingException.Error.BLOCKED_BY_ITEMS, basketId.value(), blocked);
         }

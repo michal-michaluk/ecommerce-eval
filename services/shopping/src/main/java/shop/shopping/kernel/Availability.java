@@ -11,12 +11,14 @@ import java.util.Objects;
  * it, because a second derivation is a second opinion about the same offer (element 06 §Recommendations 2).
  *
  * <p>{@code stale} alone never blocks: a row is {@code available} with {@code stale: true} when the offer answered and only
- * the stock did not, and that row crosses the handover. {@code outOfStock} and {@code unavailable} block (D33), which is the
- * whole blocking set and lives here rather than in the view or in the handover (element 06 §Blocking set).
+ * the stock did not, and that row crosses the handover. It is also what a row says when the answer behind it could not be
+ * applied — an observation priced in another currency keeps the last-known prices and is stale for that reason (D63).
+ * {@code outOfStock} and {@code unavailable} block (D33), which is the whole blocking set and lives here rather than in the
+ * view or in the handover (element 06 §Blocking set).
  *
  * @param status the outcome element 06 decided
  * @param reason why it decided so — a status without its reason cannot tell a removed offer from an unread one
- * @param stale  whether the observation behind the outcome could not be read
+ * @param stale  whether what the row shows is last-known rather than freshly read — the stock, or the prices (D63)
  */
 public record Availability(Status status, Reason reason, boolean stale) {
 

@@ -78,6 +78,10 @@ public class BasketPriceFixture {
         return BasketFixture.aSnapshotOf(BasketFixture.aBasketWith(items));
     }
 
+    public static Basket aBasketOfIn(String currency, BasketItem... items) {
+        return BasketFixture.aSnapshotOf(BasketFixture.aBasketWithIn(currency, items));
+    }
+
     public static BasketPriceCalculation aCalculation() {
         return BasketPriceCalculation.defaultCalculation();
     }
@@ -95,8 +99,15 @@ public class BasketPriceFixture {
     }
 
     public static BasketPrice aPrice(long productValue, long discountValue, long deliveryValue, long total) {
-        return new BasketPrice(anAmount(productValue), aDiscount(discountValue),
-                anAmount(deliveryValue), anAmount(total));
+        return aPriceIn(BasketFixture.PLN, productValue, discountValue, deliveryValue, total);
+    }
+
+    /** Element 04's four amounts in any currency — the one a basket holds, never a literal in the calculation (D21). */
+    public static BasketPrice aPriceIn(String currency, long productValue, long discountValue, long deliveryValue,
+            long total) {
+        return new BasketPrice(new Money(productValue, currency),
+                new Money(discountValue, currency, Money.Kind.discount),
+                new Money(deliveryValue, currency), new Money(total, currency));
     }
 
     private static BasketItem anItem(String offerId, String seller, Money currentPrice) {

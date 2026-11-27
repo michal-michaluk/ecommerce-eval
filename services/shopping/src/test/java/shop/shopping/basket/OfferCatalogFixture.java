@@ -94,6 +94,28 @@ public class OfferCatalogFixture {
                 new OfferObservation.Stock.Quantity(SOME_UNITS), READ_AT);
     }
 
+    /** The same offer answered in another currency — the observation D63 keeps the last-known prices for. */
+    public static OfferRecord anOfferPricedIn(String currency) {
+        return anOfferPricedInFrom(currency, SELLER);
+    }
+
+    /** The same, in another currency and from another seller: a shipment is not a price, so D63 keeps it. */
+    public static OfferRecord anOfferPricedInFrom(String currency, String seller) {
+        return new OfferRecord(OFFER, aDescriptionIn(currency, seller), OfferObservation.OfferState.onSale,
+                new OfferObservation.Stock.Quantity(SOME_UNITS), READ_AT);
+    }
+
+    public static OfferRecord.OfferDescription aDescriptionIn(String currency) {
+        return aDescriptionIn(currency, SELLER);
+    }
+
+    public static OfferRecord.OfferDescription aDescriptionIn(String currency, String seller) {
+        OfferRecord.OfferDescription described = aDescription();
+        return new OfferRecord.OfferDescription(seller, described.title(), described.pictureUrl(),
+                new Money(LIST_PRICE, currency), new Money(CURRENT_PRICE, currency),
+                new Money(DISCOUNT, currency, Money.Kind.discount));
+    }
+
     public static OfferRecord withoutTitle() {
         return new OfferRecord(OFFER, aDescriptionWithoutATitle(), OfferObservation.OfferState.onSale,
                 new OfferObservation.Stock.Quantity(SOME_UNITS), READ_AT);

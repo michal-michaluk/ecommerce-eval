@@ -15,6 +15,10 @@ import org.springframework.context.annotation.Configuration;
  *
  * <p>The delivery estimate's block, {@code basket.estimate.*}, binds into the same {@code basket} prefix: one prefix, one
  * properties record, one place a reader looks (element 05 §Configuration).
+ *
+ * <p>The two pure policies are beans here and nowhere else: element 04's calculation and element 05's estimate read
+ * configuration and a caller's instant and hold no state, so this class is the only place that can hand them what they read —
+ * and without the beans neither a render nor the handover could price or date anything.
  */
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(BasketConfiguration.Settings.class)
@@ -26,15 +30,82 @@ class BasketConfiguration {
     }
 
     /**
+     * Element 04's calculation, charging the delivery the deployment states.
+     *
+     * <p>An absent {@code basket.delivery} block, or one that states only half of it, answers the two values the capture fixes
+     * ({@code 9,99 zł} a shipment, free on SMART) rather than {@code 0,00} for everything: a rate nobody stated is a stated
+     * default of the specification, and a silent zero would give delivery away for free.
+     *
+     * @param settings the {@code basket.*} block
+     * @return the calculation the view and the handover price with
+     */
+    @Bean
+    BasketPriceCalculation basketPriceCalculation(Settings settings) {
+        return new BasketPriceCalculation(deliveryRatesOf(settings));
+    }
+
+    /**
+     * Element 05's estimate, reading {@code basket.estimate.*}.
+     *
+     * <p>The block is passed as it binds, {@code null} included: element 05's I5 requires an absent key to answer
+     * {@code unknown}, so no default is applied on the way in (D58).
+     *
+     * @param settings the {@code basket.*} block
+     * @return the policy the handover dates the delivery with
+     */
+    @Bean
+    BasketDeliveryEstimate basketDeliveryEstimate(Settings settings) {
+        return new BasketDeliveryEstimate(settings.estimate());
+    }
+
+    /**
+     * The rate the deployment states, key by key, each absent one answered by the stated default of element 04.
+     *
+     * <p>Both components are boxed so that "the deployment stated no rate" is observable here instead of arriving as {@code 0}:
+     * a block that names only {@code free-when-smart: false} would otherwise price every shipment at {@code 0,00}, and one that
+     * names only a rate would silently free a SMART delivery it never meant to free. The default is applied per key, never as a
+     * pair, precisely so that a half-stated block cannot flip the other half.
+     *
+     * @param settings the {@code basket.*} block
+     * @return what one shipment costs on the given channel
+     */
+    static DeliveryRates deliveryRatesOf(Settings settings) {
+        Settings.DeliverySettings delivery = settings.delivery();
+        DeliveryRates stated = DeliveryRates.defaultRates();
+        if (delivery == null) {
+            return stated;
+        }
+        return new DeliveryRates(
+                delivery.rate() == null ? stated.ratePerShipment() : delivery.rate(),
+                delivery.freeWhenSmart() == null ? stated.freeWhenSmart() : delivery.freeWhenSmart());
+    }
+
+    /**
      * The {@code basket.*} block. It stays a plain record: the model carries no framework annotation, so the binding lives
      * on this wiring class and the values arrive already typed.
      *
      * @param currency the ISO-4217 code a new basket is opened in
      * @param estimate the {@code basket.estimate.*} block {@link BasketDeliveryEstimate} reads, absent when the deployment
      *                 states none
+     * @param delivery the {@code basket.delivery.*} block {@link BasketPriceCalculation} charges, absent when the deployment
+     *                 states none
      */
     @ConfigurationProperties(prefix = "basket")
-    record Settings(String currency, EstimateSettings estimate) {
+    record Settings(String currency, EstimateSettings estimate, DeliverySettings delivery) {
+
+        /**
+         * {@code basket.delivery.*} — what one seller shipment costs and whether the SMART channel frees it (element 04
+         * §Parameters, {@code basket.delivery.rate}, {@code basket.delivery.freeWhenSmart}).
+         *
+         * <p>No {@code @DefaultValue} sits on either component, and both are boxed: an absent key stays <em>absent</em> and is
+         * answered by {@link DeliveryRates#defaultRates()} in the wiring, so a half-stated block is a stated default rather than
+         * a rate of {@code 0,00}.
+         *
+         * @param rate          what one seller shipment costs, in fine units of the basket's currency
+         * @param freeWhenSmart whether the SMART channel frees delivery
+         */
+        record DeliverySettings(Long rate, Boolean freeWhenSmart) {
+        }
 
         /**
          * {@code basket.estimate.*} — the three keys element 05 fixes (D36, D43), bound exactly where {@code basket.currency}

@@ -32,6 +32,9 @@ import static shop.shopping.basket.BasketFixture.anUnavailableItem;
 import static shop.shopping.basket.BasketFixture.selectionOf;
 import static shop.shopping.basket.BasketFixture.shipmentOf;
 import static shop.shopping.basket.BasketFixture.wholeBasket;
+import static shop.shopping.kernel.HandoverFixture.aRefusal;
+import static shop.shopping.kernel.HandoverFixture.theTotalsOfOneItem;
+import static shop.shopping.kernel.HandoverFixture.totalsOf;
 
 /**
  * Element 02 rule by rule, through the snapshot the aggregate exposes: what a repeated add does (RULE-4, D19), what a
@@ -224,7 +227,7 @@ class BasketEditorTest {
         BasketEditor basket = aBasketWith(aFirstItem());
         basket.select(wholeBasket(), false);
 
-        assertThatThrownBy(() -> basket.handOver(NOW))
+        assertThatThrownBy(() -> handedOver(basket))
                 .isInstanceOfSatisfying(ShoppingException.class, refused -> assertThat(refused.error())
                         .isEqualTo(ShoppingException.Error.NOTHING_SELECTED));
     }
@@ -232,24 +235,25 @@ class BasketEditorTest {
     @Test
     void refusesTheBlockedHandoverUntilTheBlockedRowIsDeselected() {
         BasketEditor basket = aBasketWith(aFirstItem(), anOutOfStockItem());
-        assertThatThrownBy(() -> basket.handOver(NOW))
+        assertThatThrownBy(() -> handedOver(basket))
                 .isInstanceOfSatisfying(ShoppingException.class, refused -> {
                     assertThat(refused.error()).isEqualTo(ShoppingException.Error.BLOCKED_BY_ITEMS);
-                    assertThat(refused.details()).containsExactly(BASKET_ID.value(), List.of(anOutOfStockItem()));
+                    assertThat(refused.details()).containsExactly(BASKET_ID.value(),
+                            List.of(aRefusal(SECOND_OFFER, Availability.Status.outOfStock, false)));
                 });
         assertThat(aSnapshotOf(basket).lastHandover()).isNull();
 
         basket.select(selectionOf(SECOND_OFFER), false);
-        Handover handover = basket.handOver(NOW);
+        HandoverDraft draft = handedOver(basket);
 
-        assertThat(handover.selection()).extracting(Handover.Line::offerId).containsExactly(FIRST_OFFER);
-        assertThat(aSnapshotOf(basket).lastHandover().revision()).isEqualTo(handover.revision());
+        assertThat(draft.selection()).extracting(Handover.Line::offerId).containsExactly(FIRST_OFFER);
+        assertThat(aSnapshotOf(basket).lastHandover().revision()).isEqualTo(draft.identity().revision());
     }
 
     @Test
     void keepsTheBasketEditableAfterTheHandover() {
         BasketEditor basket = aBasketWith(aFirstItem());
-        basket.handOver(NOW);
+        handedOver(basket);
 
         basket.changeQuantity(FIRST_OFFER, 2);
 
@@ -262,23 +266,27 @@ class BasketEditorTest {
     void handsOverTheSameIdentityWhileTheContentIsUnchanged() {
         BasketEditor basket = aBasketWith(aFirstItem());
 
-        Handover first = basket.handOver(NOW);
-        Handover repeated = basket.handOver(NOW);
+        HandoverDraft first = handedOver(basket);
+        HandoverDraft repeated = handedOver(basket);
 
-        assertThat(repeated).isEqualTo(first);
+        assertThat(repeated.identity()).isEqualTo(first.identity());
+        assertThat(repeated.selection()).isEqualTo(first.selection());
+        assertThat(first.repeated()).isFalse();
+        assertThat(repeated.repeated()).isTrue();
         assertThat(basket.events).filteredOn(DomainEvent.GoToCheckout.class::isInstance).hasSize(1);
     }
 
     @Test
     void handsOverANewIdentityAfterTheContentChanged() {
         BasketEditor basket = aBasketWith(aFirstItem());
-        Handover first = basket.handOver(NOW);
+        HandoverDraft first = handedOver(basket);
         String firstDigest = aSnapshotOf(basket).lastHandover().contentDigest();
 
         basket.changeQuantity(FIRST_OFFER, 2);
-        Handover second = basket.handOver(NOW);
+        HandoverDraft second = handedOver(basket);
 
-        assertThat(second.revision()).isEqualTo(first.revision() + 2);
+        assertThat(second.repeated()).isFalse();
+        assertThat(second.identity().revision()).isEqualTo(first.identity().revision() + 2);
         assertThat(aSnapshotOf(basket).lastHandover().contentDigest()).isNotEqualTo(firstDigest);
     }
 
@@ -286,10 +294,11 @@ class BasketEditorTest {
     void refusesAHandoverBlockedByAnUnavailableRow() {
         BasketEditor basket = aBasketWith(aFirstItem(), anUnavailableItem());
 
-        assertThatThrownBy(() -> basket.handOver(NOW))
+        assertThatThrownBy(() -> handedOver(basket))
                 .isInstanceOfSatisfying(ShoppingException.class, refused -> {
                     assertThat(refused.error()).isEqualTo(ShoppingException.Error.BLOCKED_BY_ITEMS);
-                    assertThat(refused.details()).containsExactly(BASKET_ID.value(), List.of(anUnavailableItem()));
+                    assertThat(refused.details()).containsExactly(BASKET_ID.value(),
+                            List.of(aRefusal(THIRD_OFFER, Availability.Status.unavailable, false)));
                 });
     }
 
@@ -297,9 +306,9 @@ class BasketEditorTest {
     void handsOverARowWhoseOfferAnsweredButWhoseStockDidNot() {
         BasketEditor basket = aBasketWith(anItemReadAsStale());
 
-        Handover handover = basket.handOver(NOW);
+        HandoverDraft draft = handedOver(basket);
 
-        assertThat(handover.selection()).singleElement().satisfies(line -> {
+        assertThat(draft.selection()).singleElement().satisfies(line -> {
             assertThat(line.availability().status()).isEqualTo(Availability.Status.available);
             assertThat(line.availability().stale()).isTrue();
         });
@@ -309,8 +318,24 @@ class BasketEditorTest {
     void refusesAHandoverOfAnArchivedBasket() {
         BasketEditor basket = anArchivedBasketWith(aFirstItem());
 
-        assertThatThrownBy(() -> basket.handOver(NOW))
+        assertThatThrownBy(() -> handedOver(basket))
                 .isInstanceOfSatisfying(ShoppingException.class, refused -> assertThat(refused.error())
                         .isEqualTo(ShoppingException.Error.BASKET_INACTIVE));
+    }
+
+    @Test
+    void handsOverANewIdentityWhenTheTotalsMoved() {
+        BasketEditor basket = aBasketWith(aFirstItem());
+        HandoverDraft first = handedOver(basket);
+
+        HandoverDraft repriced = basket.handOver(NOW, totalsOf(99890, 0, 12_340));
+
+        assertThat(repriced.repeated()).isFalse();
+        assertThat(repriced.identity().revision()).isEqualTo(first.identity().revision() + 1);
+        assertThat(repriced.identity().contentDigest()).isNotEqualTo(first.identity().contentDigest());
+    }
+
+    private static HandoverDraft handedOver(BasketEditor basket) {
+        return basket.handOver(NOW, theTotalsOfOneItem());
     }
 }

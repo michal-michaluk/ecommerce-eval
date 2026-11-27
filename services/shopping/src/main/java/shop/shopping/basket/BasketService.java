@@ -8,6 +8,8 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.Objects;
 
+import shop.shopping.kernel.CheckoutHandovers;
+import shop.shopping.kernel.Estimate;
 import shop.shopping.kernel.Handover;
 import shop.shopping.kernel.ShoppingException;
 
@@ -17,7 +19,8 @@ import shop.shopping.kernel.ShoppingException;
  *
  * <p>It holds no rule of its own — merge, quantity, blocking and handover identity belong to {@link BasketEditor}. What it
  * does own is the one write behind a read: a customer always has an active basket, so asking for it creates it when none
- * exists (RULE-1, D42, element 07 §Recorded deviations).
+ * exists (RULE-1, D42, element 07 §Recorded deviations). Compiling the handover payload is the other thing it owns, because
+ * the totals and the delivery estimate are policies over configuration that no aggregate may hold.
  *
  * <p>Creation is the one method with no ambient transaction: the attempt may be refused by the schema's partial unique
  * index, and the re-read of the winner needs a transaction of its own, because a refused statement leaves the surrounding
@@ -30,11 +33,18 @@ class BasketService {
 
     private final BasketRepository baskets;
     private final BasketCurrency currency;
+    private final BasketPriceCalculation calculation;
+    private final ShipmentEstimates estimates;
+    private final CheckoutHandovers checkouts;
     private final Clock clock;
 
-    BasketService(BasketRepository baskets, BasketCurrency currency, Clock clock) {
+    BasketService(BasketRepository baskets, BasketCurrency currency, BasketPriceCalculation calculation,
+            BasketDeliveryEstimate deliveryEstimate, CheckoutHandovers checkouts, Clock clock) {
         this.baskets = baskets;
         this.currency = currency;
+        this.calculation = calculation;
+        this.estimates = ShipmentEstimates.answeredBy(deliveryEstimate);
+        this.checkouts = checkouts;
         this.clock = clock;
     }
 
@@ -114,16 +124,58 @@ class BasketService {
     }
 
     /**
-     * Hands the selection over and answers the payload checkout receives; the basket stays active and editable (HAND-6).
+     * Hands the selection over (HAND-1…HAND-6) and answers the projection element 09 §Shape of record fixes: the payload is
+     * composed here — the rows the aggregate refuses nothing about any more, the totals of element 04, the range of element 05
+     * — and checkout receives it through the kernel port, which is the only crossing between the two slices.
+     *
+     * <p>The refusals happen before the port: nothing selected, a blocked row and an inactive basket are the aggregate's own
+     * answers, so a refused handover reaches no port and writes nothing. The totals and the range are computed beforehand only
+     * because the identity covers them, and both are pure calculations over the same snapshot. A repeat of unchanged content is
+     * not sent at all — the digest in {@code lastHandover} already answered it (HAND-4, DoD30). The basket stays active and
+     * editable throughout (HAND-6), and no order exists anywhere in this service (HAND-3).
+     *
+     * <p>The order of the two writes is deliberate and one-sided: the port is asked first, so a lost optimistic lock leaves
+     * checkout holding a handover the basket did not record. Nothing reads it back while checkout creates no order (HAND-3), and
+     * a retry recomposes the same revision and answers the receipt that already exists — but D4's checkout is the one that has to
+     * confirm the pairing once it creates one.
      *
      * @param basketId the basket the path carries, which is also the handover's identity (D32)
-     * @return the payload, carrying the identity of the content that crossed
+     * @param channel  how the customer arrives, which decides whether delivery is charged (element 04 S6)
+     * @return the answer the client reads
      */
-    Handover handOver(BasketId basketId) {
+    HandoverAnswer handOver(BasketId basketId, Channel channel) {
         BasketEditor basket = editor(basketId);
-        Handover handover = basket.handOver(Instant.now(clock));
+        Handover handover = recordedFor(basket, channel);
         baskets.save(basket);
+        return HandoverAnswer.of(handover);
+    }
+
+    private Handover recordedFor(BasketEditor basket, Channel channel) {
+        Instant now = Instant.now(clock);
+        Basket snapshot = basket.toSnapshot();
+        Handover.Totals totals = totalsOf(calculation.calculate(snapshot, channel));
+        HandoverDraft draft = basket.handOver(now, totals);
+        Estimate estimate = estimates.latestTo(snapshot.items(), channel, now);
+        return sentUnlessRepeated(draft, handoverOf(snapshot, draft, totals, estimate));
+    }
+
+    private Handover sentUnlessRepeated(HandoverDraft draft, Handover handover) {
+        if (!draft.repeated()) {
+            checkouts.accept(handover);
+        }
         return handover;
+    }
+
+    private static Handover handoverOf(Basket snapshot, HandoverDraft draft, Handover.Totals totals, Estimate estimate) {
+        LastHandover identity = draft.identity();
+        return new Handover(identity.handoverId(), snapshot.basketId().value(), snapshot.customerId().value(),
+                snapshot.currency(), identity.revision(), identity.createdAt(), identity.contentDigest(),
+                draft.selection(), totals, estimate);
+    }
+
+    private static Handover.Totals totalsOf(BasketPrice price) {
+        return new Handover.Totals(price.productValue(), price.discountValue(), price.deliveryValue(),
+                price.totalWithDelivery());
     }
 
     private BasketEditor basketFor(CustomerId customerId) {

@@ -13,6 +13,12 @@
 # application's own default already names them: `spring.security...issuer-uri` reads
 # `${JWT_ISSUER_URI}` and `basket.currency` reads `${SHOPPING_BASKET_CURRENCY:PLN}`, so the cluster
 # states the same name the profile does instead of renaming it twice.
+#
+# The six `basket-*` keys are the kebab-case form: `basket.delivery.*` (element 04 §Parameters) and
+# `basket.estimate.*` (element 05 §Configuration, D36/D43/D58) are the properties the policies read,
+# and their environment names are stated once in base/deployment.yaml. Without them the estimate
+# answers `unknown`, the delivery line hides and DoV5 reads 0 % — a key lost in transit is a
+# delivered feature lost, not a cosmetic omission.
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -23,3 +29,9 @@ data:
   spring-profile-active: "prod"
   JWT_ISSUER_URI: "http://keycloak:8080/realms/shopping"
   SHOPPING_BASKET_CURRENCY: "PLN"
+  basket-delivery-rate: "9990"
+  basket-delivery-free-when-smart: "true"
+  basket-estimate-default-days-from: "2"
+  basket-estimate-default-days-to: "4"
+  basket-estimate-zone: "Europe/Warsaw"
+  basket-estimate-fallback: "unknown"

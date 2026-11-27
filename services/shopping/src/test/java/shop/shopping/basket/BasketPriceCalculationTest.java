@@ -8,14 +8,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static shop.shopping.basket.BasketPriceFixture.DELIVERY_RATE;
 import static shop.shopping.basket.BasketPriceFixture.DISCOUNT;
+import static shop.shopping.basket.BasketPriceFixture.EUR;
 import static shop.shopping.basket.BasketPriceFixture.aBasketOf;
+import static shop.shopping.basket.BasketPriceFixture.aBasketOfIn;
 import static shop.shopping.basket.BasketPriceFixture.aCalculation;
 import static shop.shopping.basket.BasketPriceFixture.aCalculationThatChargesSmart;
 import static shop.shopping.basket.BasketPriceFixture.aDiscount;
 import static shop.shopping.basket.BasketPriceFixture.aFirstItemInAnotherCurrency;
 import static shop.shopping.basket.BasketPriceFixture.aPrice;
+import static shop.shopping.basket.BasketPriceFixture.aPriceIn;
 import static shop.shopping.basket.BasketPriceFixture.anAmount;
 import static shop.shopping.basket.BasketPriceFixture.anItemWithQuantity;
+import static shop.shopping.basket.BasketFixture.anItemPricedIn;
 import static shop.shopping.basket.BasketPriceFixture.anUnavailableItemOfAnotherSeller;
 import static shop.shopping.basket.BasketPriceFixture.deselected;
 import static shop.shopping.basket.BasketPriceFixture.theFirstItem;
@@ -149,5 +153,13 @@ class BasketPriceCalculationTest {
                 .calculate(aBasketOf(theFirstItem(), theSecondItem()), Channel.smart);
 
         assertThat(price).isEqualTo(aPrice(164880, 0, DELIVERY_RATE, 174870));
+    }
+
+    @Test
+    void pricesInTheCurrencyTheBasketHolds() {
+        BasketPrice price = aCalculation()
+                .calculate(aBasketOfIn(EUR, anItemPricedIn(BasketFixture.FIRST_OFFER, EUR)), Channel.standard);
+
+        assertThat(price).isEqualTo(aPriceIn(EUR, 99890, 0, DELIVERY_RATE, 109880));
     }
 }

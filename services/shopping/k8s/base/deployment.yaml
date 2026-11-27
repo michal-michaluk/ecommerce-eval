@@ -63,6 +63,36 @@ spec:
                 configMapKeyRef:
                   name: shopping
                   key: SHOPPING_BASKET_CURRENCY
+            - name: SHOPPING_BASKET_DELIVERY_RATE
+              valueFrom:
+                configMapKeyRef:
+                  name: shopping
+                  key: basket-delivery-rate
+            - name: SHOPPING_BASKET_DELIVERY_FREE_WHEN_SMART
+              valueFrom:
+                configMapKeyRef:
+                  name: shopping
+                  key: basket-delivery-free-when-smart
+            - name: SHOPPING_BASKET_ESTIMATE_FROM
+              valueFrom:
+                configMapKeyRef:
+                  name: shopping
+                  key: basket-estimate-default-days-from
+            - name: SHOPPING_BASKET_ESTIMATE_TO
+              valueFrom:
+                configMapKeyRef:
+                  name: shopping
+                  key: basket-estimate-default-days-to
+            - name: SHOPPING_BASKET_ESTIMATE_ZONE
+              valueFrom:
+                configMapKeyRef:
+                  name: shopping
+                  key: basket-estimate-zone
+            - name: SHOPPING_BASKET_ESTIMATE_FALLBACK
+              valueFrom:
+                configMapKeyRef:
+                  name: shopping
+                  key: basket-estimate-fallback
             - name: SPRING_DATASOURCE_URL
               valueFrom:
                 secretKeyRef:

@@ -34,7 +34,7 @@ deliveryEstimate: { kind: estimate, from: "2026-11-28", to: "2026-11-30", source
 
 **Shape of record (D41).** The `yaml` above is the **in-process command payload**, not the HTTP answer. The answer is fixed by [`prototypes/basket-api.prove.md`](prototypes/basket-api.prove.md) steps 18–19: `{ handoverId, basketId, createdAt, customerId, currency, selection: [offerId], revision, totals }` — no `checkoutId`, no `deliveryEstimate`. `checkoutId` stays inside the service: the receiving slice returns it, the basket does not publish it. The answer's `selection` is the **offer ids**, not this payload's line rows — the HTTP response is a projection of the handover, which is why `Handover.Line` (a slice type) never reaches the client. `handoverId` equals `basketId` (D32), `revision` is the one captured in step 18 and echoed in step 19 (D35), and the basket is **not cleared** (D19).
 
-The basket keeps exactly one derived field of it — `lastHandover { revision, contentDigest, handoverId, createdAt }` — so a repeat of an unchanged basket returns the same handover (HAND-4, DoD30) without the basket ever depending on checkout's state. The digest is computed over the canonical handover payload, the way `Order.canonicalDigest()` is the idempotency key of `POST /orders` (`services/fulfillment/src/main/java/shop/fulfillment/kernel/Order.java:91`). The canonical form is **versioned** (`basket-handover-v1`): widening this payload — line totals, totals, the estimate — is a `v2`, never a silent change, or a handover with different content would keep the old identity (D51).
+The basket keeps exactly one derived field of it — `lastHandover { revision, contentDigest, handoverId, createdAt }` — so a repeat of an unchanged basket returns the same handover (HAND-4, DoD30) without the basket ever depending on checkout's state. The digest is computed over the canonical handover payload, the way `Order.canonicalDigest()` is the idempotency key of `POST /orders` (`services/fulfillment/src/main/java/shop/fulfillment/kernel/Order.java:91`). The canonical form is **versioned** — `basket-handover-v3` today: it covers the **rows and the totals**, so a configuration change that moves the amounts already produces a new identity (D51). It deliberately does **not** cover the estimate, whose range is clock-derived: including it would make an untouched basket handed over across midnight a new handover (D64). Widening it again is a `v4`, never a silent change.
 
 ## Rules
 
@@ -52,8 +52,8 @@ The basket keeps exactly one derived field of it — `lastHandover { revision, c
 | nothing selected | refused before handover — `422 NOTHING_SELECTED` (element 07) |
 | a selected item is `unavailable` or `outOfStock` | refused — `422 BLOCKED_BY_ITEMS` with the offer ids, their statuses and the `stale` flag (D33) |
 | basket became `active → archived` meanwhile | refused — `422 BASKET_INACTIVE` |
-| checkout slice rejects the payload | `500`, logged; basket unchanged, retry allowed |
-| checkout slice not deployed yet | `503`; basket unchanged — expected until D4's spec lands |
+| checkout slice rejects the payload | `500`, logged; basket unchanged, retry allowed. **Unreachable in this increment**: the only refusal the in-process receiver can answer is `CONCURRENT_MODIFICATION` (D35) |
+| checkout slice not deployed yet | `503`; basket unchanged — expected until D4's spec lands. **Unreachable in this increment**: both slices ship in one process, so there is nothing to be undeployed |
 
 ## Resolved questions
 

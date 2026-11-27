@@ -7,9 +7,12 @@ import org.springframework.boot.context.properties.source.MapConfigurationProper
 
 import shop.shopping.basket.BasketConfiguration.Settings;
 import shop.shopping.basket.BasketConfiguration.Settings.EstimateSettings.DefaultDays;
+import shop.shopping.kernel.Estimate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static shop.shopping.basket.BasketDeliveryEstimateFixture.AFTER_MIDNIGHT_IN_WARSAW;
+import static shop.shopping.basket.BasketDeliveryEstimateFixture.DELIVERY_RATE;
+import static shop.shopping.basket.BasketDeliveryEstimateFixture.FREE_WHEN_SMART;
 import static shop.shopping.basket.BasketDeliveryEstimateFixture.FROM;
 import static shop.shopping.basket.BasketDeliveryEstimateFixture.FROM_DAYS;
 import static shop.shopping.basket.BasketDeliveryEstimateFixture.LAST_DAY_OF_NOVEMBER;
@@ -231,11 +234,21 @@ class BasketDeliveryEstimateTest {
     }
 
     @Test
+    void theDeliveryBlockBindsToTheSameSettingsRecord() {
+        Settings bound = new Binder(new MapConfigurationPropertySource(theDeployedProperties()))
+                .bind("basket", Bindable.of(Settings.class))
+                .get();
+
+        assertThat(bound.delivery()).isEqualTo(new Settings.DeliverySettings(DELIVERY_RATE, FREE_WHEN_SMART));
+    }
+
+    @Test
     void anAbsentBlockBindsNothing() {
         Settings bound = new Binder(new MapConfigurationPropertySource(theDeployedPropertiesWithoutTheBlock()))
                 .bind("basket", Bindable.of(Settings.class))
                 .get();
 
         assertThat(bound.estimate()).isNull();
+        assertThat(bound.delivery()).isNull();
     }
 }

@@ -9,6 +9,7 @@ import java.util.Objects;
 
 import shop.shopping.basket.BasketConfiguration.Settings.EstimateSettings;
 import shop.shopping.basket.BasketConfiguration.Settings.EstimateSettings.DefaultDays;
+import shop.shopping.kernel.Estimate;
 
 /**
  * Element 05: when the customer gets what is selected, as an <strong>interface with a hardcoded default</strong> — the day
@@ -32,11 +33,12 @@ import shop.shopping.basket.BasketConfiguration.Settings.EstimateSettings.Defaul
  * multi-seller selection is grouped by {@link BasketItem#seller()} before the call, and the figure the basket publishes is the
  * latest {@code to} of the shipments that answered {@link Estimate.Kind#estimate} — an {@code unknown} shipment hides its own
  * line and contributes no date (Q22). Neither half can be enforced here: a mixed-seller list would have to be refused with an
- * exception, which a policy does not do ({@code policy.no-exceptions}), and comparing {@code to} across calls is an
- * aggregation this type does not hold. Today grouping is a no-op, because the range depends on {@code now} and the zone only
- * — every shipment of a basket answers the same days, so an ungrouped call answers what the grouped calls would
- * ({@code mixedSellersInOneRequestAnswerTheSameDaysAsOneShipment}). The rule is still stated per shipment because the deferred
- * algorithm (issue #71) will be able to make ranges differ, and a caller that never grouped would then have to be rewritten.
+ * exception, which a policy does not do ({@code policy.no-exceptions}), and comparing {@code to} across calls is what
+ * {@link ShipmentEstimates} holds. Today grouping answers the same days for every shipment, because the range depends on
+ * {@code now} and the zone only — a whole-basket call answers what the grouped calls would
+ * ({@code mixedSellersInOneRequestAnswerTheSameDaysAsOneShipment}) — and the rule is still stated per shipment because the
+ * deferred algorithm (issue #71) will be able to make ranges differ, and a caller that never grouped would then have to be
+ * rewritten.
  *
  * <h2>What is estimated</h2>
  * Rows reach this policy as the aggregate stores them, with their own {@code selected} flag — there is no second parameter for
@@ -48,13 +50,15 @@ import shop.shopping.basket.BasketConfiguration.Settings.EstimateSettings.Defaul
  * selection whose every row is blocked (I7): nothing is handable over, so there is nothing to estimate.
  *
  * <h2>Configuration, and never an exception</h2>
- * The three keys {@code basket.estimate.defaultDays}, {@code basket.estimate.zone} and {@code basket.estimate.fallback} bind
- * into {@link EstimateSettings}. No {@code @DefaultValue} sits on that record: a key the deployment did not state stays
+ * The three keys {@code basket.estimate.default-days}, {@code basket.estimate.zone} and {@code basket.estimate.fallback}
+ * bind into {@link EstimateSettings}. No {@code @DefaultValue} sits on that record: a key the deployment did not state stays
  * <em>absent</em> and is observable here, which is what makes I5 answerable. An absent block, an absent key, a zone
  * {@link ZoneId} does not know or a range whose {@code from} is after its {@code to} all answer
- * {@link Estimate#unknown} — hidden, never a guess, never an exception (I5, Q22). {@link #defaultEstimate()} is the other half
- * of D7: the constant {@code {from: 2, to: 4}} / {@code Europe/Warsaw} / {@code unknown} this element fixes, stated once in
- * code so a runner or a test can install it without a deployment.
+ * {@link Estimate#unknown} — hidden, never a guess, never an exception (I5, Q22). The shipped {@code application.yml} states
+ * every key behind a placeholder ({@code ${SHOPPING_BASKET_ESTIMATE_FROM:2}}), so a deployment always has a value and I5's
+ * {@code unknown} is reachable only when the whole block is absent — which is the case a unit test holds. {@link #defaultEstimate()}
+ * is the other half of D7: the constant {@code {from: 2, to: 4}} / {@code Europe/Warsaw} / {@code unknown} this element fixes,
+ * stated once in code so a runner or a test can install it without a deployment.
  *
  * <h2>What it is not</h2>
  * The channel arrives in the request and changes nothing (I6): SMART changes the <em>price</em> of delivery, not the day range

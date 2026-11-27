@@ -23,6 +23,21 @@ basket:
   # basket is priced in, and the API reports a currency on exactly that basket (element 07, `basket` step 2 of the contract),
   # so the deployment states it here. It is decided once per basket: an offer in another currency is refused, never converted.
   currency: ${SHOPPING_BASKET_CURRENCY:PLN}
+  # Element 04 §Parameters: one rate per seller shipment, free on SMART. The two values of the capture are the stated
+  # defaults of both the deployment and this file, so a cluster that loses the block prices delivery as the capture did
+  # (`DeliveryRates.defaultRates()`), never as 0,00 for every customer.
+  delivery:
+    rate: ${SHOPPING_BASKET_DELIVERY_RATE:9990}
+    freeWhenSmart: ${SHOPPING_BASKET_DELIVERY_FREE_WHEN_SMART:true}
+  # Element 05 §Configuration (D36, D43, D58): the range is fixed by decision and shipped here, never defaulted in code. A
+  # deployment that omits a key answers `unknown` — the delivery line hides rather than guesses — so DoV5 reads 100 % only
+  # while these four keys reach the pod.
+  estimate:
+    default-days:
+      from: ${SHOPPING_BASKET_ESTIMATE_FROM:2}
+      to: ${SHOPPING_BASKET_ESTIMATE_TO:4}
+    zone: ${SHOPPING_BASKET_ESTIMATE_ZONE:Europe/Warsaw}
+    fallback: ${SHOPPING_BASKET_ESTIMATE_FALLBACK:unknown}
 
 server:
   shutdown: graceful

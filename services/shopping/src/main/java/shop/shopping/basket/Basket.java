@@ -2,7 +2,6 @@ package shop.shopping.basket;
 
 import java.util.List;
 
-import shop.shopping.kernel.LastHandover;
 
 /**
  * The basket as it is read and as it is stored: the customer's live configuration of offers, its revision and the identity

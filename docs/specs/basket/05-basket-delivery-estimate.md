@@ -36,7 +36,7 @@ Estimate = { kind: estimate | unknown,
 
 | Key | Meaning | Default (D7 — no invented numbers) |
 |---|---|---|
-| `basket.estimate.defaultDays` | the estimate, in **calendar** days from `today` | **`{ from: 2, to: 4 }` — fixed by decision (D36)** and shipped in `application.yml` as `basket.estimate.default-days`. The policy's `defaultEstimate()` states the same pair as an explicit `policy.explicit-default`, but **no default is applied when the deployment omits the key**: an absent key answers `unknown` (I5), never `2 … 4` (D58) |
+| `basket.estimate.default-days` | the estimate, in **calendar** days from `today` | **`{ from: 2, to: 4 }` — fixed by decision (D36)** and shipped in `application.yml` as `basket.estimate.default-days`. The policy's `defaultEstimate()` states the same pair as an explicit `policy.explicit-default`, but **no default is applied when the deployment omits the key**. Note the deployment states a placeholder (`${SHOPPING_BASKET_ESTIMATE_FROM:2}`), so I5 is reachable only when the whole `basket.estimate` block is absent: an absent key answers `unknown` (I5), never `2 … 4` (D58) |
 | `basket.estimate.zone` | the zone whose `today` the range counts from | **`Europe/Warsaw`** (D43) — the customer's calendar day, not UTC |
 | `basket.estimate.fallback` | what to return when configuration is missing | `unknown` |
 
@@ -44,7 +44,7 @@ Estimate = { kind: estimate | unknown,
 
 | # | input | expected output |
 |---|---|---|
-| I1 | both items `available`, default channel | `kind: estimate`, range from `defaultDays` |
+| I1 | both items `available`, default channel | `kind: estimate`, range from `default-days` |
 | I2 | one item `outOfStock`, still selected, others not blocked | `kind: estimate` over the **non-blocking** items only; the blocked row contributes nothing (D33) |
 | I3 | one item `unavailable` | the unavailable item is **ignored**; range as I1 (it cannot be ordered anyway, D18) |
 | I4 | no selected items | `kind: unknown` — nothing to estimate |

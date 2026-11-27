@@ -2,24 +2,24 @@ package shop.shopping.basket;
 
 import org.junit.jupiter.api.Test;
 
-import java.time.Clock;
 import java.time.Instant;
-import java.time.ZoneOffset;
 import java.util.List;
 
 import shop.shopping.kernel.Availability;
 import shop.shopping.kernel.Handover;
+import shop.shopping.kernel.Money;
 import shop.shopping.kernel.ShoppingException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static shop.shopping.basket.BasketFixture.BASKET_ID;
 import static shop.shopping.basket.BasketFixture.FIRST_OFFER;
-import static shop.shopping.basket.BasketFixture.aBasketCurrency;
 import static shop.shopping.basket.BasketFixture.aBasketWith;
 import static shop.shopping.basket.BasketFixture.aFirstItem;
 import static shop.shopping.basket.BasketFixture.aLastKnown;
 import static shop.shopping.basket.BasketFixture.aRowFromBeforeTheReadInstantWasKept;
+import static shop.shopping.basket.BasketFixture.aServiceWith;
+import static shop.shopping.basket.BasketFixture.anItemReadAt;
 import static shop.shopping.basket.BasketFixture.anotherBasketId;
 import static shop.shopping.basket.BasketFixture.anArchivedBasketWith;
 import static shop.shopping.basket.BasketFixture.anUnavailableItem;
@@ -43,6 +43,8 @@ import static shop.shopping.basket.OfferCatalogFixture.aWithdrawnOffer;
 import static shop.shopping.basket.OfferCatalogFixture.anOfferOf;
 import static shop.shopping.basket.OfferCatalogFixture.anOfferOnSaleWithStock;
 import static shop.shopping.basket.OfferCatalogFixture.anOfferOnSaleWithStockReadAt;
+import static shop.shopping.basket.OfferCatalogFixture.anOfferPricedIn;
+import static shop.shopping.basket.OfferCatalogFixture.anOfferPricedInFrom;
 import static shop.shopping.basket.OfferCatalogFixture.anOfferSoldBy;
 import static shop.shopping.basket.OfferCatalogFixture.anOfferWhoseStockWasNotRead;
 import static shop.shopping.basket.OfferCatalogFixture.withoutTitle;
@@ -59,7 +61,8 @@ import static shop.shopping.basket.OfferCatalogFixture.withoutTitle;
 class OfferIngestionTest {
 
     final FakeBasketRepository baskets = new FakeBasketRepository();
-    final BasketService service = new BasketService(baskets, aBasketCurrency(), Clock.fixed(READ_AT, ZoneOffset.UTC));
+    final FakeCheckoutHandovers checkout = new FakeCheckoutHandovers();
+    final BasketService service = aServiceWith(baskets, checkout);
 
     @Test
     void replacesTheRowsSnapshotWithThePriceItIsSoldAt() {
@@ -124,8 +127,7 @@ class OfferIngestionTest {
 
         assertThat(observed.items()).singleElement()
                 .satisfies(item -> assertThat(item.availability()).isEqualTo(Availability.availableWithoutStockRead()));
-        assertThat(service.handOver(BASKET_ID).selection()).singleElement()
-                .satisfies(line -> assertThat(line.offerId()).isEqualTo(FIRST_OFFER));
+        assertThat(service.handOver(BASKET_ID, Channel.standard).selection()).containsExactly(FIRST_OFFER);
     }
 
     @Test
@@ -278,14 +280,57 @@ class OfferIngestionTest {
     @Test
     void changesTheNextHandoverNotTheOneThatCrossed() {
         baskets.save(aBasketWith(aFirstItem()));
-        Handover crossed = service.handOver(BASKET_ID);
+        service.handOver(BASKET_ID, Channel.standard);
 
         service.applyObservation(BASKET_ID, aPriceChangeOf(OFFER, A_LATER_READ_AT, LIST_PRICE));
-        Handover next = service.handOver(BASKET_ID);
+        service.handOver(BASKET_ID, Channel.standard);
 
+        Handover crossed = checkout.accepted.get(0);
+        Handover next = checkout.accepted.get(1);
         assertThat(crossed.selection().get(0).currentPrice()).isEqualTo(aLastKnown().currentPrice());
         assertThat(next.selection().get(0).currentPrice().amount()).isEqualTo(LIST_PRICE);
         assertThat(next.revision()).isGreaterThan(crossed.revision());
+    }
+
+    @Test
+    void keepsTheLastKnownPricesOfAnAnswerInAnotherCurrencyAndMarksTheRowStale() {
+        baskets.save(aBasketWith(aFirstItem()));
+
+        Basket observed = service.applyObservation(BASKET_ID, aCommandOf(anOfferPricedIn("EUR")));
+
+        assertThat(observed.items()).singleElement().satisfies(item -> {
+            assertThat(item.lastKnown()).isEqualTo(aLastKnown());
+            assertThat(item.availability()).isEqualTo(Availability.availableWithoutStockRead());
+            assertThat(item.readAt()).isEqualTo(READ_AT);
+        });
+    }
+
+    @Test
+    void regroupsAForeignCurrencyAnswerUnderItsSellerWhileKeepingThePrices() {
+        baskets.save(aBasketWith(aFirstItem()));
+
+        Basket observed = service.applyObservation(BASKET_ID, aCommandOf(anOfferPricedInFrom("EUR", BasketFixture.ANKER)));
+
+        assertThat(observed.items()).singleElement().satisfies(item -> {
+            assertThat(item.seller()).isEqualTo(BasketFixture.ANKER);
+            assertThat(item.lastKnown()).isEqualTo(aLastKnown());
+            assertThat(item.availability()).isEqualTo(Availability.availableWithoutStockRead());
+        });
+    }
+
+    @Test
+    void ordersEveryRowByItsOwnReadInstant() {
+        baskets.save(aBasketWith(anItemReadAt(OFFER, A_LATER_READ_AT), anItemReadAt(ANOTHER_OFFER, AN_EARLIER_READ_AT)));
+
+        Basket afterTheYoungerRow = service.applyObservation(BASKET_ID,
+                aCommandOf(anOfferOf(ANOTHER_OFFER, OfferObservation.OfferState.onSale, READ_AT)));
+        Basket afterTheOlderRow = service.applyObservation(BASKET_ID,
+                aCommandOf(anOfferOf(OFFER, OfferObservation.OfferState.onSale, AN_EARLIER_READ_AT)));
+
+        assertThat(afterTheYoungerRow.items()).extracting(BasketItem::readAt)
+                .containsExactly(A_LATER_READ_AT, READ_AT);
+        assertThat(afterTheYoungerRow.items().get(1).lastKnown().discount()).isEqualTo(A_DISCOUNTED_AMOUNT);
+        assertThat(afterTheOlderRow.items().get(0)).isEqualTo(afterTheYoungerRow.items().get(0));
     }
 
     @Test
