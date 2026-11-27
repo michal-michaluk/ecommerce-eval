@@ -1,0 +1,47 @@
+{% import "partials/macros.md.tmpl" as m -%}
+{% include "partials/banner.md.tmpl" %}
+{% set quality = history.quality -%}
+{{ m.evidence(history.rows | map(attribute="evidence") | sum(start=[]) | unique | list) }}
+
+{{ history.commits_read }} commits that touch
+{% if history.scope and history.scope != "." %}`{{ history.scope }}` {% else %}this repository {% endif %}
+were read from version control and {{ quality.rows }} of them became a row below; commits that touch
+nothing under that path are out of scope for this document. A merge commit contributes the title of
+the change it brought in; a commit whose subject is a dependency bump, a formatting pass or a
+work-in-progress marker is dropped, as is a commit whose subject repeats one already kept.
+
+### {{ number }}.1 What the classification is worth
+
+The category of a row is taken from a conventional-commit prefix when the subject carries one, and
+from the files the commit touched when it does not. That makes the table readable and it makes the
+history's own discipline measurable. Two typographic rules apply to the quoted subjects: a path
+separator becomes a middle dot and a compound identifier keeps its parts in lower case. Wording and
+word order are untouched, and a subject that names a file names it as it was written.
+
+| Category | Commits |
+|---|---|
+{% for category in quality.counts | sort -%}
+| {{ m.code(category) }} | {{ quality.counts[category] }} |
+{% endfor %}
+
+: Commits per category, after classification.
+
+
+{{ (quality.non_conventional_share * 100) | round(1) }}% of the {{ quality.rows }} rows are not
+conventional commits ({{ quality.non_conventional }} of them), and
+{{ (quality.other_share * 100) | round(1) }}% end in the unclassified bucket ({{ quality.other }}
+commits): commits whose subject names no category and whose files fit none of the classified scopes.
+Of the {{ quality.non_conventional }} non-conventional commits, {{ quality.path_classified }} were
+placed by the files they touched and {{ quality.other }} stayed unclassified. The number is printed
+here rather than smoothed over: a commit whose subject does not say what it did is placed by the files
+it touched or not at all, so the table below is a reconstruction, not a record.
+
+### {{ number }}.2 Changes
+
+| Date | Scope | Category | Change | Ref |
+|-----------|------------------------|---------|--------------------------------------------------------------------------------|--------------|
+{% for row in history.rows -%}
+| {{ row.date }} | {{ m.cell(row.scope) }} | {{ m.code(row.category) }} | {{ m.cell(row.change | subject) }} | {{ m.code(row.ref.sha) }}{% if row.ref.get("pull_request") %} #{{ row.ref.pull_request }}{% endif %} |
+{% endfor %}
+
+: The history of the repository, newest first, as the extractor classifies it.

@@ -1,0 +1,121 @@
+{
+  "source": "docs/raw/basket.png",
+  "sourceKind": "single screenshot of a basket page (2558x1472 px)",
+  "capturedUi": "Allegro basket ('Koszyk'), Poland, currency PLN, language pl",
+  "note": "Every visible piece of information is represented. `basket` is the shopping basket content and its own chrome; `pageFurniture` is everything on the screenshot that is not the basket. `derivedChecks` holds arithmetic and reading ambiguities found while transcribing, `notPresent` lists what a basket usually shows and this one does not.",
+
+  "basket": {
+    "title": "Koszyk",
+    "selection": {
+      "wholeBasket": { "control": "checkbox", "checked": true, "label": "cały koszyk" }
+    },
+    "bulkActions": [
+      { "label": "USUŃ", "kind": "dropdown", "icon": "chevron-down", "scope": "wholeBasket" }
+    ],
+    "shipments": [
+      {
+        "seller": "UGREEN_POLSKA",
+        "label": "Przesyłka od UGREEN_POLSKA",
+        "selected": { "control": "checkbox", "checked": true },
+        "itemsTotal": { "label": "RAZEM", "amount": 164.88, "currency": "PLN" },
+        "items": [
+          {
+            "index": 1,
+            "selected": { "control": "checkbox", "checked": true },
+            "image": { "type": "product-photo", "count": 1 },
+            "title": "UGREEN Nexode Szybka Ładowarka Sieciowa USB 2x USB Typ C Zasilacz QC PD 65W",
+            "attributes": [
+              { "label": "Liczba urządzeń ładowanych jednocześnie", "value": "3" },
+              { "label": "Przewód w zestawie", "value": "nie" },
+              { "label": "Prąd wyjściowy", "value": "0 mA" }
+            ],
+            "quantity": {
+              "control": "stepper",
+              "value": 1,
+              "decrease": { "icon": "minus", "enabled": false },
+              "increase": { "icon": "plus", "enabled": true }
+            },
+            "price": { "amount": 99.89, "currency": "PLN", "label": "99,89 zł" },
+            "removeAction": { "icon": "trash" }
+          },
+          {
+            "index": 2,
+            "selected": { "control": "checkbox", "checked": true },
+            "image": { "type": "product-photo", "count": 1 },
+            "title": "UGREEN Hub Adapter Stacja Revodok USB-C Do 3xUSB USB-C HDMI 4K 30Hz PD 100W",
+            "attributes": [
+              { "label": "Liczba portów", "value": "5" }
+            ],
+            "quantity": {
+              "control": "stepper",
+              "value": 1,
+              "decrease": { "icon": "minus", "enabled": false },
+              "increase": { "icon": "plus", "enabled": true }
+            },
+            "price": { "amount": 64.99, "currency": "PLN", "label": "64,99 zł" },
+            "removeAction": { "icon": "trash" }
+          }
+        ]
+      }
+    ],
+    "deliveryHint": {
+      "text": "dostawa od 9,99 zł lub za 0,00 zł ze SMART",
+      "from": { "amount": 9.99, "currency": "PLN" },
+      "free": { "amount": 0.0, "currency": "PLN" },
+      "condition": "aktywacja SMART",
+      "badge": "SMART"
+    },
+    "crossSellAction": { "label": "DOBIERZ PRODUKTY", "icon": "chevron-right" },
+    "summary": {
+      "productValue": { "label": "Wartość produktów", "amount": 164.88, "currency": "PLN" },
+      "delivery": { "label": "Dostawa od", "amount": 9.99, "currency": "PLN" },
+      "totalWithDelivery": { "label": "Razem z dostawą", "amount": 174.87, "currency": "PLN", "emphasis": true },
+      "primaryAction": { "label": "DOSTAWA I PŁATNOŚĆ", "style": "primary" },
+      "secondaryAction": { "label": "KONTYNUUJ ZAKUPY", "style": "link" }
+    },
+    "promotions": [
+      {
+        "kind": "donation",
+        "logo": "szlachetna-paczka",
+        "title": "Przekaż 10 zł dla Szlachetnej Paczki",
+        "body": "Wesprzyj Szlachetną Paczkę, aby mogła pomagać na większą skalę.",
+        "amount": { "amount": 10.0, "currency": "PLN" },
+        "action": "WESPRZYJ"
+      },
+      {
+        "kind": "buyer-protection",
+        "logo": "allegro-ochrona-kupujacych",
+        "title": "Allegro Ochrona Kupujących",
+        "body": "Wygodne zwroty, reklamacje online oraz 2 lata ochrony zakupu."
+      }
+    ]
+  },
+
+  "pageFurniture": {
+    "chrome": "no site header and no footer visible — the capture covers the basket area only",
+    "background": "light grey page with white basket and summary cards",
+    "cursor": "mouse pointer visible over the page"
+  },
+
+  "derivedChecks": {
+    "arithmetic": [
+      "99,89 + 64,99 = 164,88 — matches both 'RAZEM' and 'Wartość produktów'",
+      "164,88 + 9,99 = 174,87 — 'Razem z dostawą' uses the delivery price without the per-item delivery estimate"
+    ],
+    "ambiguities": [
+      "every quantity is 1, so the displayed item price cannot be distinguished as unit price or line total",
+      "the delivery line says 'od 9,99 zł' (a lower bound) while the summary subtracts exactly 9,99 zł — no threshold for a higher delivery price is visible",
+      "one shipment only, one seller — grouping behaviour for two or more sellers is not observable"
+    ]
+  },
+
+  "notPresent": [
+    "estimated delivery time or date per item or for the basket",
+    "discount labels, crossed-out prices, or a discount total",
+    "unavailable or out-of-stock marking on an item",
+    "per-item stock, availability, or 'last units' message",
+    "quantity change beyond the ± stepper (no free text input)",
+    "any error, validation or blocked-checkout message",
+    "login state, customer identity or saved-basket information"
+  ]
+}

@@ -1,0 +1,146 @@
+{
+  "authentication": {
+    "evidence": [
+      "services/shopping/src/main/java/shop/shopping/AppConfiguration.java:56"
+    ],
+    "issuer": {
+      "default": "https://keycloak.invalid/realms/shopping",
+      "evidence": [
+        "services/shopping/src/main/resources/application.yml:26"
+      ],
+      "expression": "${JWT_ISSUER_URI:https://keycloak.invalid/realms/shopping}",
+      "line": 26,
+      "path": "services/shopping/src/main/resources/application.yml",
+      "variable": "JWT_ISSUER_URI"
+    },
+    "mechanism": {
+      "chain": "oauth2ResourceServer",
+      "line": 56,
+      "scheme": "jwt"
+    }
+  },
+  "evidence": [
+    "services/shopping/src/main/java/shop/shopping/AppConfiguration.java:64",
+    "services/shopping/src/main/java/shop/shopping/AppConfiguration.java:65",
+    "services/shopping/src/main/java/shop/shopping/AppConfiguration.java:66",
+    "services/shopping/src/main/java/shop/shopping/AppConfiguration.java:67",
+    "services/shopping/src/main/java/shop/shopping/AppConfiguration.java:68",
+    "services/shopping/src/main/java/shop/shopping/AppConfiguration.java:69",
+    "services/shopping/src/main/java/shop/shopping/AppConfiguration.java:70",
+    "services/shopping/src/main/java/shop/shopping/AppConfiguration.java:71",
+    "services/shopping/src/main/java/shop/shopping/AppConfiguration.java:72",
+    "services/shopping/src/main/java/shop/shopping/AppConfiguration.java:73",
+    "services/shopping/src/main/java/shop/shopping/AppConfiguration.java:52"
+  ],
+  "filter_chain": {
+    "evidence": [
+      "services/shopping/src/main/java/shop/shopping/AppConfiguration.java:64",
+      "services/shopping/src/main/java/shop/shopping/AppConfiguration.java:65",
+      "services/shopping/src/main/java/shop/shopping/AppConfiguration.java:66",
+      "services/shopping/src/main/java/shop/shopping/AppConfiguration.java:67",
+      "services/shopping/src/main/java/shop/shopping/AppConfiguration.java:68",
+      "services/shopping/src/main/java/shop/shopping/AppConfiguration.java:69",
+      "services/shopping/src/main/java/shop/shopping/AppConfiguration.java:70",
+      "services/shopping/src/main/java/shop/shopping/AppConfiguration.java:71",
+      "services/shopping/src/main/java/shop/shopping/AppConfiguration.java:72",
+      "services/shopping/src/main/java/shop/shopping/AppConfiguration.java:73",
+      "services/shopping/src/main/java/shop/shopping/AppConfiguration.java:52"
+    ],
+    "fallback": {
+      "decision": "denyAll",
+      "line": 52,
+      "matcher": null
+    },
+    "line": 48,
+    "path": "services/shopping/src/main/java/shop/shopping/AppConfiguration.java",
+    "rules": [
+      {
+        "authorities": [],
+        "decision": "permitAll",
+        "line": 64,
+        "matcher": "/actuator/health/**",
+        "method": null
+      },
+      {
+        "authorities": [],
+        "decision": "permitAll",
+        "line": 65,
+        "matcher": "/actuator/info",
+        "method": null
+      },
+      {
+        "authorities": [],
+        "decision": "permitAll",
+        "line": 66,
+        "matcher": "/error",
+        "method": null
+      },
+      {
+        "authorities": [],
+        "decision": "authenticated",
+        "line": 67,
+        "matcher": "/actuator/**",
+        "method": null
+      },
+      {
+        "authorities": [
+          "Scopes.CUSTOMER"
+        ],
+        "decision": "hasAuthority(Scopes.CUSTOMER)",
+        "line": 68,
+        "matcher": "/baskets",
+        "method": "GET"
+      },
+      {
+        "authorities": [
+          "Scopes.CUSTOMER"
+        ],
+        "decision": "hasAuthority(Scopes.CUSTOMER)",
+        "line": 69,
+        "matcher": "/baskets/{basketId}",
+        "method": "GET"
+      },
+      {
+        "authorities": [
+          "Scopes.CUSTOMER"
+        ],
+        "decision": "hasAuthority(Scopes.CUSTOMER)",
+        "line": 70,
+        "matcher": "/baskets/{basketId}/items",
+        "method": "PATCH"
+      },
+      {
+        "authorities": [
+          "Scopes.CUSTOMER"
+        ],
+        "decision": "hasAuthority(Scopes.CUSTOMER)",
+        "line": 71,
+        "matcher": "/baskets/{basketId}/items/{offerId}",
+        "method": "PATCH"
+      },
+      {
+        "authorities": [
+          "Scopes.CUSTOMER"
+        ],
+        "decision": "hasAuthority(Scopes.CUSTOMER)",
+        "line": 72,
+        "matcher": "/baskets/{basketId}/selection",
+        "method": "PATCH"
+      },
+      {
+        "authorities": [
+          "Scopes.CUSTOMER"
+        ],
+        "decision": "hasAuthority(Scopes.CUSTOMER)",
+        "line": 73,
+        "matcher": "/baskets/{basketId}/checkout",
+        "method": "PATCH"
+      }
+    ]
+  },
+  "method_level_authorization": {
+    "annotations": [],
+    "evidence": [],
+    "present": false
+  }
+}

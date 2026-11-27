@@ -1,0 +1,28 @@
+# The dev overlay: the same Service on a developer's machine. Everything shared lives outside the
+# cluster here, so this overlay deploys no infra object — only the app and its patch.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: shopping-dev
+
+resources:
+  - ../../base
+
+namePrefix: dev-
+
+patches:
+  - path: deployment-patch.yaml
+
+configMapGenerator:
+  - name: shopping
+    behavior: merge
+    literals:
+      - spring-profile-active=dev
+      - JWT_ISSUER_URI=http://localhost:8080/realms/shopping
+
+secretGenerator:
+  - name: shopping-db
+    literals:
+      - jdbc-url=jdbc:postgresql://localhost:5432/shopping
+      - username=shopping
+      - password=shopping

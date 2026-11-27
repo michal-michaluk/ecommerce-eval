@@ -50,7 +50,16 @@ _WHITESPACE = " \t\r\n"
 FRAMEWORK_PARAMETER_TYPES = (
     "Pageable", "Sort", "Principal", "Authentication", "HttpServletRequest",
     "HttpServletResponse", "Locale", "ZoneId", "TimeZone", "Model", "Map",
-    "WebRequest", "Errors", "BindingResult", "SessionStatus",
+    "WebRequest", "Errors", "BindingResult", "SessionStatus", "Jwt",
+)
+
+# An argument bound by one of these annotations arrives from somewhere other than the query string — the
+# authenticated principal, a request attribute, a cookie, the session, a matrix variable or a model
+# attribute. Without this, a handler's `@AuthenticationPrincipal Jwt caller` is reported as a query
+# parameter the client would have to send.
+NON_QUERY_BINDINGS = (
+    "AuthenticationPrincipal", "RequestAttribute", "CookieValue", "SessionAttribute",
+    "MatrixVariable", "ModelAttribute",
 )
 
 
@@ -213,8 +222,10 @@ def yaml_key_line(text: str, key: str) -> int:
 
 
 def _is_query_parameter(param: dict) -> bool:
-    """A request parameter is bound from the query string, never from the body or the framework."""
+    """A request parameter is bound from the query string, never from the body, a binding or the framework."""
     if "PathVariable" in param["annotations"] or "RequestBody" in param["annotations"]:
+        return False
+    if any(binding in param["annotations"] for binding in NON_QUERY_BINDINGS):
         return False
     return param["type"].strip() not in FRAMEWORK_PARAMETER_TYPES
 

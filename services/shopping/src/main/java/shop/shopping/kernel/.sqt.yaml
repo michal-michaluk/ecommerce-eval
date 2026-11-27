@@ -1,0 +1,21 @@
+version: 1
+
+# `kernel.no-framework-imports` — the first of the two holes the executable architecture leaves open, closed where it can be.
+#
+# `ArchitectureDescription.modelDependencies` is instantiated per slice, and a kernel is given `modelIsolation` only
+# (`arch-unit.md`), so nothing in `ArchitectureTest` forbids a kernel type reaching for a framework class: a kernel could import
+# `@Component` and the suite would stay green. Stating it as an ArchUnit rule would mean inventing a rule the doctrine does not
+# sanction, so the shape check states the same fact over the source: the kernel is the jointly owned, immutable model both slices
+# read — money, availability, the handover payload, the two handover contracts and the service's one exception — and it is plain
+# Java. A slice may import Spring; the kernel a slice shares may not.
+checks:
+  - id: kernel.no-framework-imports
+    language: Java
+    severity: error
+    message: a kernel type must import no framework — the kernel is the plain-Java model the slices read (arch-unit.md)
+    filter: { kind: program }
+    rule:
+      has:
+        stopBy: end
+        kind: import_declaration
+        regex: '^import (static )?(org[.]springframework|jakarta[.]|org[.]hibernate|tools[.]jackson|com[.]fasterxml|org[.]junit)'

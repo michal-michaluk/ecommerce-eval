@@ -1,0 +1,68 @@
+spring:
+  application.name: shopping
+  # `http.rejection-status`: a component the command does not declare is a 400, never a silently dropped
+  # value. This is Boot's own HTTP JsonMapper and nothing else — the JSONB document mapper is
+  # `tools/JsonConfiguration`'s, keeps `FAIL_ON_UNKNOWN_PROPERTIES` off and is pinned by
+  # `JsonConfigurationTest.ignoresUnknownProperties`, so a stored document may grow a field without failing a read.
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
+  datasource:
+    driverClassName: org.postgresql.Driver
+    hikari:
+      maximumPoolSize: 15
+  jpa:
+    hibernate.ddl-auto: none
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    properties:
+      hibernate.type.json_format_mapper: shop.shopping.tools.Jackson3JsonFormatMapper
+  liquibase:
+    change-log: classpath:db/db.changelog.yaml
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # The environment always sets JWT_ISSUER_URI; the default is deliberately unresolvable (RFC 2606).
+          issuer-uri: ${JWT_ISSUER_URI:https://keycloak.invalid/realms/shopping}
+
+basket:
+  # The one currency a basket holds (element 03 RULE-2, D21). The specification does not say what an empty, auto-created
+  # basket is priced in, and the API reports a currency on exactly that basket (element 07, `basket` step 2 of the contract),
+  # so the deployment states it here. It is decided once per basket: an offer in another currency is refused, never converted.
+  currency: ${SHOPPING_BASKET_CURRENCY:PLN}
+  # Element 04 §Parameters: one rate per seller shipment, free on SMART. The two values of the capture are the stated
+  # defaults of both the deployment and this file, so a cluster that loses the block prices delivery as the capture did
+  # (`DeliveryRates.defaultRates()`), never as 0,00 for every customer.
+  delivery:
+    rate: ${SHOPPING_BASKET_DELIVERY_RATE:9990}
+    freeWhenSmart: ${SHOPPING_BASKET_DELIVERY_FREE_WHEN_SMART:true}
+  # Element 05 §Configuration (D36, D43, D58): the range is fixed by decision and shipped here, never defaulted in code. A
+  # deployment that omits a key answers `unknown` — the delivery line hides rather than guesses — so DoV5 reads 100 % only
+  # while these four keys reach the pod.
+  estimate:
+    default-days:
+      from: ${SHOPPING_BASKET_ESTIMATE_FROM:2}
+      to: ${SHOPPING_BASKET_ESTIMATE_TO:4}
+    zone: ${SHOPPING_BASKET_ESTIMATE_ZONE:Europe/Warsaw}
+    fallback: ${SHOPPING_BASKET_ESTIMATE_FALLBACK:unknown}
+
+server:
+  shutdown: graceful
+  error:
+    include-message: never
+
+management:
+  metrics.export.prometheus.enabled: true
+  endpoint.env.enabled: true
+  endpoints.web.exposure.include: "health,info,env,prometheus"
+
+logging.level:
+  org.apache.catalina.startup.DigesterFactory: ERROR
+  org.apache.catalina.util.LifecycleBase: ERROR
+  org.apache.coyote.http11.Http11NioProtocol: WARN
+  org.apache.sshd.common.util.SecurityUtils: WARN
+  org.apache.tomcat.util.net.NioSelectorPool: WARN
+  org.eclipse.jetty.util.component.AbstractLifeCycle: ERROR
+  org.hibernate.validator.internal.util.Version: WARN
+  org.springframework.boot.actuate.endpoint.jmx: WARN
+  org.springframework.web: INFO

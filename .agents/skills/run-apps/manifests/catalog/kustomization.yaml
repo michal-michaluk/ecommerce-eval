@@ -13,11 +13,12 @@ resources:
 
 configMapGenerator:
   # The overlay still names the blueprint's `iot` realm; the service's realm document is `catalog`
-  # and the tokens the contract suite needs only exist there.
+  # and the tokens the contract suite needs only exist there. The issuer is Keycloak's pinned
+  # `KC_HOSTNAME`, fully qualified so the same string is trusted from every namespace.
   - name: catalog
     behavior: merge
     literals:
-      - JWT_ISSUER_URI=http://catalog-keycloak:8080/realms/catalog
+      - JWT_ISSUER_URI=http://catalog-keycloak.catalog.svc.cluster.local:8080/realms/catalog
 
 secretGenerator:
   # The overlay's datasource still points at the retired per-service `catalog-db-postgresql` Service.

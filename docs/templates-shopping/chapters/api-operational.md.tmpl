@@ -1,0 +1,41 @@
+{% import "partials/macros.md.tmpl" as m -%}
+{% include "partials/banner.md.tmpl" %}
+{% if not operations %}
+No operation of the management surface is declared anywhere this pipeline can read: the routes are
+the framework's, they are mapped by no controller of this service, and the scenario that calls them
+records the call without a declared contract. The operational endpoints are therefore listed by the
+chapter that reads the exposure configuration, not here.
+{% endif %}
+{% for operation in operations %}
+### {{ operation.number }} {{ operation.method }} {{ operation.path }}
+
+{{ m.evidence(api_evidence) }}
+
+{{ m.definition("Summary", operation.summary) }}
+
+{{ m.definition("Authentication", m.code("bearer JWT") if operation.authenticated else "none, public endpoint") }}
+
+{{ m.evidence(operation.access_evidence) }}
+{% if operation.parameters %}
+
+{% set parameter_rows = operation.parameters %}{% include "chapters/api-parameter-table.md.tmpl" %}
+{% endif %}
+{% for response in operation.responses %}
+
+Status
+: {{ m.code(response.status) }} — {{ m.cell(response.description) }}
+{% for table in response.tables %}
+
+Media type
+: {{ m.codes(table.media_types) }}
+
+{% set field_rows = table.rows %}{% include "chapters/api-field-table.md.tmpl" %}
+{% endfor %}
+{% if not response.tables %}
+
+No body is declared for this status.
+{% endif %}
+
+{% endfor %}
+
+{% endfor %}

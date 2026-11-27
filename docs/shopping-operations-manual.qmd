@@ -1,0 +1,45 @@
+---
+title: "shopping — Operations Manual"
+subtitle: "How the basket service runs, what configures it, and what each failure looks like"
+version: "1.0"
+date: "2026-11-27"
+status: "Draft for review"
+audience: "The engineer on call for the shopping service, and whoever deploys or changes it"
+owner: "shopping context team"
+---
+
+# Part I — Running it
+
+{{< include shopping/runbook/01-purpose.md >}}
+
+## 2 Deployment
+
+{{< include generated/shopping/chapters/deployment.md >}}
+
+{{< include shopping/runbook/03-configuration.md >}}
+
+{{< include shopping/runbook/04-procedures.md >}}
+
+# Part II — Watching it
+
+## 5 Telemetry
+
+{{< include generated/shopping/chapters/telemetry.md >}}
+
+{{< include shopping/runbook/06-failure-modes.md >}}
+
+{{< include shopping/runbook/07-resilience.md >}}
+
+# Part III — Limits and history
+
+{{< include shopping/runbook/08-capacity.md >}}
+
+{{< include shopping/runbook/09-restart.md >}}
+
+{{< include shopping/runbook/10-ownership.md >}}
+
+## 11 Revision history
+
+{{< include generated/shopping/chapters/revision-history.md >}}
+
+{{< include shopping/runbook/12-gaps.md >}}

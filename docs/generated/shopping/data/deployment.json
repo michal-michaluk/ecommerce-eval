@@ -1,0 +1,565 @@
+{
+  "base": {
+    "configmap": {
+      "evidence": [
+        "services/shopping/k8s/base/configmap.yaml:37",
+        "services/shopping/k8s/base/configmap.yaml:38",
+        "services/shopping/k8s/base/configmap.yaml:40",
+        "services/shopping/k8s/base/configmap.yaml:39",
+        "services/shopping/k8s/base/configmap.yaml:41",
+        "services/shopping/k8s/base/configmap.yaml:42",
+        "services/shopping/k8s/base/configmap.yaml:44",
+        "services/shopping/k8s/base/configmap.yaml:43",
+        "services/shopping/k8s/base/configmap.yaml:45",
+        "services/shopping/k8s/base/configmap.yaml:36"
+      ],
+      "keys": [
+        "JWT_ISSUER_URI",
+        "SHOPPING_BASKET_CURRENCY",
+        "basket-delivery-free-when-smart",
+        "basket-delivery-rate",
+        "basket-estimate-default-days-from",
+        "basket-estimate-default-days-to",
+        "basket-estimate-fallback",
+        "basket-estimate-zone",
+        "offer-fixture.yaml",
+        "spring-profile-active"
+      ],
+      "name": "shopping",
+      "path": "services/shopping/k8s/base/configmap.yaml"
+    },
+    "deployment": {
+      "container": {
+        "container_port": 8080,
+        "environment": [
+          {
+            "evidence": [
+              "services/shopping/k8s/base/deployment.yaml:59"
+            ],
+            "name": "SPRING_PROFILES_ACTIVE",
+            "source": {
+              "key": "spring-profile-active",
+              "kind": "configmap",
+              "name": "shopping"
+            }
+          },
+          {
+            "evidence": [
+              "services/shopping/k8s/base/deployment.yaml:64"
+            ],
+            "name": "JWT_ISSUER_URI",
+            "source": {
+              "key": "JWT_ISSUER_URI",
+              "kind": "configmap",
+              "name": "shopping"
+            }
+          },
+          {
+            "evidence": [
+              "services/shopping/k8s/base/deployment.yaml:69"
+            ],
+            "name": "SHOPPING_BASKET_CURRENCY",
+            "source": {
+              "key": "SHOPPING_BASKET_CURRENCY",
+              "kind": "configmap",
+              "name": "shopping"
+            }
+          },
+          {
+            "evidence": [
+              "services/shopping/k8s/base/deployment.yaml:74"
+            ],
+            "name": "SHOPPING_BASKET_DELIVERY_RATE",
+            "source": {
+              "key": "basket-delivery-rate",
+              "kind": "configmap",
+              "name": "shopping"
+            }
+          },
+          {
+            "evidence": [
+              "services/shopping/k8s/base/deployment.yaml:79"
+            ],
+            "name": "SHOPPING_BASKET_DELIVERY_FREE_WHEN_SMART",
+            "source": {
+              "key": "basket-delivery-free-when-smart",
+              "kind": "configmap",
+              "name": "shopping"
+            }
+          },
+          {
+            "evidence": [
+              "services/shopping/k8s/base/deployment.yaml:84"
+            ],
+            "name": "SHOPPING_BASKET_ESTIMATE_FROM",
+            "source": {
+              "key": "basket-estimate-default-days-from",
+              "kind": "configmap",
+              "name": "shopping"
+            }
+          },
+          {
+            "evidence": [
+              "services/shopping/k8s/base/deployment.yaml:89"
+            ],
+            "name": "SHOPPING_BASKET_ESTIMATE_TO",
+            "source": {
+              "key": "basket-estimate-default-days-to",
+              "kind": "configmap",
+              "name": "shopping"
+            }
+          },
+          {
+            "evidence": [
+              "services/shopping/k8s/base/deployment.yaml:94"
+            ],
+            "name": "SHOPPING_BASKET_ESTIMATE_ZONE",
+            "source": {
+              "key": "basket-estimate-zone",
+              "kind": "configmap",
+              "name": "shopping"
+            }
+          },
+          {
+            "evidence": [
+              "services/shopping/k8s/base/deployment.yaml:99"
+            ],
+            "name": "SHOPPING_BASKET_ESTIMATE_FALLBACK",
+            "source": {
+              "key": "basket-estimate-fallback",
+              "kind": "configmap",
+              "name": "shopping"
+            }
+          },
+          {
+            "evidence": [
+              "services/shopping/k8s/base/deployment.yaml:104"
+            ],
+            "name": "SPRING_CONFIG_ADDITIONAL_LOCATION",
+            "source": {
+              "kind": "literal",
+              "value": "file:/etc/shopping/offer-fixture.yaml"
+            }
+          },
+          {
+            "evidence": [
+              "services/shopping/k8s/base/deployment.yaml:106"
+            ],
+            "name": "SPRING_DATASOURCE_URL",
+            "source": {
+              "key": "jdbc-url",
+              "kind": "secret",
+              "name": "shopping-db"
+            }
+          },
+          {
+            "evidence": [
+              "services/shopping/k8s/base/deployment.yaml:111"
+            ],
+            "name": "SPRING_DATASOURCE_USERNAME",
+            "source": {
+              "key": "username",
+              "kind": "secret",
+              "name": "shopping-db"
+            }
+          },
+          {
+            "evidence": [
+              "services/shopping/k8s/base/deployment.yaml:116"
+            ],
+            "name": "SPRING_DATASOURCE_PASSWORD",
+            "source": {
+              "key": "password",
+              "kind": "secret",
+              "name": "shopping-db"
+            }
+          }
+        ],
+        "evidence": [
+          "services/shopping/k8s/base/deployment.yaml:24",
+          "services/shopping/k8s/base/deployment.yaml:145"
+        ],
+        "image": "shopping:latest",
+        "image_pull_policy": "IfNotPresent",
+        "name": "shopping",
+        "probes": [
+          {
+            "evidence": [
+              "services/shopping/k8s/base/deployment.yaml:131"
+            ],
+            "failure_threshold": 6,
+            "initial_delay_seconds": null,
+            "name": "livenessProbe",
+            "path": "/actuator/health/liveness",
+            "period_seconds": 10,
+            "port": 8080,
+            "timeout_seconds": 5
+          },
+          {
+            "evidence": [
+              "services/shopping/k8s/base/deployment.yaml:138"
+            ],
+            "failure_threshold": 3,
+            "initial_delay_seconds": null,
+            "name": "readinessProbe",
+            "path": "/actuator/health/readiness",
+            "period_seconds": 5,
+            "port": 8080,
+            "timeout_seconds": 3
+          },
+          {
+            "evidence": [
+              "services/shopping/k8s/base/deployment.yaml:124"
+            ],
+            "failure_threshold": 60,
+            "initial_delay_seconds": null,
+            "name": "startupProbe",
+            "path": "/actuator/health/liveness",
+            "period_seconds": 10,
+            "port": 8080,
+            "timeout_seconds": 3
+          }
+        ],
+        "protocol": "TCP",
+        "resources": {
+          "limits": {
+            "cpu": "1",
+            "memory": "1.5Gi"
+          },
+          "requests": {
+            "cpu": "250m",
+            "memory": "768Mi"
+          }
+        },
+        "security": {
+          "allowPrivilegeEscalation": false,
+          "readOnlyRootFilesystem": true,
+          "runAsNonRoot": true
+        }
+      },
+      "evidence": [
+        "services/shopping/k8s/base/deployment.yaml:2"
+      ],
+      "name": "shopping",
+      "path": "services/shopping/k8s/base/deployment.yaml",
+      "pod_security": {
+        "fsGroup": 1000,
+        "runAsGroup": 1000,
+        "runAsNonRoot": true,
+        "runAsUser": 1000,
+        "seccompProfile": {
+          "type": "RuntimeDefault"
+        }
+      },
+      "replicas": 1
+    },
+    "service": {
+      "evidence": [
+        "services/shopping/k8s/base/service.yaml:2"
+      ],
+      "name": "shopping",
+      "path": "services/shopping/k8s/base/service.yaml",
+      "port": 80,
+      "protocol": "TCP",
+      "target_port": 8080,
+      "type": "ClusterIP"
+    }
+  },
+  "evidence": [
+    "services/shopping/k8s/base/deployment.yaml:2",
+    "services/shopping/k8s/base/service.yaml:2"
+  ],
+  "image": {
+    "agent_jar": "opentelemetry-javaagent.jar",
+    "agent_version": "2.17.0",
+    "base_image": "eclipse-temurin:25-jdk",
+    "environment": [
+      {
+        "evidence": [
+          "services/shopping/build.gradle:241"
+        ],
+        "name": "SPRING_OUTPUT_ANSI_ENABLED",
+        "value": "never"
+      },
+      {
+        "evidence": [
+          "services/shopping/build.gradle:242"
+        ],
+        "name": "JAVA_TOOL_OPTIONS",
+        "value": "-javaagent:/app/opentelemetry-javaagent.jar"
+      }
+    ],
+    "evidence": [
+      "services/shopping/build.gradle:220",
+      "services/shopping/build.gradle:222",
+      "services/shopping/build.gradle:226",
+      "services/shopping/build.gradle:237",
+      "services/shopping/build.gradle:238",
+      "services/shopping/build.gradle:239"
+    ],
+    "jvm_flags": [
+      "-XX:+UseZGC",
+      "-XX:MaxRAMPercentage=75"
+    ],
+    "main_class": "shop.shopping.AppRunner",
+    "name": "shopping",
+    "path": "services/shopping/build.gradle",
+    "ports": [
+      "8080"
+    ],
+    "tags": [
+      "latest"
+    ]
+  },
+  "infrastructure": [
+    {
+      "evidence": [
+        "services/shopping/k8s/infra/otel-collector.yaml:2"
+      ],
+      "file": "otel-collector.yaml",
+      "objects": [
+        {
+          "kind": "ConfigMap",
+          "name": "otel-collector-config",
+          "namespace": "shopping"
+        },
+        {
+          "kind": "Service",
+          "name": "otel-collector",
+          "namespace": "shopping"
+        },
+        {
+          "kind": "Deployment",
+          "name": "otel-collector",
+          "namespace": "shopping"
+        }
+      ],
+      "path": "services/shopping/k8s/infra/otel-collector.yaml"
+    }
+  ],
+  "overlays": [
+    {
+      "configmap_literals": [
+        "spring-profile-active",
+        "JWT_ISSUER_URI"
+      ],
+      "configmap_values": [
+        {
+          "name": "spring-profile-active",
+          "value": "dev"
+        },
+        {
+          "name": "JWT_ISSUER_URI",
+          "value": "http://localhost:8080/realms/shopping"
+        }
+      ],
+      "container": {
+        "container_port": null,
+        "environment": [],
+        "evidence": [
+          "services/shopping/k8s/overlays/dev/deployment-patch.yaml:16",
+          "services/shopping/k8s/overlays/dev/deployment-patch.yaml:30"
+        ],
+        "image": null,
+        "image_pull_policy": "Always",
+        "name": "shopping",
+        "probes": [],
+        "protocol": null,
+        "resources": {
+          "limits": {
+            "cpu": "500m",
+            "memory": "512Mi"
+          },
+          "requests": {
+            "cpu": "100m",
+            "memory": "256Mi"
+          }
+        },
+        "security": {
+          "allowPrivilegeEscalation": false,
+          "readOnlyRootFilesystem": true,
+          "runAsNonRoot": true
+        }
+      },
+      "evidence": [
+        "services/shopping/k8s/overlays/dev/kustomization.yaml:4"
+      ],
+      "files": [
+        "deployment-patch.yaml",
+        "kustomization.yaml"
+      ],
+      "name": "dev",
+      "name_prefix": "dev-",
+      "namespace": "shopping-dev",
+      "path": "services/shopping/k8s/overlays/dev/kustomization.yaml",
+      "resources": [
+        "../../base"
+      ],
+      "secret_keys": [
+        "jdbc-url",
+        "password",
+        "username"
+      ]
+    },
+    {
+      "configmap_literals": [
+        "spring-profile-active",
+        "JWT_ISSUER_URI"
+      ],
+      "configmap_values": [
+        {
+          "name": "spring-profile-active",
+          "value": "dev"
+        },
+        {
+          "name": "JWT_ISSUER_URI",
+          "value": "http://catalog-keycloak.catalog.svc.cluster.local:8080/realms/shopping"
+        }
+      ],
+      "container": {
+        "container_port": null,
+        "environment": [
+          {
+            "evidence": [
+              "services/shopping/k8s/overlays/k3d/deployment-patch.yaml:36"
+            ],
+            "name": "JAVA_TOOL_OPTIONS",
+            "source": {
+              "kind": "literal",
+              "value": "-javaagent:/app/opentelemetry-javaagent.jar"
+            }
+          },
+          {
+            "evidence": [
+              "services/shopping/k8s/overlays/k3d/deployment-patch.yaml:38"
+            ],
+            "name": "OTEL_SERVICE_NAME",
+            "source": {
+              "kind": "literal",
+              "value": "shopping"
+            }
+          },
+          {
+            "evidence": [
+              "services/shopping/k8s/overlays/k3d/deployment-patch.yaml:40"
+            ],
+            "name": "OTEL_EXPORTER_OTLP_ENDPOINT",
+            "source": {
+              "kind": "literal",
+              "value": "http://otel-collector:4317"
+            }
+          },
+          {
+            "evidence": [
+              "services/shopping/k8s/overlays/k3d/deployment-patch.yaml:42"
+            ],
+            "name": "OTEL_EXPORTER_OTLP_PROTOCOL",
+            "source": {
+              "kind": "literal",
+              "value": "grpc"
+            }
+          },
+          {
+            "evidence": [
+              "services/shopping/k8s/overlays/k3d/deployment-patch.yaml:44"
+            ],
+            "name": "OTEL_TRACES_EXPORTER",
+            "source": {
+              "kind": "literal",
+              "value": "otlp"
+            }
+          },
+          {
+            "evidence": [
+              "services/shopping/k8s/overlays/k3d/deployment-patch.yaml:46"
+            ],
+            "name": "OTEL_LOGS_EXPORTER",
+            "source": {
+              "kind": "literal",
+              "value": "otlp"
+            }
+          },
+          {
+            "evidence": [
+              "services/shopping/k8s/overlays/k3d/deployment-patch.yaml:48"
+            ],
+            "name": "OTEL_METRICS_EXPORTER",
+            "source": {
+              "kind": "literal",
+              "value": "none"
+            }
+          },
+          {
+            "evidence": [
+              "services/shopping/k8s/overlays/k3d/deployment-patch.yaml:50"
+            ],
+            "name": "OTEL_TRACES_SAMPLER",
+            "source": {
+              "kind": "literal",
+              "value": "parentbased_traceidratio"
+            }
+          },
+          {
+            "evidence": [
+              "services/shopping/k8s/overlays/k3d/deployment-patch.yaml:52"
+            ],
+            "name": "OTEL_TRACES_SAMPLER_ARG",
+            "source": {
+              "kind": "literal",
+              "value": "1.0"
+            }
+          }
+        ],
+        "evidence": [
+          "services/shopping/k8s/overlays/k3d/deployment-patch.yaml:18"
+        ],
+        "image": null,
+        "image_pull_policy": null,
+        "name": "shopping",
+        "probes": [],
+        "protocol": null,
+        "resources": {
+          "limits": {},
+          "requests": {}
+        },
+        "security": {
+          "allowPrivilegeEscalation": false,
+          "readOnlyRootFilesystem": true,
+          "runAsNonRoot": true
+        }
+      },
+      "evidence": [
+        "services/shopping/k8s/overlays/k3d/kustomization.yaml:15"
+      ],
+      "files": [
+        "deployment-patch.yaml",
+        "ingress.yaml",
+        "kustomization.yaml",
+        "namespace.yaml"
+      ],
+      "name": "k3d",
+      "name_prefix": null,
+      "namespace": "shopping",
+      "path": "services/shopping/k8s/overlays/k3d/kustomization.yaml",
+      "resources": [
+        "namespace.yaml",
+        "ingress.yaml",
+        "../../base"
+      ],
+      "secret_keys": [
+        "jdbc-url",
+        "password",
+        "username"
+      ]
+    }
+  ],
+  "profiles": [
+    {
+      "evidence": [
+        "services/shopping/k8s/base/deployment.yaml:59"
+      ],
+      "name": null,
+      "overlay": null
+    }
+  ]
+}

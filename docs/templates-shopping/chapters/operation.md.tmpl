@@ -1,0 +1,38 @@
+{% import "partials/macros.md.tmpl" as m -%}
+{% include "partials/banner.md.tmpl" %}
+{{ m.evidence(operation.evidence) }}
+
+{{ m.definition("Method and path", m.code(operation.method) ~ " " ~ m.code(operation.path)) }}
+
+{{ m.definition("Authentication", m.code("bearer JWT") if operation.access == "authenticated" else "none, public endpoint") }}
+
+{% set authority = "none, public endpoint" if operation.access == "permitAll" else (m.codes(operation.access_scope) if operation.access_scope else "any authenticated caller") %}
+{{ m.definition("Required authority", authority) }}
+
+{{ m.evidence(operation.access_evidence) }}
+
+{{ m.definition("Consumes", m.codes(operation.consumes) if operation.consumes else "no request body") }}
+
+{{ m.definition("Produces", m.codes(operation.produces) if operation.produces else "no response body") }}
+
+{{ m.definition("Path parameters", m.codes(operation.path_params) if operation.path_params else "none") }}
+
+{{ m.definition("Query parameters", m.codes(operation.query_params) if operation.query_params else "none") }}
+{% for block in request_bodies %}
+
+{{ m.evidence(block.evidence) }}
+
+**Request body**
+
+{{ m.fence("json", block.body_raw) }}
+
+{% endfor %}
+{% for item in response_examples %}
+
+{{ m.evidence(item.example.evidence) }}
+
+**Response body** — {{ item.note }}
+
+{{ m.fence("json", item.example.content) }}
+
+{% endfor %}

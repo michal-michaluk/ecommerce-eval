@@ -1,0 +1,18 @@
+spring:
+  jpa:
+    show-sql: true
+    hibernate.ddl-auto: none
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    properties:
+      hibernate.type.json_format_mapper: shop.shopping.tools.Jackson3JsonFormatMapper
+  liquibase:
+    change-log: classpath:db/db.changelog.yaml
+    drop-first: true
+
+# A delivery rate the stated default is not (9 990) and a SMART rule that does not free it: without a value that differs from
+# `DeliveryRates.defaultRates()` an integration test cannot tell a bound `basket.delivery.*` block from the fallback. The
+# shipped values stay pinned by the binder test, and the estimate block is inherited from `application.yml` unchanged.
+basket:
+  delivery:
+    rate: 12340
+    free-when-smart: false

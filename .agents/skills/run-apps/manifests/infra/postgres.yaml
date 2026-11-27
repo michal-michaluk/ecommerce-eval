@@ -28,6 +28,7 @@ data:
   databases.txt: |
     catalog:catalog:catalog
     fulfillment:fulfillment:fulfillment
+    shopping:shopping:shopping
   # Runs once, on an empty data directory. Postgres has no CREATE DATABASE IF NOT EXISTS, so both
   # the role and the database are looked up in the catalogs first; re-running is a no-op.
   10-databases.sh: |

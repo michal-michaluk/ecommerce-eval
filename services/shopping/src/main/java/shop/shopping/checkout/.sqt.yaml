@@ -1,0 +1,112 @@
+version: 1
+
+# `structure.slice-package-private` — the slice owns its types, so nothing outside the slice may name one, and the slice's own
+# adapters sit in this package and reach them without widening anything. Only the root-level `kernel/` package is `public`;
+# a slice type that becomes `public` is the one boundary breach neither ArchUnit's access-based `modelIsolation` nor the
+# compiler would catch any more.
+#
+# `structure.slice-wiring-is-infrastructure` and `structure.slice-model-is-plain-java` — the second of the two holes the
+# executable architecture leaves open, in both halves the doctrine text names. Classification is by annotation
+# (`is.infrastructure` is a class carrying `@Configuration`), so a `*Configuration` that forgets it is `is.model`; and
+# `modelDependencies` was meant to keep a model off the framework but does not, because its allowed list contains the `model`
+# predicate itself, which every framework class satisfies — a top-level basket class annotated `@Component` and one holding an
+# `org.springframework.core.env.Environment` field both passed `basketModelDependencies` before these checks existed. The
+# checks keep the scope ArchUnit declares for that rule (`areTopLevelClasses`), so a nested binding record stays the separate
+# question `BasketConfiguration` answers today.
+
+utils:
+  has.public-modifier:
+    has: { stopBy: neighbor, kind: modifiers, regex: '\bpublic\b' }
+
+  is.top-level:
+    inside: { stopBy: neighbor, kind: program }
+
+  # A `*Configuration` declared in this package — the wiring class the shared classifier reads as model once the annotation
+  # is missing.
+  is.wiring-class:
+    all:
+      - kind: class_declaration
+      - has: { field: name, stopBy: neighbor, kind: identifier, regex: 'Configuration$' }
+
+  # The class's own `@Configuration`, which is exactly what the shared `is.infrastructure` reads.
+  has.configuration-annotation:
+    has:
+      stopBy: neighbor
+      kind: modifiers
+      has:
+        stopBy: end
+        any: [ { kind: annotation }, { kind: marker_annotation } ]
+        has: { field: name, stopBy: end, kind: identifier, regex: '^Configuration$' }
+
+  # A framework IMPORT anywhere in the file — the dependency half of the same rule. `modelDependencies` was meant to state it
+  # and cannot (its allowed list contains the `model` classifier), so the source states it: a file that imports Spring is a
+  # file whose types depend on Spring.
+  has.framework-import:
+    has:
+      stopBy: end
+      kind: import_declaration
+      regex: '^import (static )?(org[.]springframework|jakarta[.]persistence|jakarta[.]transaction|org[.]hibernate)'
+
+  # A framework annotation on the type itself. The list is Spring's own stereotype and wiring vocabulary: which annotation is
+  # spelled does not matter to the rule, that one of them is there does.
+  has.framework-annotation:
+    has:
+      stopBy: neighbor
+      kind: modifiers
+      has:
+        stopBy: end
+        any: [ { kind: annotation }, { kind: marker_annotation } ]
+        has:
+          field: name
+          stopBy: end
+          kind: identifier
+          regex: '^(Component|Service|Configuration|ConfigurationProperties|EnableConfigurationProperties|Autowired|Value|Bean|Qualifier|Repository|Controller|RestController|EventListener|Transactional|Scheduled|Async)$'
+
+checks:
+  - id: structure.slice-package-private
+    language: Java
+    severity: error
+    message: a type a slice owns must be package-private — only the shared kernel package is public
+    filter:
+      all:
+        - matches: is.top-level
+        - any:
+            - { kind: class_declaration }
+            - { kind: record_declaration }
+            - { kind: interface_declaration }
+            - { kind: enum_declaration }
+    rule: { matches: has.public-modifier }
+
+  - id: structure.slice-wiring-is-infrastructure
+    language: Java
+    severity: error
+    message: a *Configuration in a slice must carry @Configuration — without it it classifies as model and no model rule holds it
+    filter: { matches: is.wiring-class }
+    rule: { not: { matches: has.configuration-annotation } }
+
+  - id: structure.slice-model-is-plain-java
+    language: Java
+    severity: error
+    message: a slice's top-level model type must carry no framework annotation — Spring belongs to its adapters, services and wiring
+    filter:
+      all:
+        - matches: is.model
+        - matches: is.top-level
+    rule: { matches: has.framework-annotation }
+
+  # The same rule for what a model may NAME, not only what it may be annotated with: a file whose top-level type is model owns
+  # no framework import either. The exclusions are the roles the doctrine gives Spring to — an adapter, a service, the wiring
+  # and a domain event (`DomainEvent` carries Jackson's polymorphic annotations by design) — so a model file that grows one
+  # `Environment` field is refused, which is the shape `basketModelDependencies` lets through.
+  - id: structure.slice-model-file-is-plain-java
+    language: Java
+    severity: error
+    message: a slice's model file must import no framework — Spring belongs to its adapters, services and wiring
+    filter: { kind: program }
+    rule:
+      all:
+        - matches: has.framework-import
+        - not: { has: { stopBy: end, matches: is.adapter } }
+        - not: { has: { stopBy: end, matches: is.service } }
+        - not: { has: { stopBy: end, matches: is.infrastructure } }
+        - not: { has: { stopBy: end, matches: is.domain-event } }

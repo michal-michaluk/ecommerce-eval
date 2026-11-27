@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shopping
+spec:
+  template:
+    spec:
+      # A strategic-merge patch is scanned as a whole Deployment, so the guard rails the base states are restated here — the
+      # same values, not a second policy: an overlay that carried only `env` reads to a scanner (and to a reader) as a pod with
+      # no security context at all. Trivy's KSV-0014/KSV-0118 are what that reading costs, and the merged pod is unchanged.
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: shopping
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          # The base Deployment carries no telemetry: the collector is per namespace
+          # (`k8s/infra/otel-collector.yaml`) and a developer's machine has none, so only this
+          # overlay turns the exporter on. `env` merges by name, so the datasource and issuer
+          # entries of the base Deployment survive untouched.
+          env:
+            - name: JAVA_TOOL_OPTIONS
+              value: "-javaagent:/app/opentelemetry-javaagent.jar"
+            - name: OTEL_SERVICE_NAME
+              value: shopping
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: http://otel-collector:4317
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: grpc
+            - name: OTEL_TRACES_EXPORTER
+              value: otlp
+            - name: OTEL_LOGS_EXPORTER
+              value: otlp
+            - name: OTEL_METRICS_EXPORTER
+              value: none
+            - name: OTEL_TRACES_SAMPLER
+              value: parentbased_traceidratio
+            - name: OTEL_TRACES_SAMPLER_ARG
+              value: "1.0"

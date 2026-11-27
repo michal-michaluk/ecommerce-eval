@@ -1,0 +1,30 @@
+# Per-chapter labels and chapter numbers.
+#
+# `render-docs.py` reads this file and hands it to every template, so a reorder changes this file
+# and nothing else. Every key is optional except `manual_chapters`, which the operations-manual
+# templates index by chapter name.
+
+# One entry per operation chapter, keyed by the chapter slug that `examples.operation_chapters`
+# in config.json assigns. `payload` names a payload by the test that asserts it — never an
+# ordinal, so inserting a payload cannot silently relabel a chapter.
+response_examples:
+  <chapter-slug>:
+    - payload: <TestClass>#<testMethod>
+      note: <what this example shows, in one clause>
+
+# Titles of the payload examples appendix, in extraction order. The count must equal the number
+# of payloads the extractor finds; the renderer fails on a mismatch.
+payload_examples:
+  - <title of payload example 1>
+  - <title of payload example 2>
+
+# The chapter numbers the composition gives the generated API chapters.
+api_chapters:
+  first_operation: 5
+  operational: 0
+
+# Chapter numbers of the generated chapters of the operations manual.
+manual_chapters:
+  deployment: 2
+  telemetry: 5
+  revision_history: 11

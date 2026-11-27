@@ -1,0 +1,14 @@
+{% import "partials/macros.md.tmpl" as m -%}
+{% include "partials/banner.md.tmpl" %}
+{% if not fixtures %}
+The executable scenario records no request at all, so this appendix quotes none. No transcript is
+reconstructed to fill it.
+{% endif %}
+{% for block in fixtures %}
+### B.{{ block.index }} {{ m.code(block.method) }} {{ m.code(block.path) }}
+
+{{ m.evidence(block.evidence) }}
+
+{{ m.fence("http", block.raw) }}
+
+{% endfor %}

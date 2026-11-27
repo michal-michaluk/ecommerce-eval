@@ -1,0 +1,40 @@
+# The k3d overlay: the shared local k3s cluster, one namespace per service.
+#
+# The cluster and its context are properties of the WORKSPACE, not of this service — this overlay
+# only names the namespace it deploys into. On this machine the cluster is `shop-k3s`, a privileged
+# podman container running `rancher/k3s`; `.agents/skills/run-apps/` is the one place that creates it
+# and gets an image into it.
+#
+# The issuer points at the one Keycloak the shop cluster runs, in namespace `catalog`, so a render of
+# this overlay alone authenticates (base carries the stand-alone `keycloak` Service this namespace
+# does not compose). The database address stays the stand-alone `postgresql`: `shopping-db` is a
+# Secret, and a merge generator would rename it out from under the Deployment, so
+# `.agents/skills/run-apps/manifests/shopping/kustomization.yaml` carries the shared address.
+# There is no broker in this set: the service consumes no event channel (plan D39).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: shopping
+
+resources:
+  - namespace.yaml
+  - ingress.yaml
+  - ../../base
+
+patches:
+  - path: deployment-patch.yaml
+
+configMapGenerator:
+  - name: shopping
+    behavior: merge
+    literals:
+      - spring-profile-active=dev
+      - JWT_ISSUER_URI=http://catalog-keycloak.catalog.svc.cluster.local:8080/realms/shopping
+
+secretGenerator:
+  - name: shopping-db
+    literals:
+      # Same instance, same role name, one logical database per service.
+      - jdbc-url=jdbc:postgresql://postgresql:5432/shopping
+      - username=shopping
+      - password=shopping

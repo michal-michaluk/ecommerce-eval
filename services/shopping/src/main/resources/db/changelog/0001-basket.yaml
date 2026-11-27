@@ -1,0 +1,47 @@
+databaseChangeLog:
+
+  # The basket as a document snapshot: the aggregate's own snapshot in one JSONB column, plus the two columns a query reads
+  # without opening it — the customer the basket belongs to and whether it is active (element 02 RULE-1, D42).
+  - changeSet:
+      id: 0001-basket
+      author: michal.michaluk
+      changes:
+        - createTable:
+            tableName: basket
+            columns:
+              - column:
+                  name: basket_id
+                  type: varchar(64)
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: basket_pkey
+                    nullable: false
+              - column:
+                  name: version
+                  type: bigint
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+              - column:
+                  name: customer_id
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: active
+                  type: boolean
+                  constraints:
+                    nullable: false
+              - column:
+                  name: snapshot
+                  type: jsonb
+                  constraints:
+                    nullable: false
+
+        # One active basket per customer (RULE-1, D42) is the schema's promise, not the code's: two requests that both found no
+        # basket cannot both create one. It is a partial index, so the archived baskets of the same customer stay storable and
+        # "several active baskets" is a later change of this one index.
+        - sql:
+            comment: one active basket per customer
+            sql: >-
+              create unique index basket_active_customer_idx on basket (customer_id) where active

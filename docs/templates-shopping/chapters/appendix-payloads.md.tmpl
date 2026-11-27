@@ -1,0 +1,19 @@
+{% import "partials/macros.md.tmpl" as m -%}
+{% include "partials/banner.md.tmpl" %}
+{% if not examples %}
+No payload example is recorded for this service, so this appendix indexes none. The JSONB columns the
+schema declares are listed in the payload-columns chapter; what fills them is the aggregate's own
+snapshot, described in the body of the document rather than quoted here.
+{% endif %}
+{% for example in examples %}
+### A.{{ example.index }} {{ labels.payload_examples[example.index - 1] if labels.payload_examples and labels.payload_examples | length >= example.index else "Payload" }}
+
+{{ m.evidence(example.evidence) }}
+
+{{ m.fence("json", example.content) }}
+{% if example.placeholder %}
+
+The identifier is written as `%s` in the source text block and is quoted here unchanged.
+{% endif %}
+
+{% endfor %}

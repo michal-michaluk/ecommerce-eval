@@ -1,0 +1,104 @@
+# Keys are kebab-case and are NOT environment variable names: every one of them is read by an
+# explicit `configMapKeyRef` in base/deployment.yaml, so adding a key here needs a matching entry
+# there. `JWT_ISSUER_URI` carries the stand-alone shape: a `keycloak` Service in this namespace, which
+# only a self-contained deployment of this service would run. The k3d overlay overrides it with the
+# one Keycloak the shop cluster runs (namespace `catalog`, by fully qualified name) and the
+# `run-apps` manifest repeats that address, so a render of either authenticates. The realm is
+# `shopping`, the same name this service's realm document imports.
+#
+# There is no messaging key: the service consumes no event channel (plan D39), so a broker address
+# here would be a config key nothing reads.
+#
+# `offer-fixture.yaml` is the one key that is a document, not a value: element 08's fixture adapter is
+# seeded from `basket.offer-fixture.offers` (D67), and a list of offers with a per-read answer queue
+# cannot be a set of kebab-case keys. `base/deployment.yaml` mounts this key as a file and points
+# `SPRING_CONFIG_ADDITIONAL_LOCATION` at it, so the seed binds through the same configuration
+# machinery as every value above and never ships inside the image. What each offer is for, and why
+# this is a stand-in rather than a catalogue, is `services/shopping/docs/offer-fixture.md`.
+#
+# `JWT_ISSUER_URI` and `SHOPPING_BASKET_CURRENCY` keep their environment-variable spelling because the
+# application's own default already names them: `spring.security...issuer-uri` reads
+# `${JWT_ISSUER_URI}` and `basket.currency` reads `${SHOPPING_BASKET_CURRENCY:PLN}`, so the cluster
+# states the same name the profile does instead of renaming it twice.
+#
+# The six `basket-*` keys are the kebab-case form: `basket.delivery.*` (element 04 §Parameters) and
+# `basket.estimate.*` (element 05 §Configuration, D36/D43/D58) are the properties the policies read,
+# and their environment names are stated once in base/deployment.yaml. Without them the estimate
+# answers `unknown`, the delivery line hides and DoV5 reads 0 % — a key lost in transit is a
+# delivered feature lost, not a cosmetic omission.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: shopping
+  labels:
+    app: shopping
+data:
+  spring-profile-active: "prod"
+  JWT_ISSUER_URI: "http://keycloak:8080/realms/shopping"
+  SHOPPING_BASKET_CURRENCY: "PLN"
+  basket-delivery-rate: "9990"
+  basket-delivery-free-when-smart: "true"
+  basket-estimate-default-days-from: "2"
+  basket-estimate-default-days-to: "4"
+  basket-estimate-zone: "Europe/Warsaw"
+  basket-estimate-fallback: "unknown"
+  offer-fixture.yaml: |
+    basket:
+      offer-fixture:
+        offers:
+          - id: OF-1001
+            seller: UGREEN_POLSKA
+            title: Fixture offer OF-1001
+            picture: https://fixture.invalid/of-1001.png
+            list-price: 109890
+            current-price: 99890
+            discount: 0
+            currency: PLN
+            answers:
+              - stock: 9
+          - id: OF-1002
+            seller: UGREEN_POLSKA
+            title: Fixture offer OF-1002
+            picture: https://fixture.invalid/of-1002.png
+            list-price: 69900
+            current-price: 64990
+            discount: 0
+            currency: PLN
+            answers:
+              - stock: 9
+                reads: 9
+              - stock: 0
+          - id: OF-2007
+            seller: ANKER_STORE
+            title: Fixture offer OF-2007
+            picture: https://fixture.invalid/of-2007.png
+            list-price: 129000
+            current-price: 129000
+            discount: 0
+            currency: PLN
+            state: removed
+          - id: OF-9001
+            seller: UGREEN_POLSKA
+            title: Fixture offer OF-9001
+            picture: https://fixture.invalid/of-9001.png
+            list-price: 5990
+            current-price: 4990
+            discount: 0
+            currency: EUR
+            answers:
+              - stock: 9
+          # DoD18 only: the provider refuses the call for this offer, so the row is unavailable and stale
+          # (element 06 A4). No contract step names it, so no golden depends on it; it exists to make the
+          # stale half of a rendered row observable over HTTP instead of only inside a test.
+          - id: OF-1003
+            seller: UGREEN_POLSKA
+            title: Fixture offer OF-1003
+            picture: https://fixture.invalid/of-1003.png
+            list-price: 89900
+            current-price: 79900
+            discount: 0
+            currency: PLN
+            answers:
+              - stock: 9
+            fault: unreadable
+            fault-after: 2

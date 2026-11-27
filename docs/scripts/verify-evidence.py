@@ -93,9 +93,14 @@ def _commit_exists(sha: str) -> bool:
 
 
 def dataset_evidence(root: Path) -> list[tuple[str, str]]:
-    """Every ``path:line`` reference a dataset carries, so provenance is gated before it is rendered."""
+    """Every ``path:line`` reference a dataset carries, so provenance is gated before it is rendered.
+
+    The directory is the configured ``data_dir``, not a name this module knows: a second configuration of
+    the pipeline writes its datasets elsewhere, and a hard-coded ``generated/data`` would silently verify
+    another docset's JSON while claiming to have checked this one.
+    """
     found: list[tuple[str, str]] = []
-    for path in sorted((root / "generated" / "data").glob("*.json")):
+    for path in sorted(config.path("data_dir").glob("*.json")):
         document = json.loads(path.read_text(encoding="utf-8"))
         for reference in _walk_evidence(document):
             found.append((path.relative_to(REPO).as_posix(), reference))

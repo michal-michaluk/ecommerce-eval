@@ -1,0 +1,19 @@
+%% The packages of the one process, and the two edges the architecture test allows between the slices.
+%% Drawn from: services/shopping/src/main/java/shop/shopping/basket/package-info.java:1        basket slice
+%% services/shopping/src/main/java/shop/shopping/checkout/package-info.java:1-14                checkout slice, deferred to its own specification (D4)
+%% services/shopping/src/main/java/shop/shopping/kernel/ShoppingException.java:12-18           the shared kernel, the one package both slices may read
+%% services/shopping/src/main/java/shop/shopping/tools/JsonConfiguration.java:1-28                the document mapper
+%% services/shopping/src/test/java/shop/shopping/ArchitectureTest.java:15-46                   the rules: no basket type in checkout, no reservation operation anywhere
+flowchart TB
+  subgraph service["one Spring Boot process, shop.shopping"]
+    basket["basket slice<br/>BasketEditor, BasketService,<br/>BasketPriceCalculation, ShipmentEstimates,<br/>OfferAvailabilityDecision, FixtureOfferCatalog<br/>six HTTP routes + one projection"]
+    checkout["checkout slice<br/>CheckoutService<br/>receives a handover, creates no order"]
+    kernel["kernel, shared<br/>Money, Estimate, Availability,<br/>Handover, ShoppingException"]
+    tools["tools<br/>JSON mapping for the stored documents,<br/>feature configuration"]
+  end
+
+  basket -- "CheckoutHandovers: an in-process command" --> checkout
+  basket --> kernel
+  checkout --> kernel
+  basket --> tools
+  checkout --> tools

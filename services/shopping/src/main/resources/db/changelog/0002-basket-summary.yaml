@@ -1,0 +1,47 @@
+databaseChangeLog:
+
+  # The list row of element 07: one row per basket, holding the summary `GET /baskets` serves as a JSONB column, plus the two
+  # columns the query filters on — the customer the basket belongs to and whether it is still active (D29, D42).
+  - changeSet:
+      id: 0002-basket-summary
+      author: michal.michaluk
+      changes:
+        - createTable:
+            tableName: basket_summary
+            columns:
+              - column:
+                  name: basket_id
+                  type: varchar(64)
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: basket_summary_pkey
+                    nullable: false
+              - column:
+                  name: version
+                  type: bigint
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+              - column:
+                  name: customer_id
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: active
+                  type: boolean
+                  constraints:
+                    nullable: false
+              - column:
+                  name: summary
+                  type: jsonb
+                  constraints:
+                    nullable: false
+
+        # The one query this read model answers: a customer's active baskets.
+        - createIndex:
+            indexName: basket_summary_customer_idx
+            tableName: basket_summary
+            columns:
+              - column:
+                  name: customer_id

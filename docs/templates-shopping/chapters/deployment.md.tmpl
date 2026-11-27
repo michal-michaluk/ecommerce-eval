@@ -1,0 +1,189 @@
+{% import "partials/macros.md.tmpl" as m -%}
+{% include "partials/banner.md.tmpl" %}
+{% set base = deployment.base -%}
+{% set container = base.deployment.container -%}
+{% set image = deployment.image -%}
+{% set profile = container.environment | selectattr("name", "equalto", "SPRING_PROFILES_ACTIVE") | list | first %}
+{% set profile_key = (profile.source.key if profile and profile.source.kind == "configmap" else none) %}
+{{ m.evidence(deployment.evidence | unique | list) }}
+
+The service runs as one container of one Deployment, reached through one Service, configured from one
+ConfigMap and from a Secret the overlays generate, and patched by two overlays. Everything on this page
+is read from those manifests and from the build that produces the image; nothing here is a
+recommendation.
+
+| Fact | Value |
+|---|---|
+| Image | {{ m.code(image.name) }} |
+| Image tag | {{ m.codes(image.tags) }} |
+| Base image | {{ m.code(image.base_image) }} |
+| Container port | {{ m.code(container.container_port) }} ({{ container.protocol }}) |
+| Service | {{ m.code(base.service.type) }}, port {{ m.code(base.service.port) }} to container port {{ m.code(base.service.target_port) }} |
+| Replicas | {{ base.deployment.replicas }} |
+| Image pull policy | {{ m.code(container.image_pull_policy) }} |
+| JVM flags | {{ m.codes(image.jvm_flags) }} |
+
+: Image, port and service of the deployment.
+
+
+The image carries the OpenTelemetry agent and a Java runtime. The container filesystem is read-only,
+the process runs as a non-root user, privilege escalation is disabled, all capabilities are dropped,
+and an empty `tmp` volume is the only writable path. The base manifest declares those settings and
+both overlays repeat them, so a strategic-merge patch is read by a scanner as the pod it merges into.
+
+{{ m.evidence(container.evidence + (deployment.overlays | map(attribute="container") | selectattr("resources") | list | map(attribute="evidence") | sum(start=[]) | unique | list)) }}
+
+| Resource | Request | Limit |
+|---|---|---|
+{% for resource in container.resources.requests | sort -%}
+| {{ m.code(resource) }} | {{ m.code(container.resources.requests[resource]) }} | {{ m.code(m.cell(container.resources.limits.get(resource))) }} |
+{% endfor %}
+
+: Resource requests and limits of the base container.
+
+
+The base container is sized for a cold JVM plus a Liquibase migration on a shared machine. The `dev`
+overlay asks for less and caps the container lower as well; the `k3d` overlay declares no resources of
+its own and therefore leaves the base values in place.
+
+### {{ number }}.1 Environment variables and where they come from
+
+{{ m.evidence(container.evidence) }}
+
+The container declares {{ container.environment | length }} environment variables. The connection
+details are read from one Secret, the settings from the ConfigMap, and one value is a literal: the
+path of the mounted seed, which is how the offer fixture reaches the process.
+
+| Variable | Source | Name | Key or value |
+|---|---|---|---|
+{% for entry in container.environment -%}
+{% if entry.source.kind == "secret" -%}
+| {{ m.code(entry.name) }} | Secret | {{ m.code(entry.source.name) }} | key {{ m.code(entry.source.key) }} |
+{% elif entry.source.kind == "configmap" -%}
+| {{ m.code(entry.name) }} | ConfigMap | {{ m.code(entry.source.name) }} | key {{ m.code(entry.source.key) }} |
+{% else -%}
+| {{ m.code(entry.name) }} | literal | — | {{ m.code(entry.source.value) }} |
+{% endif -%}
+{% endfor %}
+
+: Environment variables of the container, with the object each one is read from.
+
+
+The base ConfigMap declares the keys {{ m.codes(base.configmap["keys"]) }}. Every key the container
+reads through a `configMapKeyRef` is one of them; the key that holds a document rather than a value,
+`offer-fixture.yaml`, is not an environment variable at all — it is mounted as a file and named by
+`SPRING_CONFIG_ADDITIONAL_LOCATION` instead. A key added to the ConfigMap without a matching reference
+in the Deployment is dead, and a reference to a key the ConfigMap does not carry stops the pod at
+admission.
+{{ m.evidence(base.configmap.evidence) }}
+
+### {{ number }}.2 Probes
+
+{{ m.evidence(container.probes | map(attribute="evidence") | sum(start=[]) | unique | list) }}
+
+| Probe | Declared by | Path | Port | Initial delay | Period | Timeout | Failure threshold |
+|---|---|---|---|---|---|---|---|
+{% for probe in container.probes -%}
+| {{ m.code(probe.name) }} | base | {{ m.code(probe.path) }} | {{ m.cell(probe.port) }} | {{ m.cell(probe.initial_delay_seconds) }} | {{ m.cell(probe.period_seconds) }} | {{ m.cell(probe.timeout_seconds) }} | {{ m.cell(probe.failure_threshold) }} |
+{% endfor -%}
+{% for overlay in deployment.overlays -%}
+{% if overlay.container -%}
+{% for probe in overlay.container.probes -%}
+| {{ m.code(probe.name) }} | {{ m.code(overlay.name) }} overlay | {{ m.code(probe.path) }} | {{ m.cell(probe.port) }} | {{ m.cell(probe.initial_delay_seconds) }} | {{ m.cell(probe.period_seconds) }} | {{ m.cell(probe.timeout_seconds) }} | {{ m.cell(probe.failure_threshold) }} |
+{% endfor -%}
+{% endif -%}
+{% endfor %}
+
+: Probes that keep the container alive and route traffic to it.
+
+
+The base manifest declares all three probes, thresholds included: the startup probe owns the cold
+start, the liveness probe restarts a container that stopped answering, and the readiness probe takes
+it out of the Service. No overlay adds a probe.
+
+### {{ number }}.3 Profiles and overlays
+
+{{ m.evidence(deployment.profiles | map(attribute="evidence") | sum(start=[]) | unique | list) }}
+
+| Profile | Activated in |
+|---|---|
+{% for entry in deployment.profiles -%}
+| {{ m.code(entry.name) if entry.name else "named by a ConfigMap key, never stated as a literal" }} | {{ ("the " ~ m.code(entry.overlay) ~ " overlay") if entry.overlay else "the base manifest, through the key " ~ m.code(profile_key) }} |
+{% endfor %}
+
+: Spring profiles the manifests activate.
+
+
+{{ m.evidence(deployment.overlays | map(attribute="evidence") | sum(start=[]) | unique | list) }}
+
+| Overlay | Namespace | Name prefix | Pull policy | Requests | Limits | ConfigMap keys | Secret keys |
+|---|---|---|---|---|---|---|---|
+{% for overlay in deployment.overlays -%}
+{% set patch = overlay.container or {} -%}
+| {{ m.code(overlay.name) }} | {{ m.code(overlay.namespace) }} | {{ m.code(overlay.name_prefix) if overlay.name_prefix else "none" }} | {{ m.code(patch.image_pull_policy) if patch.image_pull_policy else "—" }} | {{ m.resources(patch.resources, "requests") }} | {{ m.resources(patch.resources, "limits") }} | {{ m.codes(overlay.configmap_literals) }} | {{ m.codes(overlay.secret_keys) }} |
+{% endfor %}
+
+: Overlays, the namespace they deploy into and what each one patches.
+
+
+The `dev` overlay deploys into its own namespace under a `dev-` name prefix and points the datasource
+at a database on the local machine. The `k3d` overlay keeps the shared namespace, adds an Ingress and
+the Namespace it deploys into, and is the only overlay that declares the telemetry settings; it also
+replaces the issuer address the base states with the one Keycloak the shop cluster runs.
+
+{% for overlay in deployment.overlays -%}
+{% if overlay.container and overlay.container.environment -%}
+{{ m.evidence(overlay.container.evidence | unique | list) }}
+
+| Variable | Source | Value |
+|---|---|---|
+{% for entry in overlay.container.environment -%}
+| {{ m.code(entry.name) }} | {{ entry.source.kind }} | {{ m.code(entry.source.value) if entry.source.value else "—" }} |
+{% endfor %}
+
+: Environment variables the {{ m.code(overlay.name) }} overlay adds.
+
+
+{% endif -%}
+{% endfor %}
+### {{ number }}.4 Manifests the facts come from
+
+{{ m.evidence(deployment.overlays | map(attribute="evidence") | sum(start=[]) | unique | list) }}
+
+{% set manifest_roles = {
+  "kustomization.yaml": "the kustomization that composes the overlay",
+  "deployment-patch.yaml": "the patch applied to the Deployment",
+  "ingress.yaml": "the Ingress in front of the Service",
+  "namespace.yaml": "the Namespace the overlay deploys into",
+} -%}
+| Manifest | Declares |
+|---|---|
+| {{ m.code(m.filename(base.deployment.path)) }} | the Deployment: replicas, container, environment, probes, resources, pod security, the seed volume |
+| {{ m.code(m.filename(base.service.path)) }} | the ClusterIP Service on port {{ base.service.port }} |
+| {{ m.code(m.filename(base.configmap.path)) }} | the ConfigMap the container reads nine variables from and the seed document from |
+{% for overlay in deployment.overlays -%}
+{% for file in overlay.files -%}
+| {{ m.code(file) }}, {{ m.code(overlay.name) }} overlay | {{ manifest_roles.get(file, "an object of the overlay") }} |
+{% endfor -%}
+{% endfor %}
+
+: Manifests behind the deployment view.
+
+
+### {{ number }}.5 Infrastructure the service depends on
+
+{{ m.evidence(deployment.infrastructure | map(attribute="evidence") | sum(start=[]) | unique | list) }}
+
+{{ deployment.infrastructure | length }} manifest{% if deployment.infrastructure | length > 1 %}s{% endif %} describe{% if deployment.infrastructure | length == 1 %}s{% endif %} an object the service uses and no
+overlay composes it: the collector that receives the telemetry. It is applied separately from the application
+overlay, so an overlay applied on its own brings up a service whose dependencies are assumed rather
+than deployed. The database and the token issuer are not in this set at all — the workspace's cluster
+skill deploys them, and the overlays only name their addresses.
+
+| Manifest | Objects it declares |
+|---|---|
+{% for entry in deployment.infrastructure -%}
+| {{ m.code(entry.file) }} | {% for object in entry.objects %}{{ m.code(object.kind ~ " " ~ object.name) }}{% if not loop.last %}, {% endif %}{% endfor %} |
+{% endfor %}
+
+: Infrastructure manifests outside the application kustomization.

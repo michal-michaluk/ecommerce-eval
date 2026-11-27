@@ -1,22 +1,25 @@
 ---
 name: run-apps
 description: >-
-  Deploy, inspect, rebuild and tear down the shop-wide local k3s cluster and the catalog service on
-  it — k3s in a privileged podman container, because this machine has no Docker daemon and k3d cannot
-  start. Use when asked to run the app, bring the environment up or down, restart it, rebuild the image
-  after a code change, read pod logs, mint the four scoped Keycloak tokens, check
-  cluster/pod/database/health status, or run the element-12 hurl contract against a deployed service.
-  Trigger words: run-apps, run the app, deploy catalog, start the environment, bring up the cluster,
-  stop the cluster, restart, rebuild catalog, pod logs, k3s status, mint tokens, run the hurl suite,
-  e2e against the cluster, add a service database, shop cluster, shop-k3s, postgres list of databases.
+  Deploy, inspect, rebuild and tear down the shop-wide local k3s cluster and the services on it —
+  catalog, fulfillment and the scaffolded shopping — k3s in a privileged podman container, because
+  this machine has no Docker daemon and k3d cannot start. Use when asked to run the apps, bring the
+  environment up or down, restart it, rebuild one service's image after a code change, read pod logs,
+  mint the scoped Keycloak tokens of every realm, check cluster/pod/database/health status, or run a
+  service's hurl contract against the deployed service. Trigger words: run-apps, run the app, run the
+  apps, deploy catalog, deploy fulfillment, deploy shopping, start the environment, bring up the
+  cluster, stop the cluster, restart, rebuild catalog, rebuild fulfillment, rebuild shopping, pod logs,
+  k3s status, mint tokens, run the hurl suite, e2e against the cluster, add a service database, shop
+  cluster, shop-k3s, postgres list of databases.
 ---
 
 # run-apps
 
-One shop-wide cluster, one shop-wide Postgres instance, one namespace per service, one host
-port-forward. Everything the catalog service needs to boot and to answer its contract, and nothing
-that has to be started by hand. The cluster and the database are **shop-wide** — shopping,
-fulfillment and the rest will follow the catalog into the same cluster and the same instance.
+One shop-wide cluster, one shop-wide Postgres instance, one Keycloak, one namespace per service, one
+host port-forward per service. Everything `catalog`, `fulfillment` and `shopping` need to boot and to
+answer their contracts, and nothing that has to be started by hand. The cluster, the database, Kafka
+and Keycloak are **shop-wide**; a new service adds a namespace, an image, a forward and a realm — not
+an infrastructure stack.
 
 ## Commands
 
@@ -24,38 +27,67 @@ fulfillment and the rest will follow the catalog into the same cluster and the s
 
 | Command | What it does |
 | --- | --- |
-| `deploy` | podman machine → legacy cleanup → cluster container → kubeconfig → node Ready → infra apply/rollout → `jibBuildTar` → `ctr images import` → app apply → rollout → port-forward → health |
-| `deploy --force-build` / `--skip-build` | rebuild the image even if nothing changed / reuse `build/jib-image.tar` |
-| `status [--json]` | podman machine, cluster container, node, pods, deployments, services, endpoints, the databases the instance carries, host bridges, health, GREEN/RED verdict (exit 1 when RED) |
-| `logs [pod] [--tail N] [--since 10m] [--follow] [--infra]` | bounded `kubectl logs`; no pod → every app pod; `--follow` is opt-in |
-| `rebuild [catalog]` | `jibBuildTar` → import → `rollout restart` → wait Ready → health; touches only the named service |
-| `restart` | `stop` then `deploy` |
-| `stop` | kill port-forwards (tracked and orphaned) → `podman rm -f shop-k3s` (and any legacy `catalog-k3s`) → free 8080/18081/6443 → clear state |
-| `auth [--json] [--reuse]` | four scoped tokens (author, reviewer, photographer, sales) from the in-cluster Keycloak, printed as `export` lines and written to `.agents/runtime/catalog-tokens.env` |
-| `test [suite] [--base-url]` | `hurl --test` over `e2e/catalog-http-api.hurl` with the four tokens and the run-relative dates the Java harness uses |
+| `deploy [catalog\|fulfillment\|shopping]` | podman machine → legacy cleanup → cluster container → kubeconfig → node Ready → infra apply/rollout → per service: `jibBuildTar` → `ctr images import` → app apply → rollout → port-forward → health. No argument = all three, catalog first |
+| `deploy --force-build` / `--skip-build` | rebuild every named service's image even if nothing changed / reuse its `build/jib-image.tar` |
+| `status [--json]` | podman machine, cluster container, node, the databases the instance carries, **every** service's pods, deployments, health and forwards, the shared infra, GREEN/RED/NONE verdict |
+| `logs [pod\|service] [--tail N] [--since 10m] [--follow] [--infra]` | bounded `kubectl logs`; a service name → that service's app pods, a pod name → that pod (namespace is looked up), no argument → every app pod of every service, `--infra` → the shared infra pods |
+| `rebuild [catalog\|fulfillment\|shopping]` | `jibBuildTar` → import → `rollout restart` → wait Ready → health; touches only the named service. No argument = all three, sequentially |
+| `restart [catalog\|fulfillment\|shopping]` | `stop` then `deploy` |
+| `stop` | kill port-forwards (tracked and orphaned) → `podman rm -f shop-k3s` (and any legacy `catalog-k3s`) → free 8080/8081/8082/18081/6443 → clear state and tokens |
+| `auth [--json] [--reuse]` | mint the scoped tokens of **every** realm (catalog: author, reviewer, photographer, sales; fulfillment: employee, other-employee, resolver, customer, shopping; shopping: customer, service), printed as `export` lines and written to `.agents/runtime/tokens.env` |
+| `test [catalog\|fulfillment\|shopping] [--suite] [--base-url]` | `hurl --test` over that service's suite with its own tokens; no argument = all three, sequentially |
 
-Every command is idempotent. `deploy` on a deployed environment reuses the cluster, skips an
-unchanged image and an unchanged rollout; `stop` on a stopped environment reports "none running".
+Every command is idempotent. `deploy` on a deployed environment reuses the cluster, skips an unchanged
+image and an unchanged rollout; `stop` on a stopped environment reports `none running` and exits 0.
+
+**Two identities are both called "the service token", and only one of them is one.**
+`SHOPPING_SERVICE_TOKEN` is realm `shopping`'s `service` user (`shopping-service-client`, scope
+`openid shopping-service`); it validates against the shopping service and gives the customer route a
+`403` (prove step 24, DoD16). `FULFILLMENT_SHOPPING_TOKEN` is realm `iot`'s `shopping` user
+(`shopping-service-client` too, scope `openid shopping-service`) and answers `401` at the shopping
+service, because the issuer is another realm. Use the first for step 24.
+
+`status` exits 0 for GREEN and for NONE (nothing running at all — the state `stop` leaves), and exits 1
+only for a half-state: cluster up while a service is not 1/1 or not healthy.
+
+**`NOT CONFIGURED` is out of the verdict.** A service whose realm document does not exist yet prints a
+`state NOT CONFIGURED` line under its own heading and one `warning: not
+configured` above the verdict, and it does not count towards GREEN — its realm was never imported and
+no token of it can be minted. All three services carry a realm document today, so only a service that
+loses its document reaches this state. It does not hide a real failure either: a `NOT CONFIGURED` service that
+is actually deployed and unhealthy still turns the verdict RED. The same predicate keeps `auth`,
+`tokens_valid`, `write_tokens_env` and `ensure_realm_configmap` working for the other services, and
+`test shopping` fails with the missing path instead of a Keycloak error.
 
 ## What it manages
 
 ```
 podman machine (applehv, 5 CPU / 8 GiB, rootful)
-└── container shop-k3s           rancher/k3s:v1.35.5-k3s1, privileged, API 127.0.0.1:6443
-    └── namespace catalog
-        ├── postgresql             postgres:16, SHOP-WIDE ONE INSTANCE  5432  (manifests/infra/postgres.yaml)
-        │     databases: catalog   ← one logical database per service, see below
-        ├── kafka                  apache/kafka:4.1.0 KRaft         9092  (manifests/infra/kafka.yaml)
-        ├── keycloak               keycloak:26.6.1, realm `catalog` 8080  (manifests/infra/keycloak.yaml)
-        ├── otel-collector         from the service's k8s/infra/otel-collector.yaml
-        └── catalog                catalog:latest (Jib)             8080  (service k8s/overlays/k3d)
+└── container shop-k3s               rancher/k3s:v1.35.5-k3s1, privileged, API 127.0.0.1:6443
+    ├── namespace catalog            SHARED INFRA, ONE INSTANCE EACH
+    │   ├── postgresql               postgres:16                       5432  (manifests/infra/postgres.yaml)
+    │   │     databases: catalog, fulfillment, shopping   ← one logical database per service, see below
+    │   ├── kafka                    apache/kafka:4.1.0 KRaft          9092  (manifests/infra/kafka.yaml)
+    │   ├── keycloak                 keycloak:26.6.1, realms catalog + iot
+    │   │                                                           8080  (manifests/infra/keycloak.yaml)
+    │   ├── otel-collector           catalog's collector              4317  (services/catalog/k8s/infra)
+    │   └── catalog                  catalog:latest (Jib)             8080  (services/catalog/k8s/overlays/k3d)
+    ├── namespace fulfillment
+    │   ├── otel-collector           fulfillment's collector          4317  (services/fulfillment/k8s/infra)
+    │   └── fulfillment              fulfillment:latest (Jib)         8080  (services/fulfillment/k8s/overlays/k3d)
+    └── namespace shopping
+        ├── otel-collector           shopping's collector             4317  (services/shopping/k8s/infra)
+        └── shopping                 shopping:latest (Jib)            8080  (services/shopping/k8s/overlays/k3d)
 host bridges (pids in .agents/runtime/processes.json)
-├── 127.0.0.1:8080  → svc/catalog:80
-└── 127.0.0.1:18081 → svc/catalog-keycloak:8080     (only while `auth`/`test` need it)
+├── 127.0.0.1:8080  → catalog/svc/catalog:80
+├── 127.0.0.1:8081  → fulfillment/svc/fulfillment:80
+├── 127.0.0.1:8082  → shopping/svc/shopping:80
+└── 127.0.0.1:18081 → catalog/svc/catalog-keycloak:8080     (only while `auth`/`test` need it)
 ```
 
 State: `.agents/runtime/processes.json` (0600). Kubeconfig: `.agents/runtime/kubeconfig-shop.yaml`
-(context `shop-k3s`). Port-forward logs: `.agents/runtime/logs/`.
+(context `shop-k3s`). Tokens: `.agents/runtime/tokens.env` (0600, replaced the old
+`catalog-tokens.env`; `stop` removes both). Port-forward logs: `.agents/runtime/logs/`.
 
 The old per-service names (`catalog-k3s`, `catalog-db-postgresql`, `kubeconfig-catalog.yaml`) are
 gone. A machine that still carries the stopped `catalog-k3s` container: `deploy` announces it and
@@ -72,34 +104,41 @@ two clusters at once.
 | postgres | `rollout status` turns green only after `databases.txt` is fully applied — the probe is TCP, the initdb server is socket-only | 420 s |
 | kafka / keycloak | `kubectl rollout status deployment/<name>` | 420 s |
 | catalog | `rollout status` + `GET /actuator/health` → `200 {"status":"UP"}` on 127.0.0.1:8080 | 420 s + 180 s |
-| keycloak realm | `GET /realms/catalog` on 127.0.0.1:18081 → 200 | 90 s |
+| fulfillment | `rollout status` + `GET /actuator/health` → `200 {"status":"UP"}` on 127.0.0.1:8081 | 420 s + 180 s |
+| shopping | `rollout status` + `GET /actuator/health` → `200 {"status":"UP"}` on 127.0.0.1:8082 | 420 s + 180 s |
+| keycloak realms | `GET /realms/catalog` and `GET /realms/iot` on 127.0.0.1:18081 → 200; `/realms/shopping` only once that document exists | 90 s |
 
 No command blocks unbounded: `kubectl rollout status` carries `--timeout`, the port-forward wait and
 health wait carry a deadline, and every timeout prints the pods, events and last log lines of the
-deployment it timed out on. `kubectl logs -f` and `kubectl get -w` exist only behind `--follow`.
+deployment it timed out on (in that service's namespace). `kubectl logs -f` and `kubectl get -w` exist
+only behind `--follow`.
 
 ## Shop-wide Postgres — one instance, one database per service
 
-The cluster and `postgresql` are not per service. Kafka, Keycloak, the app and its port-forward are.
+The cluster and `postgresql` are not per service. Kafka, Keycloak, the app and its port-forward are
+shared the same way: one Kafka broker, one Keycloak with every realm.
 
 | Piece | Scope | Where |
 | --- | --- | --- |
 | `shop-k3s` cluster, kubeconfig, context | shop-wide, one | `CLUSTER` in the CLI |
 | `postgresql` Deployment/Service, one superuser secret `postgresql-superuser` | shop-wide, one | `manifests/infra/postgres.yaml` |
+| `kafka` Deployment + Service `catalog-kafka` | shop-wide, one | `manifests/infra/kafka.yaml` |
+| `keycloak` Deployment + Service `catalog-keycloak`, ConfigMap `keycloak-realm` | shop-wide, one | `manifests/infra/keycloak.yaml` |
 | logical database + role + password | one per service | **one line in `databases.txt`** |
-| `<service>-db` secret (here `catalog-db`) | one per service | the service's own overlay, overridden here |
-| namespace, app Deployment, port-forward, tokens | one per service | `NAMESPACE` / `APP_DEPLOYMENT` in the CLI |
+| `<service>-db` secret (`catalog-db`, `fulfillment-db`) | one per service | the service's own overlay, overridden in `manifests/<service>/kustomization.yaml` |
+| namespace, app Deployment, port-forward, realm, tokens | one per service | the `App` rows in the CLI |
 
 **A new service adds its database in exactly one place:** append a line to `databases.txt` in
 `manifests/infra/postgres.yaml`:
 
 ```
-database:role:password      # e.g.  shopping:shopping:shopping
+database:role:password      # e.g.  fulfillment:fulfillment:fulfillment
 ```
 
 and point that service's own `<service>-db` secret at the shared instance —
-`jdbc:postgresql://postgresql:5432/<database>`, same role and password as the line. `status` prints
-the databases the instance carries, so the line is verifiable without a psql session.
+`jdbc:postgresql://postgresql.catalog.svc.cluster.local:5432/<database>`, same role and password as
+the line. `status` prints the databases the instance carries, so the line is verifiable without a psql
+session — today it prints `catalog, fulfillment, shopping`.
 
 **Bootstrap.** The `postgresql-init` ConfigMap is mounted at `/docker-entrypoint-initdb.d`; its
 `10-databases.sh` reads `databases.txt` and, for every line, checks `pg_roles` before `CREATE ROLE`
@@ -118,9 +157,39 @@ If the data directory ever becomes a PVC, a restart no longer re-runs the init �
 hand instead:
 `kubectl -n catalog exec deploy/postgresql -- createdb -U postgres -O <role> <database>`.
 
-Today the instance lives in the `catalog` namespace, so another service in its own namespace reaches
-it at `postgresql.catalog.svc.cluster.local:5432`; a service in the `catalog` namespace uses
-`postgresql:5432`.
+The instance lives in the `catalog` namespace, so `catalog` reaches it at `postgresql:5432` and
+`fulfillment` and `shopping` at `postgresql.catalog.svc.cluster.local:5432`.
+
+## One Keycloak, one realm per service
+
+`keycloak` imports every realm document in the directory the `keycloak-realm` ConfigMap is mounted
+into (`/opt/keycloak/data/import`), so one Keycloak serves realm `catalog`, realm `iot` and realm
+`shopping`.
+
+| Service | Realm | Realm document | Users | Clients |
+| --- | --- | --- | --- | --- |
+| catalog | `catalog` | `services/catalog/src/test/resources/catalog-realm.json` if it exists, else the copy this skill vendors at `manifests/realms/catalog-realm.json` | author, reviewer, photographer, sales | `catalog-<user>-client` |
+| fulfillment | `iot` | `services/fulfillment/src/test/resources/iot-realm.json` | employee, other-employee, resolver, customer, shopping | `fulfillment-employee-client`, `fulfillment-resolver-client`, `fulfillment-customer-client`, `shopping-service-client` |
+| shopping | `shopping` | `services/shopping/src/test/resources/shopping-realm.json` | customer, service | `customer-client`, `shopping-service-client` |
+
+The customer's token carries scope `customer` (the route authority `SCOPE_customer`); the service
+token is valid in the same realm through `shopping-service` and carries no customer scope, so a
+customer route can answer `403` to it (DoD16).
+
+The realm document stays the service's single source of truth. The catalog document is on
+`feat/catalog-domain-model` and **not on `main`**, so the skill vendors the same file and a `deploy` on
+`main` still imports a realm the catalog resource server accepts; when the branch lands, the service's
+own file wins and the vendored copy becomes dead weight. `shopping` has no vendored copy on purpose:
+its document is owned by the service, and until it exists the infra step prints a warning, skips that
+realm and deploys the other two — one unfinished service does not take the environment down.
+
+Every credential here is the local dev placeholder the manifests and realm documents already carry
+(`author`/`author`, `employee`/`employee`, client secret `secret`, Keycloak `admin`/`admin`). Nothing
+in this skill invents or holds a secret of its own.
+
+`--import-realm` reads the directory only at startup and skips a realm that already exists, so when the
+realm set changes `deploy` restarts `deployment/keycloak` (it records a digest of the ConfigMap in the
+state file and only restarts when it differs).
 
 ## Environment facts this skill is built on
 
@@ -130,7 +199,8 @@ it at `postgresql.catalog.svc.cluster.local:5432`; a service in the `catalog` na
    on `0.0.0.0:52333`. k3s runs as a **privileged podman container** instead — the add-run
    instruction's sanctioned path for a local cluster.
 2. **Podman machine is rootful** (`podman machine inspect` → `Rootful: true`), applehv, 5 CPU / 8 GiB.
-   The cluster fits: infra limits sum to ~3 GiB, the app to 1.5 GiB.
+   The cluster fits: the seven pods request 3 GiB of the 8 GiB (catalog namespace 2 GiB, fulfillment
+   namespace 1 GiB).
 3. **The disk is shared and often nearly full.** The machine has one 100 GiB disk and other work
    (sandboxes, old eval stacks) fills it; k3s evicts every pod at its default 5 % free threshold
    (`The node was low on resource: ephemeral-storage`). The cluster is therefore created with
@@ -141,71 +211,114 @@ it at `postgresql.catalog.svc.cluster.local:5432`; a service in the `catalog` na
    `.status.nodeInfo.architecture` from the node and builds with
    `-Djib.from.platforms=linux/<arch>`, verifying the tar's `config.json` afterwards.
 5. **No registry.** `jibBuildTar` → `podman exec -i shop-k3s ctr -n k8s.io images import -`;
-   the Deployment's `imagePullPolicy: IfNotPresent` keeps kubelet off the network.
+   the Deployments' `imagePullPolicy: IfNotPresent` keeps kubelet off the network.
 6. **`stop` discards the containerd store**, because it lives in the container's filesystem. The next
-   `deploy` re-pulls postgres/kafka/keycloak/otel (~2 min) and re-imports the app image from the tar.
+   `deploy` re-pulls postgres/kafka/keycloak/otel (~2 min) and re-imports both app images from their
+   tars.
 
 ## Workarounds in the manifests (and why)
 
-- **The service's `k8s/infra/` is a stale blueprint copy.** `kafka.yaml` and `keycloak.yaml` do carry
-  Deployments, but the Keycloak one imports realm `iot` with users `john/jane/admin` — the service's
-  realm document is `catalog` with the four `catalog-*` scopes, and the contract suite cannot get a
-  single token from `iot`. Postgres has no manifest at all. The skill therefore ships its own infra
-  under `manifests/infra/` (postgres, kafka, keycloak with the real realm) and leaves the service
-  tree untouched.
-- **`JWT_ISSUER_URI` is `…/realms/iot` in `k8s/overlays/k3d`.** `manifests/app/kustomization.yaml`
-  merges the service overlay and overrides the one key to `…/realms/catalog`, and adds the
-  `otel-collector` the overlay's `OTEL_EXPORTER_OTLP_ENDPOINT` points at (that manifest exists in
-  `k8s/infra/` but no kustomization includes it). Nothing else is redefined.
-- **Realm config map is generated at deploy time** from
-  `src/test/resources/catalog-realm.json` — the test resource stays the single source of truth.
-- **Keycloak pins `KC_HOSTNAME=http://catalog-keycloak:8080`.** Without it Keycloak derives `iss`
-  from the request host, and a token minted through the host port-forward would carry
-  `http://127.0.0.1:18081/...`, which the resource server rejects.
+- **The services' `k8s/infra/` is a stale blueprint copy.** `kafka.yaml` and `keycloak.yaml` do carry
+  Deployments, but neither is the realm or the broker this environment needs (catalog's Keycloak copy
+  imports realm `iot` with users `john/jane/admin`, and there is no Postgres manifest at all). The
+  skill ships its own infra under `manifests/infra/` and leaves the service trees untouched; each
+  service's `k8s/infra/otel-collector.yaml` is used, in its own namespace.
+- **Overrides live in `manifests/<service>/kustomization.yaml`, never in the service tree.**
+  `manifests/catalog/` merges the catalog overlay, adds its collector and overrides
+  `JWT_ISSUER_URI=http://catalog-keycloak.catalog.svc.cluster.local:8080/realms/catalog` and
+  `jdbc-url=jdbc:postgresql://postgresql:5432/catalog`.
+  `manifests/fulfillment/` does the same for fulfillment: `kafka-bootstrap-servers=
+  catalog-kafka.catalog.svc.cluster.local:9092`, `JWT_ISSUER_URI=http://catalog-keycloak.catalog.
+  svc.cluster.local:8080/realms/iot`, `jdbc-url=jdbc:postgresql://postgresql.catalog.svc.cluster.
+  local:5432/fulfillment` with the overlay's own `fulfillment`/`fulfillment` credentials. The
+  overlays keep pointing at the standalone `fulfillment-kafka`/`fulfillment-keycloak`/
+  `fulfillment-db-postgresql` a standalone deployment would install, because they must stay honest.
+- **The override cannot be a `kubectl apply` after the overlay.** A kustomize merge generator renames
+  its object with a content hash and rewrites the Deployment's `secretKeyRef`/`configMapKeyRef` to the
+  hashed name (`catalog-db-k94df5mg66`, `fulfillment-db-kfmc66555h`), so a plain object of the
+  unhashed name would be read by nobody.
+- **Kafka advertises a fully qualified Service name** (`catalog-kafka.catalog.svc.cluster.
+  local:9092`): the broker's metadata is also read by a pod in the `fulfillment` namespace, where the
+  bare name does not resolve.
+- **Keycloak pins `KC_HOSTNAME=http://catalog-keycloak.catalog.svc.cluster.local:8080`.** Without
+  a pinned host Keycloak derives `iss` from the request host, and a token minted through the host
+  port-forward would carry `http://127.0.0.1:18081/...`, which both resource servers reject. It is
+  the fully qualified name, not the bare Service name, because every service configures that string as
+  their `issuer-uri` and the `iss` in a token has to match it byte for byte; only the FQDN resolves in
+  the `fulfillment` namespace too.
 - **Kafka needs a writable `/opt/kafka/config`.** The image's entrypoint regenerates
   `server.properties` from the `KAFKA_*` env, so an emptyDir there and at `/opt/kafka/logs` is
   required under `readOnlyRootFilesystem: true`.
-- **The Ingress of `overlays/k3d` is applied but inert**: Traefik and ServiceLB are disabled in the
-  cluster, and 127.0.0.1:8080 is the port-forward, not an ingress.
-- **The service overlay's `catalog-db` secret still points at `catalog-db-postgresql`.** The shop-wide
-  instance is `postgresql`, so `manifests/app/kustomization.yaml` merges `jdbc-url=
-  jdbc:postgresql://postgresql:5432/catalog` into the generated secret; the role and password stay
-  the service's own.
+- **The Ingress of each `overlays/k3d` is applied but inert**: Traefik and ServiceLB are disabled in
+  the cluster, and 127.0.0.1:8080/8081/8082 are the port-forwards, not ingresses.
 
 ## Proven on this machine
 
-A full cycle, observed end to end after the shop-wide rename (fresh `stop` → `deploy` 111.7 s;
-`deploy` on a running environment ≈ 5 s; `rebuild` 54.5 s; `restart` 115.1 s):
+A full cycle, observed end to end with both services.
 
 | Step | Observed |
 | --- | --- |
-| `deploy` → `status` | container `shop-k3s` RUNNING, pod `postgresql-7869f44ccb-r825v` 1/1, `catalog-64d94c7c84-drzqg` 1/1, 5 pods `1/1 Running` (otel-collector included), `databases catalog (instance postgresql)`, `GREEN — GET /actuator/health → 200 UP`, exit 0 |
-| the database list | `psql -lqt` in the pod: `catalog postgres template0 template1`; `pg_stat_activity`: `catalog <- catalog x15`, `postgres <- postgres x1` |
-| a real write through the shop-wide instance | `POST /offers → 201 /offers/OFR-1LEH7H68`, `GET → 200`, and `offer_document` in database `catalog` holds `OFR-1LEH7H68 | SW894838` |
-| `auth` | 4 tokens, scopes `openid catalog-author|catalog-reviewer|catalog-photographer|catalog-sales`, +3600 s |
-| `test` | `Executed requests: 106`, `Failed files: 0`, exit 0 |
-| `rebuild catalog` | `catalog-695c777df8-krkms → catalog-7c66c87b68-m4j5j`, Ready, health 200, port-forward restarted after the pod swap |
-| `restart` | stop removed `shop-k3s`, `catalog-k3s was not running`, both port-forwards killed, ports free; deploy recreated the cluster, `GREEN` |
-| `stop` | `shop-k3s removed`, `podman ps -a` has neither `shop-k3s` nor `catalog-k3s`, 8080/18081/6443 free |
-| `deploy` twice | second run: `cluster already running`, `image tar up to date`, `cluster already carries catalog:latest`, ready rollout, health 200 in ≈ 5 s |
-| `stop` twice | second run: `none running`, `shop-k3s was not running`, exit 0 |
-| legacy machine | a planted stopped `catalog-k3s`: `deploy` prints `catalog-k3s is the per-service cluster of the old layout, replaced by shop-k3s — removing it` and removes it |
-| disk guard | with 2.2 GiB free `deploy` stops at `error: the podman machine disk has 2.2 GiB free — k3s will evict every pod under disk pressure` and exit 1 |
+| `deploy` from nothing (container absent, image tars present) | exit 0 in 219 s: `shop-k3s` created, postgres/kafka/keycloak Ready, both images imported, `catalog-64d94c7c84-rvwcc` and `fulfillment-7ddb4d9b76-nnlkb` 1/1, health `200 UP` on 8080 and 8081 |
+| `status` | exit 0: `databases catalog, fulfillment (instance postgresql)`, both services `1/1` and `200 UP`, two LIVE forwards, `GREEN — cluster up, catalog 1/1 200 UP, fulfillment 1/1 200 UP` |
+| `auth` (re-observed with three services) | exit 0: 11 tokens out of the one Keycloak — realm `catalog` (author/reviewer/photographer/sales, scope `openid catalog-author`…, client `catalog-*-client`), realm `iot` (employee/other-employee/resolver/customer/shopping, scope `openid fulfillment-employee`…, client `fulfillment-*-client`) and realm `shopping` (customer through `customer-client`, scope `openid customer`; service through `shopping-service-client`, scope `openid shopping-service`), +3600 s, written to `.agents/runtime/tokens.env` (11 lines, 0600) |
+| keycloak import (re-observed with three services) | `realms catalog, iot, shopping in keycloak-realm`, then `Realm 'catalog' imported`, `Realm 'iot' imported`, `Realm 'shopping' imported`, `Import finished successfully` in one pod |
+| `test fulfillment` | executes requests 1–8 on a fresh database (order hand-over `201`, `OP-2026-0001`) and fails at request 9 (`e2e/fulfillment-api.hurl:121`) with `500 the warehouse port has no implementation` — exit 4, see *Known gaps* below |
+| `test catalog` | `e2e/healthcheck.hurl` fails at request 2 (`:12`): it expects `401` on `GET /actuator/info`, the app permits the path and answers `200` — exit 4, see *Known gaps* |
+| `rebuild catalog` | exit 0: `catalog-5d656df695-v5hm2 → catalog-7776ddff48-pd47q`, health `200 UP`, forward restarted, `fulfillment-6db4c5ff4d-xjzpp` untouched |
+| `rebuild fulfillment` | exit 0: `fulfillment-7ddb4d9b76-nnlkb → fulfillment-d8dfb44d6-xlfvx`, health `200 UP`, `catalog-64d94c7c84-rvwcc` untouched |
+| `stop` | exit 0: three forwards killed, `shop-k3s removed`, `catalog-k3s was not running`, 8080/8081/18081/6443 free, kubeconfig and `tokens.env` removed, state cleared |
+| `status` after `stop` | exit 0: `NONE — nothing running (cluster absent, no host bridges)` |
+| `deploy` twice | second run 11 s: `cluster already running`, both `image tar up to date`, `cluster already carries catalog:latest` and `fulfillment:latest`, both forwards `already up`, health `200 UP` |
+
+## Known gaps in the services themselves
+
+`run-apps` deploys and gates every service; it cannot make a service's suite pass when the service disagrees with it. Three such disagreements are visible today and are reported here instead of hidden:
+
+- **`catalog`'s `e2e/healthcheck.hurl` expects `401` on `GET /actuator/info`.**
+  `services/catalog/src/main/java/shop/catalog/AppConfiguration.java:29` permits that path, so the deployed app answers `200` and the suite fails on its second request. Element 12 (offers, the four scopes) lives on `feat/catalog-domain-model`, not on `main`; the same branch carries the 106-request `e2e/catalog-http-api.hurl` that `--suite` can run once it lands.
+- **`shopping`'s `e2e/healthcheck.hurl` has the same `401`-on-`/actuator/info` assertion.**
+  `services/shopping/src/main/java/shop/shopping/AppConfiguration.java:30` permits that path, so `test shopping` stops at request 2. The route matrix has landed and the disagreement is **permanent**: `AppConfiguration` permits `/actuator/info` by design, so the blueprint's healthcheck suite will always stop at request 2 for this service — exactly as it does in `catalog`. The service's real contract is the prove scenario, not that healthcheck.
+- **A changed realm document does not re-import on its own.**
+  Keycloak's `--import-realm` skips a realm that already exists, so `deploy` restarts Keycloak after a
+  ConfigMap change and the new document is still not applied to a realm that is already there. Editing
+  a realm document needs the realm deleted first (`DELETE /admin/realms/<realm>` through the Keycloak
+  port-forward with the `admin`/`admin` superuser), then `deploy`; today that is a manual step.
+- **`fulfillment` cannot complete its own contract without a warehouse.**
+  `services/fulfillment/src/main/java/shop/fulfillment/processing/InvenTreeWarehouseIntegration.java` wires the adapter only when `fulfillment.warehouse.token` (and URL) are configured, and its class comment states that no simulator lives in `src/main` — the tests bring their own double. A deployment without them boots, answers `/orders`, and refuses the first claim with `the warehouse port has no implementation` (a 500, not the intended `WAREHOUSE_NOT_WIRED`). The suite therefore stops at request 9 of 48. A deployment that passes it needs an InvenTree-shaped endpoint (`docs/api/warehouse-api.md`) and `FULFILLMENT_WAREHOUSE_URL`/`FULFILLMENT_WAREHOUSE_TOKEN` in `manifests/fulfillment/kustomization.yaml`; the eval itself says the warehouse is never run, so this environment does not invent one.
+
+`test` still does its job in every case: the right suite, the right tokens, the real service, hurl's own exit code.
 
 ## Prerequisites
 
 `podman` (machine running, rootful), `kubectl`, `hurl`, Java 25, the local image
-`docker.io/rancher/k3s:v1.35.5-k3s1`. `helm` is not needed — the infra is plain manifests.
+`docker.io/rancher/k3s:v1.35.5-k3s1`, and network access on the first `deploy` of a service (Jib pulls
+the base image and the build downloads the OpenTelemetry java agent). `helm` is not needed — the infra
+is plain manifests.
 
 ## Tests
 
-`run-apps test` is the element-12 contract, not a smoke test: it mints the four tokens, computes
-today-relative dates exactly as `src/test/java/shop/catalog/e2e/CatalogE2eVariables` does, and runs
-`hurl --test --max-time 30` over `e2e/catalog-http-api.hurl` (106 requests) against
-`http://127.0.0.1:8080`. Exit code is hurl's; the request count is printed with it.
+`run-apps test <service>` runs that service's own suite against its host port-forward, with that
+service's own tokens, each suite read as the service itself documents it:
 
-The suite needs no in-cluster DNS, so the host port-forward is the transport. `--base-url` accepts
-another address if one is ever needed.
+| Service | Suite | Variables |
+| --- | --- | --- |
+| catalog | `e2e/healthcheck.hurl` (3 requests: health 200 UP, secured endpoint 401 with no token and with a bad one) | `BASE_URL` plus the four catalog tokens and the run-relative dates, so the element-12 suite (`e2e/catalog-http-api.hurl`, 106 requests — present on `feat/catalog-domain-model`, not on `main`) runs on the same command with `--suite e2e/catalog-http-api.hurl` |
+| fulfillment | `e2e/fulfillment-api.hurl` (48 requests) | `BASE_URL`, `shoppingToken`, `employeeToken`, `otherEmployeeToken`, `resolverToken`, `customerToken` |
+
+The suites need no in-cluster DNS, so the host port-forward is the transport. `--base-url` accepts
+another address. Exit code is hurl's; the request and file counts are printed with it.
+
+Before each suite `test` sends one authenticated request of its own (catalog: `GET /actuator/info`,
+fulfillment: `GET /orders`), retried up to four times, and then starts hurl. The first authenticated
+request of a fresh pod is also the app's first JWKS fetch, and Keycloak's first realm-key load can
+outlast the resource server's read timeout — the warm-up is what keeps a suite from failing on a 500
+that a plain retry would have avoided.
+
+`e2e/fulfillment-api.hurl` asserts `201` on the first hand-over of its order hash, so it needs a
+database without that order: a `deploy` on a fresh pod, `run-apps stop` + `run-apps deploy`, or a
+`rollout restart deployment/postgresql` in namespace `catalog` followed by a restart of the service
+(so its Liquibase migration runs against the empty database). A second run against the same instance
+fails on that assertion by design.
 
 ## Troubleshooting
 
@@ -214,13 +327,22 @@ another address if one is ever needed.
 | `Cannot connect to the Docker daemon` from any k3d command | expected — k3d needs Docker; use this skill |
 | cluster container exits right after `deploy` | `podman logs shop-k3s`; the image must be `rancher/k3s`, rootful machine, privileged container |
 | `ctr: image might be filtered out` | tar arch ≠ node arch — `deploy --force-build` rebuilds with the right platform |
-| pods `CreateContainerConfigError` | the `catalog-db` secret or the `catalog` ConfigMap key is missing; re-run `deploy` |
+| pods `CreateContainerConfigError` | the `<service>-db` secret or the service's ConfigMap key is missing; re-run `deploy` |
+| fulfillment logs `UnknownHostException: fulfillment-db-postgresql` | the service's own overlay was applied without `manifests/fulfillment`; re-run `deploy` |
+| fulfillment logs `UnknownHostException: fulfillment-kafka` | same — the shared broker is `catalog-kafka.catalog.svc.cluster.local:9092` |
 | `postgresql` pod restarts or never becomes Ready | its init script failed — `kubectl -n catalog logs deploy/postgresql --previous --tail 40`; a bad line in `databases.txt` is the usual cause |
-| app logs `database "catalog" does not exist` | the init did not run (data directory not empty) — `createdb` by hand as described above, or `stop` then `deploy` |
+| app logs `database "fulfillment" does not exist` | the init did not run on this data directory — `createdb` by hand as described above, or `stop` then `deploy` |
 | `status` shows `legacy container catalog-k3s PRESENT` | the old per-service cluster is still on the machine; `deploy` or `stop` removes it |
-| app logs `Couldn't find a token issuer` | Keycloak not Ready yet or `KC_HOSTNAME` changed; `rollout status deployment/keycloak` |
-| `port 8080 is already taken by pid …` | a foreign process holds the port; `stop` refuses to kill it — free it yourself |
-| `auth` 401 `invalid_grant` | the realm was imported before the config map existed (`stop`, then `deploy`) |
+| app logs `Couldn't find a token issuer` | Keycloak not Ready yet or `KC_HOSTNAME` changed; `rollout status deployment/keycloak -n catalog` |
+| `port 8080/8081/8082 is already taken by pid …` | a foreign process holds the port; `stop` refuses to kill it — free it yourself |
+| `auth` 401 `invalid_grant` | the realm was imported before the ConfigMap existed, or the realm set changed without a Keycloak restart (`stop`, then `deploy`) |
+| `auth` hangs on realm `iot` only | the second document was not in the ConfigMap — `deploy` prints every imported realm and their digest |
+| first authenticated request 500, logs `Read timed out` on `…/protocol/openid-connect/certs` | Keycloak's first realm-key load outlasted the resource server's read timeout; `run-apps test` warms it, and the same request succeeds on retry |
+| `test catalog` fails on `GET /actuator/info` expecting 401 | the app permits that path on `main` — see *Known gaps* |
+| `test shopping` fails on `GET /actuator/info` expecting 401 | the same permitted path as catalog — see *Known gaps* |
+| `deploy` warns `no realm document for <service>` | that service's realm document is missing; `deploy` imports the other realms and skips this one — see *Known gaps* |
+| a realm document edit had no effect | Keycloak skips a realm that already exists — delete the realm through the admin API, then `deploy` — see *Known gaps* |
+| `test fulfillment` fails at request 9 with `the warehouse port has no implementation` | no warehouse adapter is configured — see *Known gaps* |
 | pods `Pending`, `node was low on resource: ephemeral-storage` | the podman machine disk is full — `podman image prune -f`, then `podman system df`; `deploy` refuses below 3 GiB free |
 | `port-forward … exited` | the API server or the pod went away; `status` then `deploy` restores it |
 
@@ -229,8 +351,12 @@ another address if one is ever needed.
 | Path | Purpose |
 | --- | --- |
 | `scripts/run-apps` | the whole CLI (Python 3, stdlib only) |
-| `manifests/app/kustomization.yaml` | service `overlays/k3d` + catalog issuer + shop `postgresql` address + otel collector |
+| `manifests/catalog/kustomization.yaml` | catalog `overlays/k3d` + its `catalog` realm issuer + the shop `postgresql` address + its otel collector |
+| `manifests/shopping/kustomization.yaml` | shopping `overlays/k3d` + the shared Keycloak address + the shop `postgresql` address + its otel collector (no broker — plan D39) |
+| `manifests/fulfillment/kustomization.yaml` | fulfillment `overlays/k3d` + the shared Kafka/Keycloak addresses + the shop `postgresql` address + its otel collector |
+| `manifests/realms/catalog-realm.json` | the vendored realm `catalog`, used while the service does not ship its own document |
 | `manifests/infra/postgres.yaml` | the shop-wide `postgresql`: superuser secret, `databases.txt` (one line per service), init script, Service, Deployment |
-| `manifests/infra/kafka.yaml` | `catalog-kafka` KRaft broker |
-| `manifests/infra/keycloak.yaml` | Keycloak with the `catalog` realm from the test resource |
-| `.agents/runtime/processes.json` | cluster, host-process and token state |
+| `manifests/infra/kafka.yaml` | the shop-wide `catalog-kafka` KRaft broker |
+| `manifests/infra/keycloak.yaml` | one Keycloak, one realm document per service from the `keycloak-realm` ConfigMap |
+| `.agents/runtime/processes.json` | cluster, host-process, realm-digest and token state |
+| `.agents/runtime/tokens.env` | the minted tokens of every realm (0600) |

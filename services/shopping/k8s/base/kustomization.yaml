@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: shopping
+
+resources:
+  - deployment.yaml
+  - service.yaml
+  - configmap.yaml
+
+labels:
+  - pairs:
+      app: shopping
+      managed-by: kustomize
+
+images:
+  - name: shopping
+    newName: shopping
+    newTag: latest

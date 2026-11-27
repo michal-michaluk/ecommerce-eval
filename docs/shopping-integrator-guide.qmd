@@ -1,0 +1,51 @@
+---
+title: "shopping — Integrator Guide"
+subtitle: "How to call the basket API, what comes back, and what the server refuses"
+version: "1.0"
+date: "2026-11-27"
+status: "Draft for review"
+audience: "Developers integrating with the shopping service: a customer's web client or app"
+owner: "shopping context team"
+---
+
+# Part I — Calling the API
+
+{{< include shopping/integrator/01-purpose.md >}}
+
+{{< include shopping/integrator/02-authentication.md >}}
+
+{{< include shopping/integrator/03-errors.md >}}
+
+## 4 Security decisions
+
+{{< include generated/shopping/chapters/security-policy.md >}}
+
+# Part II — Operations
+
+{{< include generated/shopping/chapters/api-get-baskets.md >}}
+
+{{< include generated/shopping/chapters/api-get-basket.md >}}
+
+{{< include generated/shopping/chapters/api-patch-checkout.md >}}
+
+{{< include generated/shopping/chapters/api-patch-items-removal.md >}}
+
+{{< include generated/shopping/chapters/api-patch-item-quantity.md >}}
+
+{{< include generated/shopping/chapters/api-patch-selection.md >}}
+
+{{< include shopping/integrator/11-response-bodies.md >}}
+
+{{< include shopping/integrator/12-operational-endpoints.md >}}
+
+{{< include shopping/integrator/13-contract.md >}}
+
+{{< include shopping/integrator/14-gaps.md >}}
+
+# Appendix A — Payload catalogue
+
+{{< include generated/shopping/chapters/appendix-payloads.md >}}
+
+# Appendix B — Recorded transcripts
+
+{{< include generated/shopping/chapters/appendix-fixtures.md >}}
