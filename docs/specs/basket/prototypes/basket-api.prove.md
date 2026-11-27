@@ -15,7 +15,7 @@ prove run      prototypes/basket-api.prove.md --config prove.yaml --env local --
 **vars:**
 - base_url: http://127.0.0.1:8080
 - est_from: 2026-11-28
-- est_to: 2026-12-02
+- est_to: 2026-11-30
 - customer_token: override-with---var-customer_token
 - service_token: override-with---var-service_token
 
@@ -990,7 +990,7 @@ Status: 200
 - $.items[*].title
 - $.items[*].picture
 
-## 13. A handover with an empty selection is refused — 422 (RULE-9)
+## 13. Deselecting everything leaves a valid basket with an empty selection (RULE-9)
 
 **HTTP request: PATCH {{base_url}}/baskets/{{basketId}}/selection**
 Authorization: Bearer {{customer_token}}
@@ -1086,10 +1086,7 @@ Status: 200
       "kind": "charge"
     }
   },
-  "deliveryEstimate": {
-    "from": "{{est_from}}",
-    "to": "{{est_to}}"
-  }
+  "deliveryEstimate": null
 }
 ```
 

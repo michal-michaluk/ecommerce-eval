@@ -30,3 +30,7 @@ databaseChangeLog:
   - include:
       file: db/changelog/0001-basket.yaml
       relativeToChangelogFile: false
+
+  - include:
+      file: db/changelog/0002-basket-summary.yaml
+      relativeToChangelogFile: false

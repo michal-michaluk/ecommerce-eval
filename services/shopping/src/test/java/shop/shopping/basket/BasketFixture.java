@@ -11,6 +11,7 @@ import shop.shopping.kernel.Availability;
 import shop.shopping.kernel.CheckoutHandovers;
 import shop.shopping.kernel.Money;
 import shop.shopping.kernel.MoneyFixture;
+import shop.shopping.kernel.ShoppingException;
 
 /**
  * The basket of element 02 as its tests build it: the two offers of the capture, a third one from another seller, the three
@@ -165,15 +166,31 @@ public class BasketFixture {
 
     public static BasketService aServiceOf(BasketCurrency currency, Instant now, FakeBasketRepository baskets,
             CheckoutHandovers checkouts) {
+        return aServiceOf(currency, now, baskets, aCatalog(), checkouts);
+    }
+
+    /** The same port reading the offers through the catalog a test seeded — the pull and the add path read it. */
+    public static BasketService aServiceOf(BasketCurrency currency, Instant now, FakeBasketRepository baskets,
+            OfferCatalog offers, CheckoutHandovers checkouts) {
         return new BasketService(baskets, currency, BasketPriceCalculation.defaultCalculation(),
-                BasketDeliveryEstimate.defaultEstimate(), checkouts, Clock.fixed(now, ZoneOffset.UTC));
+                BasketDeliveryEstimate.defaultEstimate(), offers, checkouts, Clock.fixed(now, ZoneOffset.UTC));
     }
 
     /** The primary port charging a delivery another deployment states — the same rows, another payload. */
     public static BasketService aServiceCharging(DeliveryRates rates, FakeBasketRepository baskets,
             CheckoutHandovers checkouts) {
         return new BasketService(baskets, aBasketCurrency(), new BasketPriceCalculation(rates),
-                BasketDeliveryEstimate.defaultEstimate(), checkouts, Clock.fixed(NOW, ZoneOffset.UTC));
+                BasketDeliveryEstimate.defaultEstimate(), aCatalog(), checkouts, Clock.fixed(NOW, ZoneOffset.UTC));
+    }
+
+    /** The catalog of element 08 as this increment has it, empty: every id it is asked about is an offer nobody sells. */
+    public static FixtureOfferCatalog aCatalog() {
+        return new FixtureOfferCatalog(Clock.fixed(NOW, ZoneOffset.UTC));
+    }
+
+    /** The service's one failure, so a test states a code and its domain values and nothing else (register D48). */
+    public static ShoppingException aRefusalOf(ShoppingException.Error error, Object... details) {
+        return new ShoppingException(error, details);
     }
 
     public static CustomerId aFreshCustomer() {

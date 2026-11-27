@@ -23,6 +23,8 @@ The UI-prototyping mandate of the specification skill makes a gallery mandatory 
 
 ## Data shown
 
+The wire payload is element 07's — `shipments[]` carries only its items and `itemsTotal` (the `Przesyłka od <seller>` label is derived by the client from `seller`), and an item carries `offerId`, `seller`, `quantity`, `selected`, `availability`, `currentPrice`, `discount`, `lineTotal` (the attributes the capture shows are **not** in this increment's payload — D70).
+
 | Field | Source | Rule |
 |---|---|---|
 | page title | `basket.json` `basket.title` | `Koszyk` |

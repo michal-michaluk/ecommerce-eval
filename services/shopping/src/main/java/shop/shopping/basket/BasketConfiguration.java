@@ -5,6 +5,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.time.Clock;
+
 /**
  * The basket's own configuration, in one place and one style for the {@code basket} prefix.
  *
@@ -27,6 +29,21 @@ class BasketConfiguration {
     @Bean
     BasketCurrency basketCurrency(Settings settings) {
         return new BasketCurrency(settings.currency());
+    }
+
+    /**
+     * Element 08's port as this increment has it (D38): the fixture adapter stands in for a provider that publishes no
+     * shop-facing offer read yet, and the browsing slice's adapter replaces it without this wiring changing.
+     *
+     * <p>It is a bean because the render route is the port's first caller (D60): without it neither the pull on read nor an add
+     * could answer anything, and the service would not start with a dependency nobody provides.
+     *
+     * @param clock the clock the adapter stamps its reads with
+     * @return the catalog the basket reads its offers through
+     */
+    @Bean
+    OfferCatalog offerCatalog(Clock clock) {
+        return new FixtureOfferCatalog(clock);
     }
 
     /**
