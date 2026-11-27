@@ -162,7 +162,7 @@ Rows are the acceptance contract for the **implementation** (this spec stops at 
 | DoD25 | Gate | ArchUnit slice-isolation test | the `basket` slice references no `checkout` type; exit `0` |
 | DoD26 | Contract | `05:I1–I7` as a table test with a fixed clock | each row's `kind`/`from`/`to` matches element 05 |
 | DoD27 | Contract | `06:I1–I7` as a table test | each row's `status`/`reason`/`stale` matches element 06 |
-| DoD28 | Integration | restart the service, then scenario step 22 | basket content survives; `items` count `2` |
+| DoD28 | Integration | restart the service, then `GET /baskets/{basketId}` | basket content survives: `items` count `2`, the same offer ids and the same totals. What does **not** survive is the fixture's per-process read count (D72), so a *derived* availability may be re-decided after a restart — that half is not claimed here |
 | DoD29 | Integration | scenario step 18 handover | `handoverId == basketId` |
 | DoD30 | Integration | scenario step 19 (repeat handover, compares against the captured `revision`) | `revision` equals `revA` |
 
