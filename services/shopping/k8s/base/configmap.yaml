@@ -87,3 +87,18 @@ data:
             currency: EUR
             answers:
               - stock: 9
+          # DoD18 only: the provider refuses the call for this offer, so the row is unavailable and stale
+          # (element 06 A4). No contract step names it, so no golden depends on it; it exists to make the
+          # stale half of a rendered row observable over HTTP instead of only inside a test.
+          - id: OF-1003
+            seller: UGREEN_POLSKA
+            title: Fixture offer OF-1003
+            picture: https://fixture.invalid/of-1003.png
+            list-price: 89900
+            current-price: 79900
+            discount: 0
+            currency: PLN
+            answers:
+              - stock: 9
+            fault: unreadable
+            fault-after: 2

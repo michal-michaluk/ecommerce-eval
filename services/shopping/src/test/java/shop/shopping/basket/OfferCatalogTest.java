@@ -24,6 +24,8 @@ import static shop.shopping.basket.OfferCatalogFixture.aDescription;
 import static shop.shopping.basket.OfferSeedFixture.aDescribedRemoval;
 import static shop.shopping.basket.OfferSeedFixture.aSeededCatalog;
 import static shop.shopping.basket.OfferSeedFixture.anOnSaleSeed;
+import static shop.shopping.basket.OfferSeedFixture.anOnSaleSeedThatFaultsAfter;
+import static shop.shopping.basket.OfferSeedFixture.anUnreadableSeed;
 import static shop.shopping.basket.OfferCatalogFixture.aDescriptionPricedIn;
 import static shop.shopping.basket.OfferCatalogFixture.aSnapshotPricedInTwoCurrencies;
 import static shop.shopping.basket.OfferCatalogFixture.aWithdrawnOffer;
@@ -121,6 +123,32 @@ class OfferCatalogTest {
         catalog.failingWith(FixtureOfferCatalog.Failure.malformedRequest);
 
         assertThat(catalog.read(List.of(OFFER))).isEmpty();
+    }
+
+    @Test
+    void failsTheWholeReadForAnOfferTheSeedDeclaresUnreadable() {
+        FixtureOfferCatalog seeded = aSeededCatalog(anOnSaleSeed(OFFER, SOME_UNITS),
+                anUnreadableSeed(ANOTHER_OFFER));
+
+        List<OfferRecord> read = seeded.read(List.of(OFFER, ANOTHER_OFFER));
+
+        assertThat(read).extracting(OfferRecord::offerState)
+                .containsOnly(OfferObservation.OfferState.notRead);
+        assertThat(read).extracting(OfferRecord::stock).containsOnly(OfferObservation.Stock.NotRead.notRead);
+        assertThat(seeded.read(List.of(OFFER))).extracting(OfferRecord::offerState)
+                .containsOnly(OfferObservation.OfferState.onSale);
+    }
+
+    @Test
+    void faultsOnlyFromTheReadTheSeedNames() {
+        FixtureOfferCatalog seeded = aSeededCatalog(anOnSaleSeedThatFaultsAfter(OFFER, 2));
+
+        assertThat(seeded.read(List.of(OFFER))).extracting(OfferRecord::offerState)
+                .containsOnly(OfferObservation.OfferState.onSale);
+        assertThat(seeded.read(List.of(OFFER))).extracting(OfferRecord::offerState)
+                .containsOnly(OfferObservation.OfferState.onSale);
+        assertThat(seeded.read(List.of(OFFER))).extracting(OfferRecord::offerState)
+                .containsOnly(OfferObservation.OfferState.notRead);
     }
 
     @Test

@@ -114,7 +114,8 @@ class BasketConfiguration {
      *
      * <p>One entry per offer, every field a read answers. {@code answers} is the warehouse's answer per read of that offer,
      * in order, the last one repeating — the queue is per offer because the contract turns one row out of stock while its
-     * neighbours stay on sale. A seed without {@code answers} is an offer whose stock nobody read (A5).
+     * neighbours stay on sale. A seed without {@code answers} is an offer whose stock nobody read (A5). {@code fault} is the
+     * provider refusing the call for this offer, the stand-in for an outage (element 06 A4, DoD18).
      *
      * @param offers the seeded offers, absent when the deployment seeds none
      */
@@ -134,10 +135,14 @@ class BasketConfiguration {
          * @param currency     the ISO-4217 code every amount of this offer is in
          * @param state        {@code onSale} or {@code removed}; absent reads as {@code onSale}
          * @param answers      the warehouse answers in order of this offer's reads, absent for never read
+         * @param fault        {@code unreadable} when the provider refuses the call for this offer, so the row is
+         *                     {@code unavailable} and {@code stale} (A4); {@code none} or absent answers normally
+         * @param faultAfter   how many reads of this offer answer before {@code fault} takes hold, absent or {@code 0} for
+         *                     "from the first read on"; {@code 2} lets an add store the row and greys it on the next read
          */
         record SeededOffer(String id, String seller, String title, String picture, Long listPrice,
                 Long currentPrice, Long discount, String currency, OfferObservation.OfferState state,
-                List<StockAnswer> answers) {
+                List<StockAnswer> answers, String fault, Integer faultAfter) {
         }
 
         /**
@@ -172,9 +177,10 @@ class BasketConfiguration {
 
     private static FixtureOfferCatalog.Offering offeringOf(OfferFixture.SeededOffer seed) {
         String offerId = stated(seed.id(), null, "id");
+        FixtureOfferCatalog.Failure fault = faultOf(offerId, seed.fault());
         return new FixtureOfferCatalog.Offering(offerId, descriptionOf(offerId, seed),
                 seed.state() == null ? OfferObservation.OfferState.onSale : seed.state(),
-                stockAnswersOf(offerId, seed.answers()));
+                stockAnswersOf(offerId, seed.answers()), fault, faultAfterOf(offerId, seed.faultAfter(), fault));
     }
 
     private static OfferRecord.OfferDescription descriptionOf(String offerId, OfferFixture.SeededOffer seed) {
@@ -217,6 +223,56 @@ class BasketConfiguration {
             throw new IllegalArgumentException("basket.offer-fixture of " + offerId + " states stock '" + stock
                     + "', which is neither notRead nor a count of units", notACount);
         }
+    }
+
+    /**
+     * The provider's answer for one seeded offer: {@code unreadable} states the fault element 06 A4 speaks of — the call is
+     * refused, so every row read with this offer is {@code unavailable} and {@code stale} — and an absent value answers
+     * normally. Any other value stops the pod, the way a malformed stock answer does, because a fault nothing implements would
+     * otherwise read as a healthy provider and a {@code stale} row would never be observable (DoD18).
+     *
+     * @param offerId the offer the seed states
+     * @param fault   {@code unreadable}, {@code none}, or absent
+     * @return the fault the adapter answers that offer with
+     */
+    private static FixtureOfferCatalog.Failure faultOf(String offerId, String fault) {
+        if (fault == null || fault.isBlank()) {
+            return FixtureOfferCatalog.Failure.none;
+        }
+        String stated = fault.trim();
+        if (stated.equalsIgnoreCase("unreadable")) {
+            return FixtureOfferCatalog.Failure.serverError;
+        }
+        if (stated.equalsIgnoreCase(FixtureOfferCatalog.Failure.none.name())) {
+            return FixtureOfferCatalog.Failure.none;
+        }
+        throw new IllegalArgumentException("basket.offer-fixture of " + offerId + " states fault '" + fault
+                + "', which is neither unreadable nor none");
+    }
+
+    /**
+     * How many reads of one seeded offer answer before its {@code fault} takes hold. Absent or {@code 0} is the provider that
+     * refuses from the first read; a positive count is the provider that stops answering after that many — which is the only
+     * shape element 06 A4 can be observed in over HTTP, because a row has to exist before a read can fail against it (DoD18).
+     * A count without a fault names nothing and stops the pod, like the other malformed branches.
+     *
+     * @param offerId    the offer the seed states
+     * @param faultAfter the reads the provider still answers, absent for none
+     * @param fault      the fault {@code faultOf} read from the same seed
+     * @return the read the fault takes hold on
+     */
+    private static int faultAfterOf(String offerId, Integer faultAfter,
+            FixtureOfferCatalog.Failure fault) {
+        int stated = faultAfter == null ? 0 : faultAfter;
+        if (stated < 0) {
+            throw new IllegalArgumentException("basket.offer-fixture of " + offerId + " states fault-after "
+                    + faultAfter + ", which is no read count");
+        }
+        if (stated > 0 && fault == FixtureOfferCatalog.Failure.none) {
+            throw new IllegalArgumentException("basket.offer-fixture of " + offerId
+                    + " states fault-after " + faultAfter + " without a fault");
+        }
+        return stated;
     }
 
     private static String stated(String value, String offerId, String key) {

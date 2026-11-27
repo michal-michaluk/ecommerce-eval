@@ -196,6 +196,47 @@ class BasketConfigurationTest {
     }
 
     @Test
+    void convertsTheFaultASeedStatesForAnOfferTheProviderWillNotAnswer() {
+        FixtureOfferCatalog.Offering seeded = BasketConfiguration
+                .offeringsOf(aFixtureOf(OfferSeedFixture.aSeededOfferThatCannotBeRead("OF-1003"))).get(0);
+
+        assertThat(seeded.fault()).isEqualTo(FixtureOfferCatalog.Failure.serverError);
+    }
+
+    @Test
+    void answersNormallyForASeedThatStatesNoFault() {
+        FixtureOfferCatalog.Offering seeded =
+                BasketConfiguration.offeringsOf(aFixtureOf(aSeededOffer("OF-1002", "9", 2))).get(0);
+
+        assertThat(seeded.fault()).isEqualTo(FixtureOfferCatalog.Failure.none);
+    }
+
+    @Test
+    void convertsTheReadCountAFaultTakesHoldOn() {
+        FixtureOfferCatalog.Offering seeded = BasketConfiguration
+                .offeringsOf(aFixtureOf(OfferSeedFixture.aSeededOfferThatCannotBeReadAfterTwoReads("OF-1003"))).get(0);
+
+        assertThat(seeded.fault()).isEqualTo(FixtureOfferCatalog.Failure.serverError);
+        assertThat(seeded.faultAfter()).isEqualTo(2);
+    }
+
+    @Test
+    void refusesAReadCountForAFaultTheSeedNeverNames() {
+        assertThatThrownBy(() -> BasketConfiguration.offeringsOf(
+                aFixtureOf(OfferSeedFixture.aSeededOfferWithAFaultAfterButNoFault("OF-1003"))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("without a fault");
+    }
+
+    @Test
+    void refusesAFaultNoFailureModels() {
+        assertThatThrownBy(() -> BasketConfiguration.offeringsOf(
+                aFixtureOf(OfferSeedFixture.aSeededOfferWithAnUnknownFault("OF-1003", "slowish"))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("neither unreadable nor none");
+    }
+
+    @Test
     void refusesASeedThatStatesNoId() {
         assertThatThrownBy(() -> BasketConfiguration.offeringsOf(aFixtureOf(aSeededOfferWithoutId())))
                 .isInstanceOf(IllegalArgumentException.class)

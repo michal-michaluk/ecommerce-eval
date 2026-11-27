@@ -151,13 +151,13 @@ Rows are the acceptance contract for the **implementation** (this spec stops at 
 | DoD14b | Failure | scenario step 14 (handover with an empty selection) | `422 NOTHING_SELECTED` |
 | DoD15 | Failure | scenario step 23 (no token) | `401`, empty body |
 | DoD16 | Failure | scenario step 24 (service token on a customer route) | `403`, empty body |
-| DoD17 | No false green | ArchUnit rule: no `reserve*` operation on any port of `shop.shopping`; the fixture `OfferCatalog` records its calls | `0` reservation operations declared and `0` recorded after scenario step 6 |
+| DoD17 | No false green | ArchUnit rule: no `reserve*` operation anywhere in `shop.shopping`, plus the port rule that an implementation declaring one is refused | `0` reservation operations declared; the fixture has **no** operation that could record one, and the ledger shows only reads — a count of reservations is `0` because nothing can make it anything else |
 | DoD18 | No false green | offer read forced to `503`, then `GET /baskets/{id}` | `items[].availability.stale == true` |
 | DoD19 | No false green | same read failure, then `PATCH … /checkout` | `422 BLOCKED_BY_ITEMS` — the row is `unavailable`, which blocks; a `stale` row that is still `available` would not (element 06 A5) |
 | DoD20 | No false green | apply the same `OfferObservation` twice through the ingestion command (element 10, D39) | basket state unchanged after the second |
 | DoD21 | No false green | apply an `OfferObservation` whose `readAt` is older than the item's | basket state unchanged |
 | DoD22 | No false green | two concurrent `GET /baskets` for a customer with none | exactly `1` basket exists |
-| DoD23 | Gate | `./gradlew test` | `jacocoTestCoverageVerification` passes at the blueprint's **80 % INSTRUCTION** — the DoD's 0.70 is satisfied, and the architecture rule forbids lowering the gate (D45) |
+| DoD23 | Gate | `./gradlew build` (or `jacocoTestCoverageVerification`) in `services/shopping` | the verification task **executes** and passes at the blueprint's **80 % INSTRUCTION** — the DoD's 0.70 is satisfied, and the architecture rule forbids lowering the gate (D45). `./gradlew test` alone cannot run it: the verification hangs off `check`, `test` only produces the report |
 | DoD24 | Gate | `sqt check` in `services/shopping` | exit `0` with **no `error`-severity** violation. Hint- and warning-level notes are expected and accepted — 19 at the time of writing (10 `vo.builder-when-wide`, 3 `event.past-tense`, 6 metric bands); they are listed with their reasons in `plan.md` §Open Topics |
 | DoD25 | Gate | ArchUnit slice-isolation test | the `basket` slice references no `checkout` type; exit `0` |
 | DoD26 | Contract | `05:I1–I7` as a table test with a fixed clock | each row's `kind`/`from`/`to` matches element 05 |

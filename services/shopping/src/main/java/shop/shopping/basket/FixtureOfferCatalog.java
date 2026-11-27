@@ -28,6 +28,10 @@ import shop.shopping.kernel.Money;
  * travels through untouched (D56) and a {@code 404} for the whole batch answers nothing at all, because the call was wrong, not
  * the offer. There is no reservation method, no state a reservation could hold, and no way to add one without widening the
  * port the ArchUnit rule forbids (R6).
+ *
+ * <p>A seeded offer may also answer as though the provider refused the call ({@link Failure#serverError}), which is the one fault
+ * element 06 A4 speaks of and the one {@link #failingWith} injects: that is how a deployment states an unreadable offer, so the
+ * {@code stale} half of a rendered row can be observed over HTTP and not only in a test (DoD18).
  */
 final class FixtureOfferCatalog implements OfferCatalog {
 
@@ -66,7 +70,7 @@ final class FixtureOfferCatalog implements OfferCatalog {
             return List.of();
         }
         reads.add(List.copyOf(offerIds));
-        return switch (failure) {
+        return switch (failureOf(offerIds)) {
             case malformedRequest -> List.of();
             case unauthorized, forbidden, timeout, serverError -> offerIds.stream().map(this::unreadable).toList();
             case none -> offerIds.stream().map(this::answered).toList();
@@ -82,7 +86,7 @@ final class FixtureOfferCatalog implements OfferCatalog {
      */
     void sells(String offerId, int units) {
         offers.put(offerId, new Seeded(aDescription(offerId), OfferObservation.OfferState.onSale,
-                List.of(new OfferObservation.Stock.Quantity(units))));
+                List.of(new OfferObservation.Stock.Quantity(units)), Failure.none, 0));
     }
 
     /**
@@ -92,7 +96,7 @@ final class FixtureOfferCatalog implements OfferCatalog {
      */
     void sellsWithoutStockRead(String offerId) {
         offers.put(offerId, new Seeded(aDescription(offerId), OfferObservation.OfferState.onSale,
-                List.of(OfferObservation.Stock.NotRead.notRead)));
+                List.of(OfferObservation.Stock.NotRead.notRead), Failure.none, 0));
     }
 
     /**
@@ -102,7 +106,7 @@ final class FixtureOfferCatalog implements OfferCatalog {
      */
     void removed(String offerId) {
         offers.put(offerId, new Seeded(null, OfferObservation.OfferState.removed,
-                List.of(OfferObservation.Stock.NotRead.notRead)));
+                List.of(OfferObservation.Stock.NotRead.notRead), Failure.none, 0));
     }
 
     /**
@@ -115,6 +119,27 @@ final class FixtureOfferCatalog implements OfferCatalog {
     }
 
     /**
+     * The provider's answer for this read: the fault the asked-for offer was seeded with, or the one {@link #failingWith}
+     * injected for the whole adapter. An injected outage outranks a seed, because a test that states one is stating what the
+     * whole provider does.
+     *
+     * @param offerIds the ids this read asked for
+     * @return the fault to answer with, {@link Failure#none} when every asked-for offer is healthy
+     */
+    private Failure failureOf(List<String> offerIds) {
+        if (failure != Failure.none) {
+            return failure;
+        }
+        return offerIds.stream()
+                .map(offers::get)
+                .filter(Objects::nonNull)
+                .map(Seeded::faultNow)
+                .filter(seededFault -> seededFault != Failure.none)
+                .findFirst()
+                .orElse(Failure.none);
+    }
+
+    /**
      * Every call this adapter received, in order, each one the ids it was asked for — the ledger DoD17 reads.
      *
      * @return one entry per read, immutable
@@ -124,7 +149,8 @@ final class FixtureOfferCatalog implements OfferCatalog {
     }
 
     private void seed(Offering offering) {
-        Seeded seeded = new Seeded(offering.description(), offering.offerState(), offering.stockAnswers());
+        Seeded seeded = new Seeded(offering.description(), offering.offerState(), offering.stockAnswers(),
+                offering.fault(), offering.faultAfter());
         if (offers.put(offering.offerId(), seeded) != null) {
             throw new IllegalArgumentException("the fixture seeds one offer twice, got " + offering.offerId());
         }
@@ -166,13 +192,21 @@ final class FixtureOfferCatalog implements OfferCatalog {
      * @param description  what the provider says about the offer, absent when it says nothing about the content
      * @param offerState   whether the provider offers the thing or has withdrawn it
      * @param stockAnswers the warehouse answers in order of the reads of this offer, at least one, the last repeating
+     * @param fault        what the provider does when this offer is asked about, {@link Failure#none} when it answers
+     * @param faultAfter   how many reads of this offer the provider answers before {@code fault} takes hold, {@code 0} for
+     *                     "from the first read on"
      */
     record Offering(String offerId, OfferRecord.OfferDescription description,
-            OfferObservation.OfferState offerState, List<OfferObservation.Stock> stockAnswers) {
+            OfferObservation.OfferState offerState, List<OfferObservation.Stock> stockAnswers, Failure fault,
+            int faultAfter) {
 
         Offering {
             Objects.requireNonNull(offerId, "offerId");
             Objects.requireNonNull(offerState, "offerState");
+            Objects.requireNonNull(fault, "fault");
+            if (faultAfter < 0) {
+                throw new IllegalArgumentException("an offer cannot fault before its first read, got " + faultAfter);
+            }
             if (stockAnswers == null || stockAnswers.isEmpty()) {
                 throw new IllegalArgumentException("an offer answers at least one read, got none for " + offerId);
             }
@@ -185,13 +219,28 @@ final class FixtureOfferCatalog implements OfferCatalog {
         private final OfferRecord.OfferDescription description;
         private final OfferObservation.OfferState offerState;
         private final List<OfferObservation.Stock> stockAnswers;
+        private final Failure fault;
+        private final int faultAfter;
         private int read;
+        private int answered;
 
         private Seeded(OfferRecord.OfferDescription description, OfferObservation.OfferState offerState,
-                List<OfferObservation.Stock> stockAnswers) {
+                List<OfferObservation.Stock> stockAnswers, Failure fault, int faultAfter) {
             this.description = description;
             this.offerState = offerState;
             this.stockAnswers = List.copyOf(stockAnswers);
+            this.fault = fault;
+            this.faultAfter = faultAfter;
+        }
+
+        /**
+         * The fault this read runs into: none while the provider still owes this offer an answer, the seeded fault from the
+         * read the seed names on. Pure — the counter moves only when a read is actually answered.
+         *
+         * @return the fault to answer with
+         */
+        private Failure faultNow() {
+            return answered < faultAfter ? Failure.none : fault;
         }
 
         private OfferRecord asRecord(String offerId, Instant readAt) {
@@ -201,11 +250,13 @@ final class FixtureOfferCatalog implements OfferCatalog {
         private OfferObservation.Stock next() {
             OfferObservation.Stock stock = stockAnswers.get(Math.min(read, stockAnswers.size() - 1));
             read = Math.min(read + 1, stockAnswers.size());
+            answered++;
             return stock;
         }
 
         private void rewind() {
             read = 0;
+            answered = 0;
         }
     }
 

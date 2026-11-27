@@ -36,13 +36,29 @@ class OfferSeedDocumentTest {
     private static final String SEED_KEY = "offer-fixture.yaml";
     private static final String OF_1001 = "OF-1001";
     private static final String OF_1002 = "OF-1002";
+    private static final String OF_1003 = "OF-1003";
     private static final String OF_2007 = "OF-2007";
     private static final String OF_9001 = "OF-9001";
 
     @Test
     void bindsTheOffersTheDeploymentSeeds() throws IOException {
         assertThat(offerings()).extracting(FixtureOfferCatalog.Offering::offerId)
-                .containsExactly(OF_1001, OF_1002, OF_2007, OF_9001);
+                .containsExactly(OF_1001, OF_1002, OF_2007, OF_9001, OF_1003);
+    }
+
+    @Test
+    void seedsTheOneOfferWhoseProviderRefusesTheCall() throws IOException {
+        FixtureOfferCatalog.Offering seeded = offering(OF_1003);
+
+        assertThat(seeded.fault()).isEqualTo(FixtureOfferCatalog.Failure.serverError);
+        assertThat(seeded.faultAfter()).isEqualTo(2);
+        assertThat(seeded.description()).satisfies(described -> {
+            assertThat(described.seller()).isEqualTo("UGREEN_POLSKA");
+            assertThat(described.currentPrice().amount()).isEqualTo(79900);
+        });
+        assertThat(offerings()).filteredOn(offering -> offering.fault() != FixtureOfferCatalog.Failure.none)
+                .extracting(FixtureOfferCatalog.Offering::offerId)
+                .containsExactly(OF_1003);
     }
 
     @Test

@@ -20,9 +20,10 @@ The seed is deployment configuration, never compiled in and never in `src/main/r
 and a seed there would make every test see offers it never stated. A deployment that states no seed gets an **empty** catalog
 — the shape every test keeps.
 
-A malformed seed (a missing title, picture, price or currency, or a stock answer that is neither `notRead` nor a count) stops
-the pod while the bean is created, like a bad `basket.currency`: an offer that answers `200` and describes nothing would
-otherwise surface as `OFFER_READ_UNAVAILABLE` on the first add.
+A malformed seed (a missing title, picture, price or currency, a stock answer that is neither `notRead` nor a count, or a
+`fault` that is neither `unreadable` nor `none`, or a `fault-after` without a fault) stops the pod while the bean is created,
+like a bad `basket.currency`: an offer that answers `200` and describes nothing would otherwise surface as
+`OFFER_READ_UNAVAILABLE` on the first add.
 
 ## The seeded offers
 
@@ -36,6 +37,7 @@ one digit finer than the currency's minor unit, so `99890` is `99,89 zł` (eleme
 | `OF-1002` | `UGREEN_POLSKA` | 64 990 | 69 900 | PLN | `onSale` | 9 units for the first 9 reads, **0 units from the 10th** | steps 4–22 — the row that goes `outOfStock` at step 15, having priced the basket until then |
 | `OF-2007` | `ANKER_STORE` | 129 000 | 129 000 | PLN | `removed` | no stock answer (`notRead`) — the offer answers, only its stock does not | steps 20–22 — a **described** removal: a `200` row marked `unavailable` that keeps its price and blocks the handover, instead of the `404` an undescribed removal gives |
 | `OF-9001` | `UGREEN_POLSKA` | 4 990 | 5 990 | EUR | `onSale` | 9 units, always | step 9 — the foreign-currency probe: adding it to a PLN basket must answer `422 CURRENCY_MISMATCH` |
+| `OF-1003` | `UGREEN_POLSKA` | 79 900 | 89 900 | PLN | `onSale` | 9 units, always — and `fault: unreadable` from the **third** read of this offer | **DoD18 only** — the row that renders `unavailable` + `stale: true` (element 06 A4). No contract step names it, so no golden depends on it |
 | `OF-0000` | — | — | — | — | — | — | step 10 — never seeded: an id the fixture does not know is answered as `removed` without a description, which is the `404 OFFER_NOT_FOUND` the step expects |
 
 `title` and `picture` are placeholders (`Fixture offer OF-…`, `https://fixture.invalid/…`): every row renders both, so the
@@ -90,11 +92,42 @@ Two properties follow, and both are the price of that replayability:
 `stock` is the warehouse's answer, never repaired (D56): a count below zero travels through and the decision reads it as none
 left, and `notRead` states that the offer answered while only its stock did not (A5).
 
+## The fault
+
+`fault` states that the **provider refuses the call** for this offer — element 06 A4, the failed read D26 makes fail-closed:
+no previous `available` survives it, the row renders `unavailable` with `stale: true`, and it blocks the handover. The seed
+vocabulary is two values: `unreadable` (mapped to the adapter's `Failure.serverError`, the same outcome `failingWith`
+injects) and `none`, which an absent key also means. Anything else throws while the bean is created, because a fault nothing
+implements would read as a healthy provider.
+
+`fault-after` says how many reads of that offer still answer before the fault takes hold, and it is not a convenience: a
+**command** that reads a failed offer is refused (`503 OFFER_READ_UNAVAILABLE`, element 07 §Error contract), so a permanently
+faulted offer can never enter a basket and no row would ever exist to be greyed. The transition is what D26 is about, and it
+needs a row that was stored while the provider still answered.
+
+```yaml
+- id: OF-1003
+  # ...
+  answers:
+    - stock: 9
+  fault: unreadable
+  fault-after: 2    # the add's own read and the pull that composes its answer; every read after them is refused
+```
+
+`fault-after` absent or `0` faults from the first read; a count stated without a `fault` names nothing and stops the pod like
+the other malformed branches. The counter moves only when a read is **answered**, and a read that asks for no offers rewinds
+it with the stock queue.
+
+A faulted offer fails the **whole read it takes part in**, which is element 08 §Failure mapping and not a per-row detail: every
+row of that read answers `notRead`. That is why `OF-1003` stays out of the 24 contract steps — adding it to a basket that also
+holds `OF-1001` would grey both rows, and that is the behaviour, not a side effect. It exists so the `stale` half of a
+rendered row is observable over HTTP (DoD18) instead of only inside `OfferCatalogTest`.
+
 ## Changing it
 
 The seed is gated: `OfferSeedDocumentTest` parses `k8s/base/configmap.yaml`, binds it with the machinery the pod uses and
-asserts the four offers and the queue `OF-1002` answers, and `build.gradle` declares the ConfigMap an input of `test` so an
-edited seed re-runs it. A seed that cannot describe a row fails `./gradlew build`, not step 3.
+asserts the five offers, the fault `OF-1003` states and the queue `OF-1002` answers, and `build.gradle` declares the ConfigMap
+an input of `test` so an edited seed re-runs it. A seed that cannot describe a row fails `./gradlew build`, not step 3.
 
 1. Edit the `offer-fixture.yaml` value in `k8s/base/configmap.yaml`.
 2. `.agents/skills/run-apps/scripts/run-apps deploy shopping` — it applies the manifests and restarts the deployment because

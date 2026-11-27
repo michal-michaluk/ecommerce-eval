@@ -56,7 +56,7 @@ public class OfferSeedFixture {
     public static SeededOffer aSeededOffer(String offerId, String stock, Integer reads) {
         return new SeededOffer(offerId, SELLER, "Fixture offer " + offerId, "https://fixture.invalid/" + offerId + ".png",
                 LIST_PRICE, CURRENT_PRICE, NO_DISCOUNT, A_LOWER_CASE_CURRENCY, null,
-                List.of(new StockAnswer(stock, reads), new StockAnswer("0", null)));
+                List.of(new StockAnswer(stock, reads), new StockAnswer("0", null)), null, null);
     }
 
     /**
@@ -67,7 +67,7 @@ public class OfferSeedFixture {
      */
     public static SeededOffer aSeededOfferWithoutTitle(String offerId) {
         return new SeededOffer(offerId, SELLER, null, aPictureOf(offerId),
-                LIST_PRICE, CURRENT_PRICE, NO_DISCOUNT, BasketFixture.PLN, null, AN_ANSWER);
+                LIST_PRICE, CURRENT_PRICE, NO_DISCOUNT, BasketFixture.PLN, null, AN_ANSWER, null, null);
     }
 
     /**
@@ -79,7 +79,7 @@ public class OfferSeedFixture {
      */
     public static SeededOffer aSeededOfferWithoutSeller(String offerId) {
         return new SeededOffer(offerId, null, aTitleOf(offerId), aPictureOf(offerId),
-                LIST_PRICE, CURRENT_PRICE, NO_DISCOUNT, A_LOWER_CASE_CURRENCY, null, AN_ANSWER);
+                LIST_PRICE, CURRENT_PRICE, NO_DISCOUNT, A_LOWER_CASE_CURRENCY, null, AN_ANSWER, null, null);
     }
 
     /**
@@ -90,7 +90,7 @@ public class OfferSeedFixture {
      */
     public static SeededOffer aSeededOfferWithoutPicture(String offerId) {
         return new SeededOffer(offerId, SELLER, aTitleOf(offerId), null,
-                LIST_PRICE, CURRENT_PRICE, NO_DISCOUNT, A_LOWER_CASE_CURRENCY, null, AN_ANSWER);
+                LIST_PRICE, CURRENT_PRICE, NO_DISCOUNT, A_LOWER_CASE_CURRENCY, null, AN_ANSWER, null, null);
     }
 
     /**
@@ -101,7 +101,7 @@ public class OfferSeedFixture {
      */
     public static SeededOffer aSeededOfferWithoutListPrice(String offerId) {
         return new SeededOffer(offerId, SELLER, aTitleOf(offerId), aPictureOf(offerId),
-                null, CURRENT_PRICE, NO_DISCOUNT, A_LOWER_CASE_CURRENCY, null, AN_ANSWER);
+                null, CURRENT_PRICE, NO_DISCOUNT, A_LOWER_CASE_CURRENCY, null, AN_ANSWER, null, null);
     }
 
     /**
@@ -112,7 +112,7 @@ public class OfferSeedFixture {
      */
     public static SeededOffer aSeededOfferWithoutCurrency(String offerId) {
         return new SeededOffer(offerId, SELLER, aTitleOf(offerId), aPictureOf(offerId),
-                LIST_PRICE, CURRENT_PRICE, NO_DISCOUNT, null, null, AN_ANSWER);
+                LIST_PRICE, CURRENT_PRICE, NO_DISCOUNT, null, null, AN_ANSWER, null, null);
     }
 
     /**
@@ -123,7 +123,7 @@ public class OfferSeedFixture {
      */
     public static SeededOffer aSeededOfferWithABlankTitle(String offerId) {
         return new SeededOffer(offerId, SELLER, "  ", aPictureOf(offerId),
-                LIST_PRICE, CURRENT_PRICE, NO_DISCOUNT, A_LOWER_CASE_CURRENCY, null, AN_ANSWER);
+                LIST_PRICE, CURRENT_PRICE, NO_DISCOUNT, A_LOWER_CASE_CURRENCY, null, AN_ANSWER, null, null);
     }
 
     /**
@@ -135,7 +135,7 @@ public class OfferSeedFixture {
     public static SeededOffer aSeededOfferReadZeroTimes(String offerId) {
         return new SeededOffer(offerId, SELLER, aTitleOf(offerId), aPictureOf(offerId),
                 LIST_PRICE, CURRENT_PRICE, NO_DISCOUNT, A_LOWER_CASE_CURRENCY, null,
-                List.of(new StockAnswer("9", 0)));
+                List.of(new StockAnswer("9", 0)), null, null);
     }
 
     /**
@@ -147,7 +147,7 @@ public class OfferSeedFixture {
     public static SeededOffer aSeededOfferWhoseStockWasNeverRead(String offerId) {
         return new SeededOffer(offerId, SELLER, aTitleOf(offerId), aPictureOf(offerId),
                 LIST_PRICE, CURRENT_PRICE, NO_DISCOUNT, A_LOWER_CASE_CURRENCY, null,
-                List.of(new StockAnswer(OfferObservation.Stock.NotRead.notRead.name(), null)));
+                List.of(new StockAnswer(OfferObservation.Stock.NotRead.notRead.name(), null)), null, null);
     }
 
     /**
@@ -158,7 +158,7 @@ public class OfferSeedFixture {
      */
     public static SeededOffer aSeededOfferWithoutAnswers(String offerId) {
         return new SeededOffer(offerId, SELLER, aTitleOf(offerId), aPictureOf(offerId),
-                LIST_PRICE, CURRENT_PRICE, NO_DISCOUNT, A_LOWER_CASE_CURRENCY, null, null);
+                LIST_PRICE, CURRENT_PRICE, NO_DISCOUNT, A_LOWER_CASE_CURRENCY, null, null, null, null);
     }
 
     /**
@@ -169,7 +169,7 @@ public class OfferSeedFixture {
      */
     public static SeededOffer aSeededOfferWithAnEmptyAnswerQueue(String offerId) {
         return new SeededOffer(offerId, SELLER, aTitleOf(offerId), aPictureOf(offerId),
-                LIST_PRICE, CURRENT_PRICE, NO_DISCOUNT, A_LOWER_CASE_CURRENCY, null, List.of());
+                LIST_PRICE, CURRENT_PRICE, NO_DISCOUNT, A_LOWER_CASE_CURRENCY, null, List.of(), null, null);
     }
 
     /**
@@ -179,7 +179,56 @@ public class OfferSeedFixture {
      */
     public static SeededOffer aSeededOfferWithoutId() {
         return new SeededOffer(null, SELLER, "Fixture offer without an id", "https://fixture.invalid/no-id.png",
-                LIST_PRICE, CURRENT_PRICE, NO_DISCOUNT, A_LOWER_CASE_CURRENCY, null, AN_ANSWER);
+                LIST_PRICE, CURRENT_PRICE, NO_DISCOUNT, A_LOWER_CASE_CURRENCY, null, AN_ANSWER, null, null);
+    }
+
+    /**
+     * One entry of that block whose provider refuses the call for it — the fault element 06 A4 renders as
+     * {@code unavailable} + {@code stale} (DoD18).
+     *
+     * @param offerId the offer the provider will not answer about
+     * @return the seeded offer as it binds
+     */
+    public static SeededOffer aSeededOfferThatCannotBeRead(String offerId) {
+        return new SeededOffer(offerId, SELLER, aTitleOf(offerId), aPictureOf(offerId),
+                LIST_PRICE, CURRENT_PRICE, NO_DISCOUNT, A_LOWER_CASE_CURRENCY, null, AN_ANSWER, "unreadable", null);
+    }
+
+    /**
+     * One entry of that block whose {@code fault} states something no failure models — a seed that must stop the pod rather
+     * than answer as a healthy provider (DoD18).
+     *
+     * @param offerId the offer the seed states
+     * @param fault   the value no mapping accepts
+     * @return the seeded offer as it binds
+     */
+    public static SeededOffer aSeededOfferWithAnUnknownFault(String offerId, String fault) {
+        return new SeededOffer(offerId, SELLER, aTitleOf(offerId), aPictureOf(offerId),
+                LIST_PRICE, CURRENT_PRICE, NO_DISCOUNT, A_LOWER_CASE_CURRENCY, null, AN_ANSWER, fault, null);
+    }
+
+    /**
+     * One entry of that block whose fault takes hold only after two reads — the seed that lets an add store the row and greys it
+     * on the next read, which is the only way element 06 A4 is observable over HTTP (DoD18).
+     *
+     * @param offerId the offer the provider stops answering about
+     * @return the seeded offer as it binds
+     */
+    public static SeededOffer aSeededOfferThatCannotBeReadAfterTwoReads(String offerId) {
+        return new SeededOffer(offerId, SELLER, aTitleOf(offerId), aPictureOf(offerId),
+                LIST_PRICE, CURRENT_PRICE, NO_DISCOUNT, A_LOWER_CASE_CURRENCY, null, AN_ANSWER, "unreadable", 2);
+    }
+
+    /**
+     * One entry of that block that states a read count for a fault it never names — a seed that means nothing and must stop the
+     * pod rather than be read as "healthy from the first read on".
+     *
+     * @param offerId the offer the seed states
+     * @return the seeded offer as it binds
+     */
+    public static SeededOffer aSeededOfferWithAFaultAfterButNoFault(String offerId) {
+        return new SeededOffer(offerId, SELLER, aTitleOf(offerId), aPictureOf(offerId),
+                LIST_PRICE, CURRENT_PRICE, NO_DISCOUNT, A_LOWER_CASE_CURRENCY, null, AN_ANSWER, null, 2);
     }
 
     private static String aTitleOf(String offerId) {
@@ -211,7 +260,34 @@ public class OfferSeedFixture {
                 .mapToObj(units -> (OfferObservation.Stock) new OfferObservation.Stock.Quantity(units))
                 .toList();
         return new FixtureOfferCatalog.Offering(offerId, OfferCatalogFixture.aDescription(),
-                OfferObservation.OfferState.onSale, answers);
+                OfferObservation.OfferState.onSale, answers, FixtureOfferCatalog.Failure.none, 0);
+    }
+
+    /**
+     * An offer the provider stops answering about after the read count it is given — the transition element 06 A4 needs and no
+     * test-only injection can produce in a running pod (DoD18).
+     *
+     * @param offerId       the offer the provider stops answering about
+     * @param readsAnswered how many reads still answer normally
+     * @return the offering the adapter is seeded with
+     */
+    public static FixtureOfferCatalog.Offering anOnSaleSeedThatFaultsAfter(String offerId, int readsAnswered) {
+        return new FixtureOfferCatalog.Offering(offerId, OfferCatalogFixture.aDescription(),
+                OfferObservation.OfferState.onSale, List.of(new OfferObservation.Stock.Quantity(1)),
+                FixtureOfferCatalog.Failure.serverError, readsAnswered);
+    }
+
+    /**
+     * An offer the provider refuses to answer about — the seed that makes a rendered row {@code unavailable} and
+     * {@code stale} without any test-only injection (element 06 A4, DoD18).
+     *
+     * @param offerId the offer the provider will not answer about
+     * @return the offering the adapter is seeded with
+     */
+    public static FixtureOfferCatalog.Offering anUnreadableSeed(String offerId) {
+        return new FixtureOfferCatalog.Offering(offerId, OfferCatalogFixture.aDescription(),
+                OfferObservation.OfferState.onSale, List.of(OfferObservation.Stock.NotRead.notRead),
+                FixtureOfferCatalog.Failure.serverError, 0);
     }
 
     /**
@@ -222,6 +298,7 @@ public class OfferSeedFixture {
      */
     public static FixtureOfferCatalog.Offering aDescribedRemoval(String offerId) {
         return new FixtureOfferCatalog.Offering(offerId, OfferCatalogFixture.aDescription(),
-                OfferObservation.OfferState.removed, List.of(OfferObservation.Stock.NotRead.notRead));
+                OfferObservation.OfferState.removed, List.of(OfferObservation.Stock.NotRead.notRead),
+                FixtureOfferCatalog.Failure.none, 0);
     }
 }
