@@ -41,13 +41,14 @@ class BasketSelectionControllerTest {
     OfferCatalog offers;
 
     MockMvc mvc;
+    FixtureOfferCatalog catalog;
     String customer;
     String basketId;
 
     @BeforeEach
     void buildsABasketOfTwoSelectedOffers() throws Exception {
         mvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
-        FixtureOfferCatalog catalog = (FixtureOfferCatalog) offers;
+        catalog = (FixtureOfferCatalog) offers;
         catalog.failingWith(FixtureOfferCatalog.Failure.none);
         catalog.sells(FIRST_OFFER, 5);
         catalog.sells(SECOND_OFFER, 5);
@@ -56,6 +57,20 @@ class BasketSelectionControllerTest {
                 HttpFixture.asCustomer(mvc, customer, get("/baskets")), "$.baskets[0].basketId");
         addToBasket(FIRST_OFFER);
         addToBasket(SECOND_OFFER);
+    }
+
+    @Test
+    void answersTheAvailabilityTheCatalogReportsNowOnTheRowTheCommandDidNotTouch() throws Exception {
+        catalog.sells(SECOND_OFFER, 0);
+
+        MockHttpServletResponse response = select("""
+                { "scope": "item", "offerId": "%s", "selected": false }
+                """.formatted(FIRST_OFFER));
+
+        assertThat(HttpFixture.json(response, "$.items[0].selected")).isEqualTo(false);
+        assertThat(HttpFixture.json(response, "$.items[1].offerId")).isEqualTo(SECOND_OFFER);
+        assertThat(HttpFixture.json(response, "$.items[1].availability.status")).isEqualTo("outOfStock");
+        assertThat(HttpFixture.json(response, "$.items[1].selected")).isEqualTo(true);
     }
 
     @Test

@@ -21,9 +21,12 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
  * added by the same command. The path that carries no offer is the only one that removes, and {@code quantity: null} is how it
  * says so — a number there would be a second way to change a quantity the other route already owns.
  *
- * <p>Both answer the whole basket (steps 3–10 and 22 of the contract), so the client never re-reads after a command. Every
+ * <p>Both answer the whole basket (steps 3–10 and 22 of the contract), so the client never re-reads after a command — and both
+ * pull before they answer (D66): the rows' offers are re-read, the answers applied through the ingestion path and the document
+ * stored when anything changed, which is how a row's availability can move between two commands without an event transport. Every
  * refusal is the aggregate's and reaches the wire through the one advice: {@code 422 QUANTITY_NOT_POSITIVE},
- * {@code 422 CURRENCY_MISMATCH}, {@code 422 OFFER_UNAVAILABLE}, {@code 404 OFFER_NOT_FOUND}, {@code 404 BASKET_NOT_FOUND}.
+ * {@code 422 CURRENCY_MISMATCH}, {@code 422 OFFER_UNAVAILABLE}, {@code 404 OFFER_NOT_FOUND}, {@code 404 BASKET_NOT_FOUND} — the
+ * last one also for a basket owned by another customer (D68).
  */
 @RestController
 @RequiredArgsConstructor
@@ -35,18 +38,18 @@ class BasketItemsController {
             produces = APPLICATION_JSON_VALUE)
     BasketContent setQuantity(@PathVariable String basketId, @PathVariable String offerId,
             @RequestBody @Valid UpdateQuantity update, @AuthenticationPrincipal Jwt caller) {
-        return baskets.setQuantity(new BasketId(basketId), offerId, update.quantity(), channelOf(caller));
+        return baskets.setQuantity(new BasketId(basketId), offerId, update.quantity(), callerOf(caller));
     }
 
     @PatchMapping(path = "/baskets/{basketId}/items", consumes = APPLICATION_JSON_VALUE,
             produces = APPLICATION_JSON_VALUE)
     BasketContent remove(@PathVariable String basketId, @RequestBody @Valid RemoveItems removal,
             @AuthenticationPrincipal Jwt caller) {
-        return baskets.remove(new BasketId(basketId), removal.scope(), removal.offerId(), channelOf(caller));
+        return baskets.remove(new BasketId(basketId), removal.scope(), removal.offerId(), callerOf(caller));
     }
 
-    private static Channel channelOf(Jwt caller) {
-        return TokenChannel.claimedAs(caller.getClaimAsString(TokenChannel.CLAIM));
+    private static Caller callerOf(Jwt caller) {
+        return Caller.of(caller.getSubject(), caller.getClaimAsString(Caller.CHANNEL_CLAIM));
     }
 
     /**

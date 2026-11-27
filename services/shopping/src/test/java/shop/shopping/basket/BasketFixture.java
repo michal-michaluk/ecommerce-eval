@@ -166,7 +166,7 @@ public class BasketFixture {
 
     public static BasketService aServiceOf(BasketCurrency currency, Instant now, FakeBasketRepository baskets,
             CheckoutHandovers checkouts) {
-        return aServiceOf(currency, now, baskets, aCatalog(), checkouts);
+        return aServiceOf(currency, now, baskets, anInertCatalog(), checkouts);
     }
 
     /** The same port reading the offers through the catalog a test seeded — the pull and the add path read it. */
@@ -180,12 +180,30 @@ public class BasketFixture {
     public static BasketService aServiceCharging(DeliveryRates rates, FakeBasketRepository baskets,
             CheckoutHandovers checkouts) {
         return new BasketService(baskets, aBasketCurrency(), new BasketPriceCalculation(rates),
-                BasketDeliveryEstimate.defaultEstimate(), aCatalog(), checkouts, Clock.fixed(NOW, ZoneOffset.UTC));
+                BasketDeliveryEstimate.defaultEstimate(), anInertCatalog(), checkouts, Clock.fixed(NOW, ZoneOffset.UTC));
     }
 
-    /** The catalog of element 08 as this increment has it, empty: every id it is asked about is an offer nobody sells. */
+    /** The catalog of element 08 as this increment has it, wanting a seed: an id nobody seeds is an offer nobody sells. */
     public static FixtureOfferCatalog aCatalog() {
         return new FixtureOfferCatalog(Clock.fixed(NOW, ZoneOffset.UTC));
+    }
+
+    /**
+     * The catalog a test that is not about the pull wants: it answers nothing about any id — the provider refused the call — so
+     * the pull leaves every row exactly as the test built it (element 08 §Failure mapping).
+     */
+    public static OfferCatalog anInertCatalog() {
+        return requested -> List.of();
+    }
+
+    /** The caller every unit test acts for: the fixture customer, arriving the ordinary way. */
+    public static Caller aCaller() {
+        return aCallerOf(CUSTOMER_ID);
+    }
+
+    /** The same caller for another customer — the one a test of ownership needs (D68). */
+    public static Caller aCallerOf(CustomerId customerId) {
+        return new Caller(customerId, Channel.standard);
     }
 
     /** The service's one failure, so a test states a code and its domain values and nothing else (register D48). */

@@ -24,10 +24,14 @@ import shop.shopping.kernel.ShoppingException;
  * the delivery estimate are policies over configuration that no aggregate may hold — the handover's (element 09 §Shape of
  * record) and the screen's {@link BasketContent} alike.
  *
- * <p>The render route is the third write behind a read, and the recorded deviation D62: {@code GET /baskets/{basketId}} reads
- * the basket's offers through {@link OfferCatalog}, applies each answer through the same ingestion path an event takes
- * (element 10 §Application), and stores before it computes — so two concurrent renders of one basket can lose the race and
- * answer {@code CONCURRENT_MODIFICATION}, which the client retries.
+ * <p>The render route is the third write behind a read, and the recorded deviation D62: every route that answers basket content
+ * re-reads the basket's offers through {@link OfferCatalog}, applies each answer through the same ingestion path an event takes
+ * (element 10 §Application), and stores when anything changed (D66) — so a row's availability can move between two commands
+ * without a transport, and two concurrent answers to one basket can lose the race and report {@code CONCURRENT_MODIFICATION},
+ * which the client retries.
+ *
+ * <p>Who may ask is decided once, here: every route hands a {@link Caller} and loads through {@link #ownedBy}, which answers a
+ * basket owned by somebody else exactly as it answers one that does not exist (element 07 §Ownership, D68).
  *
  * <p>Creation is the one method with no ambient transaction: the attempt may be refused by the schema's partial unique
  * index, and the re-read of the winner needs a transaction of its own, because a refused statement leaves the surrounding
@@ -70,7 +74,8 @@ class BasketService {
     }
 
     /**
-     * Reads one basket by its identity.
+     * Reads one basket by its identity, for this slice's own tests — no route reaches it, and it decides no ownership: the wire
+     * answers of {@link #render} and the commands below take a {@link Caller} and go through {@link #ownedBy} (D68).
      *
      * @param basketId the identity the path carries
      * @return the basket as the read side serves it
@@ -81,21 +86,20 @@ class BasketService {
     }
 
     /**
-     * Element 07's render (D10, D62): the basket with its content, its totals and its estimate in one answer.
+     * Element 07's render (D10, D66): the basket with its content, its totals and its estimate in one answer.
      *
-     * <p>The pull happens before the read: the rows' offers are read in one batched call (element 08 §Port), each answer is
-     * applied through the ingestion path, and the document is stored — which is the deviation D62 records, because a persisted
-     * {@code readAt} makes that write happen on every render. A read that failed greys its row instead of failing the basket
-     * (A4, D26), so the pull raises nothing here: only a lost optimistic lock leaves it as {@code CONCURRENT_MODIFICATION}.
+     * <p>The pull happens before the answer: the rows' offers are read in one batched call (element 08 §Port), each answer is
+     * applied through the ingestion path, and the document is stored when anything changed — which is the deviation D66/D62
+     * records, because a persisted {@code readAt} makes a fresh read a write even when the availability did not move. A read that
+     * failed greys its row instead of failing the basket (A4, D26), so the pull raises nothing here: only a lost optimistic lock
+     * leaves it as {@code CONCURRENT_MODIFICATION}.
      *
      * @param basketId the identity the path carries
-     * @param channel  how the customer arrives, which decides whether delivery is charged
+     * @param caller   who is calling: the owner the basket must belong to, and the channel delivery is priced by
      * @return the payload of steps 2–22 of the contract
      */
-    BasketContent render(BasketId basketId, Channel channel) {
-        BasketEditor basket = editor(basketId);
-        observed(basket);
-        return content(store(basket), channel);
+    BasketContent render(BasketId basketId, Caller caller) {
+        return answered(ownedBy(basketId, caller), caller);
     }
 
     /**
@@ -109,17 +113,14 @@ class BasketService {
      * @param basketId the identity the path carries
      * @param offerId  the offer the path carries
      * @param quantity the absolute quantity, at least one
-     * @param channel  how the customer arrives, which decides whether delivery is charged
-     * @return the basket after the command
+     * @param caller   who is calling: the owner the basket must belong to, and the channel delivery is priced by
+     * @return the basket after the command, pulled (D66)
      */
-    BasketContent setQuantity(BasketId basketId, String offerId, int quantity, Channel channel) {
-        BasketEditor basket = editor(basketId);
-        if (holds(basket, offerId)) {
-            basket.changeQuantity(offerId, quantity);
-        } else {
-            basket.addToBasket(offered(offerId, quantity));
-        }
-        return content(store(basket), channel);
+    BasketContent setQuantity(BasketId basketId, String offerId, int quantity, Caller caller) {
+        BasketEditor basket = ownedBy(basketId, caller);
+        Basket before = basket.toSnapshot();
+        putQuantity(basket, offerId, quantity);
+        return answered(basket, before, caller);
     }
 
     /**
@@ -129,13 +130,14 @@ class BasketService {
      * @param basketId the identity the path carries
      * @param removal  which rows the command covers
      * @param offerId  the offer the body named, absent for the two scopes that name none
-     * @param channel  how the customer arrives, which decides whether delivery is charged
-     * @return the basket after the command
+     * @param caller   who is calling: the owner the basket must belong to, and the channel delivery is priced by
+     * @return the basket after the command, pulled (D66)
      */
-    BasketContent remove(BasketId basketId, BasketRemoval removal, String offerId, Channel channel) {
-        BasketEditor basket = editor(basketId);
+    BasketContent remove(BasketId basketId, BasketRemoval removal, String offerId, Caller caller) {
+        BasketEditor basket = ownedBy(basketId, caller);
+        Basket before = basket.toSnapshot();
         removal.removeFrom(basket, offerId);
-        return content(store(basket), channel);
+        return answered(basket, before, caller);
     }
 
     /**
@@ -144,13 +146,14 @@ class BasketService {
      * @param basketId  the identity the path carries
      * @param selection which rows the command covers
      * @param selected  switch them on or off
-     * @param channel   how the customer arrives, which decides whether delivery is charged
-     * @return the basket after the command
+     * @param caller    who is calling: the owner the basket must belong to, and the channel delivery is priced by
+     * @return the basket after the command, pulled (D66)
      */
-    BasketContent updateSelection(BasketId basketId, BasketSelection selection, boolean selected, Channel channel) {
-        BasketEditor basket = editor(basketId);
+    BasketContent updateSelection(BasketId basketId, BasketSelection selection, boolean selected, Caller caller) {
+        BasketEditor basket = ownedBy(basketId, caller);
+        Basket before = basket.toSnapshot();
         basket.select(selection, selected);
-        return content(store(basket), channel);
+        return answered(basket, before, caller);
     }
 
     Basket addToBasket(BasketId basketId, BasketItem item) {
@@ -222,12 +225,13 @@ class BasketService {
      * confirm the pairing once it creates one.
      *
      * @param basketId the basket the path carries, which is also the handover's identity (D32)
-     * @param channel  how the customer arrives, which decides whether delivery is charged (element 04 S6)
+     * @param caller   who is calling: the owner the basket must belong to, and the channel delivery is priced by (element 04 S6)
      * @return the answer the client reads
      */
-    HandoverAnswer handOver(BasketId basketId, Channel channel) {
-        BasketEditor basket = editor(basketId);
-        Handover handover = recordedFor(basket, channel);
+    HandoverAnswer handOver(BasketId basketId, Caller caller) {
+        BasketEditor basket = ownedBy(basketId, caller);
+        observed(basket);
+        Handover handover = recordedFor(basket, caller.channel());
         baskets.save(basket);
         return HandoverAnswer.of(handover);
     }
@@ -255,10 +259,42 @@ class BasketService {
                 draft.selection(), totals, estimate);
     }
 
+    /**
+     * The pull of element 07 §Recorded deviations (D66): one batched read of every offer the basket holds, each answer applied
+     * through the ingestion path element 10 owns. It changes nothing when the answers say what the rows already say — a fresh
+     * {@code readAt} is the only thing that moves, and that is a write without a revision (D59).
+     */
     private void observed(BasketEditor basket) {
         offers.read(basket.toSnapshot().items().stream().map(BasketItem::offerId).toList()).stream()
                 .map(OfferObservationCommand::of)
                 .forEach(basket::applyObservation);
+    }
+
+    private void putQuantity(BasketEditor basket, String offerId, int quantity) {
+        if (holds(basket, offerId)) {
+            basket.changeQuantity(offerId, quantity);
+        } else {
+            basket.addToBasket(offered(offerId, quantity));
+        }
+    }
+
+    /**
+     * The answer every route goes through: pull, then compose — so no route can answer basket content without having re-read the
+     * offers first, and none can forget it (D66).
+     */
+    private BasketContent answered(BasketEditor basket, Caller caller) {
+        return answered(basket, basket.toSnapshot(), caller);
+    }
+
+    /**
+     * The same answer for a route that has already commanded: {@code before} is the basket as the command found it, so the
+     * document is written when the command changed it <em>or</em> when the pull did, and not at all when neither did — a repeated
+     * command over an unchanged catalog costs no write and no version.
+     */
+    private BasketContent answered(BasketEditor basket, Basket before, Caller caller) {
+        observed(basket);
+        Basket after = basket.toSnapshot();
+        return content(after.equals(before) ? after : store(basket), caller.channel());
     }
 
     private BasketContent content(Basket snapshot, Channel channel) {
@@ -328,6 +364,23 @@ class BasketService {
         }
     }
 
+    /**
+     * The load a wire route uses: a basket belongs to one customer, and a basket owned by somebody else is answered as one that
+     * does not exist (element 07 §Ownership, D68). The refusal is {@code BASKET_NOT_FOUND} — never {@code 403}, which would
+     * confirm that the id exists, and never an answer that echoes the owner.
+     */
+    private BasketEditor ownedBy(BasketId basketId, Caller caller) {
+        Objects.requireNonNull(basketId, "basketId");
+        return baskets.get(basketId.value())
+                .filter(basket -> basket.toSnapshot().customerId().equals(caller.customerId()))
+                .orElseThrow(() -> new ShoppingException(ShoppingException.Error.BASKET_NOT_FOUND, basketId.value()));
+    }
+
+    /**
+     * The load of this slice's own commands — element 02's operations, driven by this slice's tests. No HTTP route loads a basket
+     * through it: every route that answers or commands takes a {@link Caller} and goes through {@link #ownedBy}, so ownership is
+     * decided on the one path a request can take (D68).
+     */
     private BasketEditor editor(BasketId basketId) {
         Objects.requireNonNull(basketId, "basketId");
         return baskets.get(basketId.value()).orElseThrow(

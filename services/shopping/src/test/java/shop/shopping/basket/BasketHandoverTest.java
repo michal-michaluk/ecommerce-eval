@@ -29,6 +29,7 @@ import static shop.shopping.basket.BasketFixture.PLN;
 import static shop.shopping.basket.BasketFixture.SECOND_OFFER;
 import static shop.shopping.basket.BasketFixture.THIRD_OFFER;
 import static shop.shopping.basket.BasketFixture.aBasketWith;
+import static shop.shopping.basket.BasketFixture.aCaller;
 import static shop.shopping.basket.BasketFixture.aFirstItem;
 import static shop.shopping.basket.BasketFixture.aLastKnown;
 import static shop.shopping.basket.BasketFixture.aSecondItem;
@@ -67,7 +68,7 @@ class BasketHandoverTest {
         BasketId basketId = service.basketOf(CUSTOMER_ID).basketId();
         service.addToBasket(basketId, aFirstItem());
 
-        HandoverAnswer answer = service.handOver(basketId, Channel.standard);
+        HandoverAnswer answer = service.handOver(basketId, aCaller());
 
         assertThat(answer.handoverId()).isEqualTo(basketId.value());
         assertThat(answer.basketId()).isEqualTo(basketId.value());
@@ -86,7 +87,7 @@ class BasketHandoverTest {
         service.addToBasket(basketId, aThirdItemOfAnotherSeller());
         service.select(basketId, selectionOf(THIRD_OFFER), false);
 
-        HandoverAnswer answer = service.handOver(basketId, Channel.standard);
+        HandoverAnswer answer = service.handOver(basketId, aCaller());
 
         assertThat(answer.selection()).containsExactly(FIRST_OFFER);
         assertThat(checkout.accepted).singleElement()
@@ -98,7 +99,7 @@ class BasketHandoverTest {
     void answersTheShapeOfRecordTheContractFixes() {
         baskets.save(aBasketWith(aFirstItem()));
 
-        HandoverAnswer answer = service.handOver(BASKET_ID, Channel.standard);
+        HandoverAnswer answer = service.handOver(BASKET_ID, aCaller());
 
         JsonAssert.assertThat(answer).isExactlyLike("""
                 {
@@ -123,7 +124,7 @@ class BasketHandoverTest {
     void answersTheSelectionInTheOrderTheIdentitySortsIt() {
         baskets.save(aBasketWith(aSecondItem(), aFirstItem()));
 
-        HandoverAnswer answer = service.handOver(BASKET_ID, Channel.standard);
+        HandoverAnswer answer = service.handOver(BASKET_ID, aCaller());
 
         assertThat(answer.selection()).containsExactly(FIRST_OFFER, SECOND_OFFER);
     }
@@ -135,7 +136,7 @@ class BasketHandoverTest {
         service.addToBasket(basketId, anOutOfStockItem());
         Basket before = service.basket(basketId);
 
-        assertThatThrownBy(() -> service.handOver(basketId, Channel.standard))
+        assertThatThrownBy(() -> service.handOver(basketId, aCaller()))
                 .isInstanceOfSatisfying(ShoppingException.class, refused -> {
                     assertThat(refused.error()).isEqualTo(ShoppingException.Error.BLOCKED_BY_ITEMS);
                     assertThat(refused.details()).containsExactly(basketId.value(),
@@ -150,7 +151,7 @@ class BasketHandoverTest {
     void namesTheBlockedRowInTheWireShapeOfReasons() {
         baskets.save(aBasketWith(aFirstItem(), anOutOfStockItem()));
 
-        assertThatThrownBy(() -> service.handOver(BASKET_ID, Channel.standard))
+        assertThatThrownBy(() -> service.handOver(BASKET_ID, aCaller()))
                 .isInstanceOfSatisfying(ShoppingException.class, refused -> JsonAssert
                         .assertThat(blockedRowOf(refused))
                         .isExactlyLike("{\"offerId\": \"OF-1002\", \"status\": \"outOfStock\", \"stale\": false}"));
@@ -166,7 +167,7 @@ class BasketHandoverTest {
         service.addToBasket(basketId, aFirstItem());
         service.select(basketId, selectionOf(FIRST_OFFER), false);
 
-        assertThatThrownBy(() -> service.handOver(basketId, Channel.standard))
+        assertThatThrownBy(() -> service.handOver(basketId, aCaller()))
                 .isInstanceOfSatisfying(ShoppingException.class, refused -> assertThat(refused.error())
                         .isEqualTo(ShoppingException.Error.NOTHING_SELECTED));
         assertThat(checkout.accepted).isEmpty();
@@ -176,7 +177,7 @@ class BasketHandoverTest {
     void refusesAHandoverOfAnArchivedBasket() {
         baskets.save(anArchivedBasketWith(aFirstItem()));
 
-        assertThatThrownBy(() -> service.handOver(BASKET_ID, Channel.standard))
+        assertThatThrownBy(() -> service.handOver(BASKET_ID, aCaller()))
                 .isInstanceOfSatisfying(ShoppingException.class, refused -> assertThat(refused.error())
                         .isEqualTo(ShoppingException.Error.BASKET_INACTIVE));
         assertThat(checkout.accepted).isEmpty();
@@ -186,7 +187,7 @@ class BasketHandoverTest {
     void handsOverARowWhoseStockCouldNotBeRead() {
         baskets.save(aBasketWith(anItemReadAsStale()));
 
-        HandoverAnswer answer = service.handOver(BASKET_ID, Channel.standard);
+        HandoverAnswer answer = service.handOver(BASKET_ID, aCaller());
 
         assertThat(answer.selection()).containsExactly(FIRST_OFFER);
     }
@@ -197,7 +198,7 @@ class BasketHandoverTest {
         service.addToBasket(basketId, aFirstItem());
         service.changeQuantity(basketId, FIRST_OFFER, 2);
 
-        service.handOver(basketId, Channel.standard);
+        service.handOver(basketId, aCaller());
 
         assertThat(checkout.accepted).singleElement().satisfies(handover ->
                 assertThat(handover.selection()).singleElement().satisfies(line -> {
@@ -212,8 +213,8 @@ class BasketHandoverTest {
         BasketId basketId = service.basketOf(CUSTOMER_ID).basketId();
         service.addToBasket(basketId, aFirstItem());
 
-        HandoverAnswer first = service.handOver(basketId, Channel.standard);
-        HandoverAnswer repeated = service.handOver(basketId, Channel.standard);
+        HandoverAnswer first = service.handOver(basketId, aCaller());
+        HandoverAnswer repeated = service.handOver(basketId, aCaller());
 
         assertThat(repeated).isEqualTo(first);
         assertThat(checkout.accepted).hasSize(1);
@@ -224,8 +225,8 @@ class BasketHandoverTest {
         baskets.save(aBasketWith(aFirstItem()));
         Instant afterMidnight = LATE_EVENING.plusSeconds(3_600);
 
-        HandoverAnswer beforeMidnight = aServiceAt(LATE_EVENING, baskets, checkout).handOver(BASKET_ID, Channel.standard);
-        HandoverAnswer acrossTheDay = aServiceAt(afterMidnight, baskets, checkout).handOver(BASKET_ID, Channel.standard);
+        HandoverAnswer beforeMidnight = aServiceAt(LATE_EVENING, baskets, checkout).handOver(BASKET_ID, aCaller());
+        HandoverAnswer acrossTheDay = aServiceAt(afterMidnight, baskets, checkout).handOver(BASKET_ID, aCaller());
 
         assertThat(anEstimate().estimate(aRequestOf(aFixedClockAt(LATE_EVENING), aFirstItem())))
                 .isNotEqualTo(anEstimate().estimate(aRequestOf(aFixedClockAt(afterMidnight), aFirstItem())));
@@ -237,10 +238,10 @@ class BasketHandoverTest {
     void answersANewRevisionAfterTheContentChanged() {
         BasketId basketId = service.basketOf(CUSTOMER_ID).basketId();
         service.addToBasket(basketId, aFirstItem());
-        HandoverAnswer first = service.handOver(basketId, Channel.standard);
+        HandoverAnswer first = service.handOver(basketId, aCaller());
 
         service.changeQuantity(basketId, FIRST_OFFER, 2);
-        HandoverAnswer second = service.handOver(basketId, Channel.standard);
+        HandoverAnswer second = service.handOver(basketId, aCaller());
 
         assertThat(second.revision()).isEqualTo(first.revision() + 2);
         assertThat(second.handoverId()).isEqualTo(first.handoverId());
@@ -252,7 +253,7 @@ class BasketHandoverTest {
         BasketId basketId = service.basketOf(CUSTOMER_ID).basketId();
         service.addToBasket(basketId, aFirstItem());
 
-        service.handOver(basketId, Channel.standard);
+        service.handOver(basketId, aCaller());
         Basket after = service.basket(basketId);
 
         assertThat(after.isActive()).isTrue();
@@ -267,7 +268,7 @@ class BasketHandoverTest {
         BasketId basketId = service.basketOf(CUSTOMER_ID).basketId();
         service.addToBasket(basketId, aFirstItem());
 
-        service.handOver(basketId, Channel.standard);
+        service.handOver(basketId, aCaller());
 
         assertThat(baskets.emitted).hasSize(2);
         assertThat(baskets.emitted.get(1)).isInstanceOf(DomainEvent.GoToCheckout.class);
@@ -282,7 +283,7 @@ class BasketHandoverTest {
         BasketId basketId = euro.basketOf(CUSTOMER_ID).basketId();
         euro.addToBasket(basketId, anItemPricedIn(FIRST_OFFER, EUR));
 
-        HandoverAnswer answer = euro.handOver(basketId, Channel.standard);
+        HandoverAnswer answer = euro.handOver(basketId, aCaller());
 
         assertThat(answer.currency()).isEqualTo(EUR);
         assertThat(answer.totals()).isEqualTo(totalsIn(EUR, 99890, 0, 9990));
@@ -294,10 +295,10 @@ class BasketHandoverTest {
     @Test
     void answersANewRevisionWhenTheConfigurationChangedTheTotals() {
         baskets.save(aBasketWith(aFirstItem()));
-        HandoverAnswer before = service.handOver(BASKET_ID, Channel.standard);
+        HandoverAnswer before = service.handOver(BASKET_ID, aCaller());
 
         HandoverAnswer after = aServiceCharging(new DeliveryRates(12_340, true), baskets, checkout)
-                .handOver(BASKET_ID, Channel.standard);
+                .handOver(BASKET_ID, aCaller());
 
         assertThat(after.totals().delivery().amount()).isEqualTo(12_340);
         assertThat(after.revision()).isGreaterThan(before.revision());
@@ -310,7 +311,7 @@ class BasketHandoverTest {
         service.addToBasket(basketId, aFirstItem());
         service.addToBasket(basketId, aThirdItemOfAnotherSeller());
 
-        HandoverAnswer answer = service.handOver(basketId, Channel.standard);
+        HandoverAnswer answer = service.handOver(basketId, aCaller());
 
         assertThat(answer.totals()).isEqualTo(totalsOf(2 * 99890, 0, 2 * 9990));
         assertThat(checkout.accepted).singleElement().satisfies(handover ->

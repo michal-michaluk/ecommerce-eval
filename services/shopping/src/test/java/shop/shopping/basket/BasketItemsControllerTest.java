@@ -176,6 +176,20 @@ class BasketItemsControllerTest {
     }
 
     @Test
+    void answersTheAvailabilityTheCatalogReportsNowOnTheRowTheCommandDidNotTouch() throws Exception {
+        setQuantity(FIRST_OFFER, "1");
+        setQuantity(SECOND_OFFER, "1");
+        catalog.sells(FIRST_OFFER, 0);
+
+        MockHttpServletResponse response = setQuantity(SECOND_OFFER, "2");
+
+        assertThat(HttpFixture.json(response, "$.items[0].offerId")).isEqualTo(FIRST_OFFER);
+        assertThat(HttpFixture.json(response, "$.items[0].availability.status")).isEqualTo("outOfStock");
+        assertThat(HttpFixture.json(response, "$.items[0].quantity")).isEqualTo(1);
+        assertThat(HttpFixture.json(response, "$.items[1].quantity")).isEqualTo(2);
+    }
+
+    @Test
     void refusesBothRoutesWithoutAToken() throws Exception {
         assertThat(HttpFixture.anonymous(mvc, patch("/baskets/{basketId}/items/{offerId}", basketId, FIRST_OFFER)
                 .contentType(APPLICATION_JSON).content("{\"quantity\": 1}")).getStatus()).isEqualTo(401);
@@ -185,10 +199,16 @@ class BasketItemsControllerTest {
 
     @Test
     void refusesBothRoutesToTheServiceToken() throws Exception {
-        assertThat(HttpFixture.asService(mvc, patch("/baskets/{basketId}/items/{offerId}", basketId, FIRST_OFFER)
-                .contentType(APPLICATION_JSON).content("{\"quantity\": 1}")).getStatus()).isEqualTo(403);
-        assertThat(HttpFixture.asService(mvc, patch("/baskets/{basketId}/items", basketId)
-                .contentType(APPLICATION_JSON).content("{\"scope\": \"all\"}")).getStatus()).isEqualTo(403);
+        MockHttpServletResponse quantity = HttpFixture.asService(mvc,
+                patch("/baskets/{basketId}/items/{offerId}", basketId, FIRST_OFFER)
+                        .contentType(APPLICATION_JSON).content("{\"quantity\": 1}"));
+        MockHttpServletResponse removal = HttpFixture.asService(mvc, patch("/baskets/{basketId}/items", basketId)
+                .contentType(APPLICATION_JSON).content("{\"scope\": \"all\"}"));
+
+        assertThat(quantity.getStatus()).isEqualTo(403);
+        assertThat(HttpFixture.body(quantity)).isEmpty();
+        assertThat(removal.getStatus()).isEqualTo(403);
+        assertThat(HttpFixture.body(removal)).isEmpty();
     }
 
     private MockHttpServletResponse setQuantity(String offerId, String quantity) throws Exception {

@@ -17,6 +17,7 @@ import static shop.shopping.basket.BasketFixture.SECOND_OFFER;
 import static shop.shopping.basket.BasketFixture.NOW;
 import static shop.shopping.basket.BasketFixture.aBasketCurrency;
 import static shop.shopping.basket.BasketFixture.aBasketWith;
+import static shop.shopping.basket.BasketFixture.aCaller;
 import static shop.shopping.basket.BasketFixture.aCatalog;
 import static shop.shopping.basket.BasketFixture.aFirstItem;
 import static shop.shopping.basket.BasketFixture.aSecondItem;
@@ -64,7 +65,7 @@ class BasketOfferAddTest {
         BasketService service = aServiceSelling(anOfferOnSaleWithStock(SOME_UNITS));
         BasketId basketId = service.basketOf(CUSTOMER_ID).basketId();
 
-        BasketContent content = service.setQuantity(basketId, OFFER, 2, Channel.standard);
+        BasketContent content = service.setQuantity(basketId, OFFER, 2, aCaller());
 
         JsonAssert.assertThat(content).hasFieldsLike(ONE_ADDED_ROW);
         assertThat(content.items()).singleElement()
@@ -75,9 +76,9 @@ class BasketOfferAddTest {
     void repeatsTheQuantityTheCommandStatesInsteadOfAddingToIt() {
         BasketService service = aServiceSelling(anOfferOnSaleWithStock(SOME_UNITS));
         BasketId basketId = service.basketOf(CUSTOMER_ID).basketId();
-        service.setQuantity(basketId, OFFER, 3, Channel.standard);
+        service.setQuantity(basketId, OFFER, 3, aCaller());
 
-        BasketContent content = service.setQuantity(basketId, OFFER, 1, Channel.standard);
+        BasketContent content = service.setQuantity(basketId, OFFER, 1, aCaller());
 
         assertThat(content.items()).singleElement()
                 .satisfies(item -> assertThat(item.quantity()).isEqualTo(1));
@@ -88,7 +89,7 @@ class BasketOfferAddTest {
         baskets.save(aBasketWith());
         BasketService service = aServiceSelling(anOfferPricedIn("EUR"));
 
-        assertThatThrownBy(() -> service.setQuantity(BASKET_ID, OFFER, 1, Channel.standard))
+        assertThatThrownBy(() -> service.setQuantity(BASKET_ID, OFFER, 1, aCaller()))
                 .isInstanceOfSatisfying(ShoppingException.class, refused ->
                         assertThat(refused.error()).isEqualTo(ShoppingException.Error.CURRENCY_MISMATCH));
     }
@@ -98,7 +99,7 @@ class BasketOfferAddTest {
         baskets.save(aBasketWith());
         BasketService service = aServiceSelling(aWithdrawnOffer());
 
-        assertThatThrownBy(() -> service.setQuantity(BASKET_ID, OFFER, 1, Channel.standard))
+        assertThatThrownBy(() -> service.setQuantity(BASKET_ID, OFFER, 1, aCaller()))
                 .isInstanceOfSatisfying(ShoppingException.class, refused ->
                         assertThat(refused.error()).isEqualTo(ShoppingException.Error.OFFER_NOT_FOUND));
     }
@@ -108,7 +109,7 @@ class BasketOfferAddTest {
         baskets.save(aBasketWith());
         BasketService service = aServiceSelling(aFailedRead());
 
-        assertThatThrownBy(() -> service.setQuantity(BASKET_ID, OFFER, 1, Channel.standard))
+        assertThatThrownBy(() -> service.setQuantity(BASKET_ID, OFFER, 1, aCaller()))
                 .isInstanceOfSatisfying(ShoppingException.class, refused ->
                         assertThat(refused.error()).isEqualTo(ShoppingException.Error.OFFER_READ_UNAVAILABLE));
     }
@@ -118,7 +119,7 @@ class BasketOfferAddTest {
         baskets.save(aBasketWith());
         BasketService service = aServiceSelling(withoutTitle());
 
-        assertThatThrownBy(() -> service.setQuantity(BASKET_ID, OFFER, 1, Channel.standard))
+        assertThatThrownBy(() -> service.setQuantity(BASKET_ID, OFFER, 1, aCaller()))
                 .isInstanceOfSatisfying(ShoppingException.class, refused ->
                         assertThat(refused.error()).isEqualTo(ShoppingException.Error.OFFER_READ_UNAVAILABLE));
     }
@@ -130,7 +131,7 @@ class BasketOfferAddTest {
         catalog.sells(SECOND_OFFER, SOME_UNITS);
         baskets.save(aBasketWith(aFirstItem(), aSecondItem()));
 
-        aServiceOf(aBasketCurrency(), NOW, baskets, catalog, checkout).render(BASKET_ID, Channel.standard);
+        aServiceOf(aBasketCurrency(), NOW, baskets, catalog, checkout).render(BASKET_ID, aCaller());
 
         assertThat(catalog.reads()).containsExactly(List.of(FIRST_OFFER, SECOND_OFFER));
     }
@@ -142,7 +143,7 @@ class BasketOfferAddTest {
         baskets.save(aBasketWith(aFirstItem()));
 
         BasketContent content = aServiceOf(aBasketCurrency(), NOW, baskets, catalog, checkout)
-                .render(BASKET_ID, Channel.standard);
+                .render(BASKET_ID, aCaller());
 
         assertThat(content.items()).singleElement().satisfies(item -> {
             assertThat(item.availability().status()).isEqualTo(Availability.Status.unavailable);
@@ -152,15 +153,39 @@ class BasketOfferAddTest {
     }
 
     @Test
-    void writesTheBasketOnEveryRenderBecauseTheReadInstantMoves() {
+    void writesTheBasketWhenThePullChangedWhatTheRowSays() {
         FixtureOfferCatalog catalog = aCatalog();
         catalog.sells(FIRST_OFFER, SOME_UNITS);
         baskets.save(aBasketWith(aFirstItem()));
         baskets.saved.clear();
 
-        aServiceOf(aBasketCurrency(), NOW, baskets, catalog, checkout).render(BASKET_ID, Channel.standard);
+        BasketContent answer = aServiceOf(aBasketCurrency(), NOW, baskets, catalog, checkout)
+                .render(BASKET_ID, aCaller());
 
         assertThat(baskets.saved).containsExactly(BASKET_ID.value());
+        assertThat(answer.items()).singleElement()
+                .satisfies(item -> assertThat(item.seller()).isEqualTo(FixtureOfferCatalog.SELLER));
+    }
+
+    @Test
+    void writesNothingWhenNeitherTheCommandNorThePullChangedAnything() {
+        FixtureOfferCatalog catalog = aCatalog();
+        catalog.sells(FIRST_OFFER, SOME_UNITS);
+        BasketService service = aServiceOf(aBasketCurrency(), NOW, baskets, catalog, checkout);
+        BasketId basketId = service.basketOf(CUSTOMER_ID).basketId();
+        service.setQuantity(basketId, OFFER, 1, aCaller());
+        long writtenOnce = revisionOf(basketId);
+        baskets.saved.clear();
+
+        service.setQuantity(basketId, OFFER, 1, aCaller());
+
+        assertThat(baskets.saved).isEmpty();
+        assertThat(revisionOf(basketId)).isEqualTo(writtenOnce);
+    }
+
+    /** The persisted document's own revision — the number the basket moves only when it is mutated (D35, D59). */
+    private long revisionOf(BasketId basketId) {
+        return baskets.stored(basketId).toSnapshot().revision();
     }
 
     /** The primary port reading one answer per asked id, so a test states the catalog's whole vocabulary in one place. */

@@ -15,8 +15,10 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
  * customer with none creates the one they always own (D29, D42, element 07 §Contract decisions).
  *
  * <p>The identity is the token's subject and never a value the client sends; the authority that gates the route is the chain's,
- * decided once in {@code AppConfiguration} (D27). The answer is the read model's, so this adapter holds the projection and
- * cannot reach the write model at all ({@code http.no-write-model-in-read}).
+ * decided once in {@code AppConfiguration} (D27), and the row it answers is the customer's own — the route filters by the subject,
+ * so no second customer can appear in a list. The answer is the read model's, so this adapter holds the projection ({@code
+ * http.no-write-model-in-read}) — with the one write element 07 §Recorded deviations grants it, because a customer with no basket
+ * gets one and the projection delegates that creation to the basket service rather than reaching the write model itself.
  */
 @RestController
 @RequiredArgsConstructor

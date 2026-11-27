@@ -12,6 +12,7 @@ import shop.shopping.IntegrationTest;
 import static org.assertj.core.api.Assertions.assertThat;
 import static shop.shopping.basket.BasketFixture.FIRST_OFFER;
 import static shop.shopping.basket.BasketFixture.aBasketOf;
+import static shop.shopping.basket.BasketFixture.aCallerOf;
 import static shop.shopping.basket.BasketFixture.aFirstItem;
 import static shop.shopping.basket.BasketFixture.aFreshCustomer;
 
@@ -35,17 +36,22 @@ class BasketHandoverDocumentTest {
     @Autowired
     BasketService service;
 
+    @Autowired
+    OfferCatalog offers;
+
     @PersistenceContext
     EntityManager entityManager;
+
+    CustomerId owner;
 
     @Test
     void answersTheSameHandoverAfterTheBasketWasRehydrated() {
         BasketId basketId = aStoredBasket();
 
-        HandoverAnswer first = service.handOver(basketId, Channel.standard);
+        HandoverAnswer first = service.handOver(basketId, aCallerOf(owner));
         entityManager.flush();
         entityManager.clear();
-        HandoverAnswer repeated = service.handOver(basketId, Channel.standard);
+        HandoverAnswer repeated = service.handOver(basketId, aCallerOf(owner));
 
         assertThat(repeated).isEqualTo(first);
         assertThat(repeated.revision()).isEqualTo(first.revision());
@@ -56,18 +62,24 @@ class BasketHandoverDocumentTest {
     void answersANewRevisionAfterTheRehydratedBasketChanged() {
         BasketId basketId = aStoredBasket();
 
-        HandoverAnswer first = service.handOver(basketId, Channel.standard);
+        HandoverAnswer first = service.handOver(basketId, aCallerOf(owner));
         entityManager.flush();
         entityManager.clear();
         service.changeQuantity(basketId, FIRST_OFFER, 2);
-        HandoverAnswer second = service.handOver(basketId, Channel.standard);
+        HandoverAnswer second = service.handOver(basketId, aCallerOf(owner));
 
         assertThat(second.revision()).isGreaterThan(first.revision());
     }
 
+    /**
+     * A stored basket of a customer of its own, and a catalog that answers nothing: the handover pulls before it composes (D66),
+     * and the provider's refusal is what leaves the row exactly as the fixture built it (element 08 §Failure mapping).
+     */
     private BasketId aStoredBasket() {
         BasketId basketId = BasketId.minted();
-        baskets.save(aBasketOf(basketId, aFreshCustomer(), aFirstItem()));
+        ((FixtureOfferCatalog) offers).failingWith(FixtureOfferCatalog.Failure.malformedRequest);
+        owner = aFreshCustomer();
+        baskets.save(aBasketOf(basketId, owner, aFirstItem()));
         return basketId;
     }
 }

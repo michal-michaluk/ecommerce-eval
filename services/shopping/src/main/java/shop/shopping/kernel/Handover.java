@@ -30,7 +30,8 @@ import java.util.stream.Stream;
  *
  * @param handoverId       the handover's identity, which is the basket's (D32)
  * @param basketId         the basket the handover belongs to
- * @param customerId       the customer the basket belongs to, taken from the token
+ * @param customerId       the customer the basket belongs to, taken from the **aggregate** — the token's subject only
+ *                         decides whether this caller may see the basket (D68), never what the payload says
  * @param currency         the one currency the basket holds (element 03 RULE-2)
  * @param revision         the basket revision this handover was composed at (D35)
  * @param createdAt        when the handover was composed

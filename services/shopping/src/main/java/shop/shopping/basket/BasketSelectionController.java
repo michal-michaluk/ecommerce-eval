@@ -19,6 +19,10 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
  * <p>Selection is state and not history (RULE-10), so the command records no event and the answer is the basket the new
  * selection prices (VIEW-1): ship it, the shipment's rows change the totals; ship it for the whole basket, every row does.
  * Deselecting everything is a valid basket with an empty selection — the refusal lives at the handover, not here (RULE-9).
+ *
+ * <p>Like every route that answers basket content it pulls before it answers (D66), so the rows it returns are the catalog's
+ * current answer, not the one they were added with — which is what makes step 15 of the contract possible without a transport.
+ * A basket owned by another customer answers {@code 404 BASKET_NOT_FOUND} (D68).
  */
 @RestController
 @RequiredArgsConstructor
@@ -31,11 +35,11 @@ class BasketSelectionController {
     BasketContent select(@PathVariable String basketId, @RequestBody @Valid SelectItems command,
             @AuthenticationPrincipal Jwt caller) {
         return baskets.updateSelection(new BasketId(basketId), command.asSelection(), command.selected(),
-                channelOf(caller));
+                callerOf(caller));
     }
 
-    private static Channel channelOf(Jwt caller) {
-        return TokenChannel.claimedAs(caller.getClaimAsString(TokenChannel.CLAIM));
+    private static Caller callerOf(Jwt caller) {
+        return Caller.of(caller.getSubject(), caller.getClaimAsString(Caller.CHANNEL_CLAIM));
     }
 
     /**

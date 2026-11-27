@@ -19,9 +19,10 @@ import shop.shopping.kernel.Handover;
  * @param handoverId the handover's identity, which is the basket's (D32)
  * @param basketId   the basket it was composed from
  * @param createdAt  when it was composed — the same instant for a repeated handover (HAND-4)
- * @param customerId the customer the basket belongs to, taken from the token
+ * @param customerId the customer the basket belongs to, as the aggregate stores it — never read from the token, because a token
+ *                   only says who is asking (element 07 §Ownership, D68), and the answer is only ever given to that owner
  * @param currency   the one currency the basket holds
- * @param selection  the offers that crossed, in the order the basket holds them (HAND-2)
+ * @param selection  the offers that crossed, sorted by offer id, so two answers of one content are one answer (HAND-2)
  * @param revision   the revision of the content that crossed, echoed on a repeat (D35, DoD30)
  * @param totals     what the customer pays for that selection (element 04)
  */

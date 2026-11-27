@@ -15,6 +15,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static shop.shopping.basket.BasketFixture.BASKET_ID;
 import static shop.shopping.basket.BasketFixture.FIRST_OFFER;
 import static shop.shopping.basket.BasketFixture.aBasketWith;
+import static shop.shopping.basket.BasketFixture.aCaller;
 import static shop.shopping.basket.BasketFixture.aFirstItem;
 import static shop.shopping.basket.BasketFixture.aLastKnown;
 import static shop.shopping.basket.BasketFixture.aRowFromBeforeTheReadInstantWasKept;
@@ -127,7 +128,7 @@ class OfferIngestionTest {
 
         assertThat(observed.items()).singleElement()
                 .satisfies(item -> assertThat(item.availability()).isEqualTo(Availability.availableWithoutStockRead()));
-        assertThat(service.handOver(BASKET_ID, Channel.standard).selection()).containsExactly(FIRST_OFFER);
+        assertThat(service.handOver(BASKET_ID, aCaller()).selection()).containsExactly(FIRST_OFFER);
     }
 
     @Test
@@ -280,10 +281,10 @@ class OfferIngestionTest {
     @Test
     void changesTheNextHandoverNotTheOneThatCrossed() {
         baskets.save(aBasketWith(aFirstItem()));
-        service.handOver(BASKET_ID, Channel.standard);
+        service.handOver(BASKET_ID, aCaller());
 
         service.applyObservation(BASKET_ID, aPriceChangeOf(OFFER, A_LATER_READ_AT, LIST_PRICE));
-        service.handOver(BASKET_ID, Channel.standard);
+        service.handOver(BASKET_ID, aCaller());
 
         Handover crossed = checkout.accepted.get(0);
         Handover next = checkout.accepted.get(1);

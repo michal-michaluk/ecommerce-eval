@@ -16,9 +16,11 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
  * not a navigation, so it is a {@code PATCH} with no resource of its own (element 07 §Contract decisions, D32).
  *
  * <p>The answer is {@link HandoverAnswer} and not the payload that crosses: the client reads the offers that crossed, the four
- * totals and the identity of the handover, never checkout's own id (D41). A basket that is blocked, empty-handed or archived is
- * refused by the aggregate and reaches the wire through the one advice — {@code 422 NOTHING_SELECTED},
- * {@code 422 BLOCKED_BY_ITEMS} with the rows that refuse it, {@code 422 BASKET_INACTIVE} — so this adapter decides nothing.
+ * totals and the identity of the handover, never checkout's own id (D41). The route pulls before it composes (D66), so what
+ * crosses is the basket as the catalog describes it now, not as it was when the row was added. A basket that is blocked,
+ * empty-handed or archived is refused by the aggregate and reaches the wire through the one advice — {@code 422
+ * NOTHING_SELECTED}, {@code 422 BLOCKED_BY_ITEMS} with the rows that refuse it, {@code 422 BASKET_INACTIVE} — and a basket
+ * owned by another customer is {@code 404 BASKET_NOT_FOUND} (D68), so no answer echoes its owner.
  */
 @RestController
 @RequiredArgsConstructor
@@ -29,11 +31,11 @@ class BasketCheckoutController {
     @PatchMapping(path = "/baskets/{basketId}/checkout", produces = APPLICATION_JSON_VALUE)
     HandoverAnswer handOver(@PathVariable String basketId, @RequestBody(required = false) @Valid HandOver handOver,
             @AuthenticationPrincipal Jwt caller) {
-        return baskets.handOver(new BasketId(basketId), channelOf(caller));
+        return baskets.handOver(new BasketId(basketId), callerOf(caller));
     }
 
-    private static Channel channelOf(Jwt caller) {
-        return TokenChannel.claimedAs(caller.getClaimAsString(TokenChannel.CLAIM));
+    private static Caller callerOf(Jwt caller) {
+        return Caller.of(caller.getSubject(), caller.getClaimAsString(Caller.CHANNEL_CLAIM));
     }
 
     /**

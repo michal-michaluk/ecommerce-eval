@@ -12,10 +12,11 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 /**
  * {@code GET /baskets/{basketId}} — step 11 of the contract: content, totals and the delivery estimate in one call (D10).
  *
- * <p>It is the one read that writes (D62): the render pulls the basket's offers through the catalog, applies each answer
- * through the ingestion path and stores before it computes, so two concurrent renders of one basket can answer
- * {@code 409 CONCURRENT_MODIFICATION} — a retryable answer the client owns. It therefore holds the write model, which is the
- * third recorded deviation of element 07 §Recorded deviations, and not the projection.
+ * <p>It is one of the routes that pull and write (D66, D62): it re-reads the basket's offers, applies each answer through the
+ * ingestion path and stores what changed, so two concurrent answers to one basket can report
+ * {@code 409 CONCURRENT_MODIFICATION} — a retryable answer the client owns. It therefore holds the write model, which is one of
+ * element 07 §Recorded deviations, and not the projection. A basket owned by another customer answers {@code 404}, exactly as an
+ * unknown id does (D68).
  */
 @RestController
 @RequiredArgsConstructor
@@ -25,10 +26,10 @@ class BasketController {
 
     @GetMapping(path = "/baskets/{basketId}", produces = APPLICATION_JSON_VALUE)
     BasketContent read(@PathVariable String basketId, @AuthenticationPrincipal Jwt caller) {
-        return baskets.render(new BasketId(basketId), channelOf(caller));
+        return baskets.render(new BasketId(basketId), callerOf(caller));
     }
 
-    private static Channel channelOf(Jwt caller) {
-        return TokenChannel.claimedAs(caller.getClaimAsString(TokenChannel.CLAIM));
+    private static Caller callerOf(Jwt caller) {
+        return Caller.of(caller.getSubject(), caller.getClaimAsString(Caller.CHANNEL_CLAIM));
     }
 }
