@@ -122,9 +122,43 @@ public class OfferCatalogFixture {
     }
 
     public static OfferObservationCommand aPriceChangeOf(String offerId, Instant readAt, long currentPrice) {
-        return new OfferObservationCommand.Refreshed(offerId, readAt,
+        return OfferObservationCommand.refreshed(offerId, readAt,
                 new OfferObservationCommand.OfferSnapshot(null, null,
                         new Money(currentPrice, BasketFixture.PLN, Money.Kind.charge), null));
+    }
+
+    /**
+     * A discount reported in a currency the row cannot take, with no price beside it — the one shape that names a foreign
+     * amount while {@code currentPrice} stays absent, which is how the row's currency guard is reached from one side.
+     *
+     * @param offerId the row the change is reported for
+     * @param readAt  when the change was reported
+     * @param currency the currency the provider stated the discount in
+     * @param discount the discount it named, in that currency
+     * @return the command the change is applied with
+     */
+    public static OfferObservationCommand aDiscountChangeIn(String offerId, Instant readAt, String currency,
+            long discount) {
+        return OfferObservationCommand.refreshed(offerId, readAt,
+                new OfferObservationCommand.OfferSnapshot(null, null, null,
+                        new Money(discount, currency, Money.Kind.discount)));
+    }
+
+    /**
+     * A price change reported in a currency the row cannot take — element 10's event, which element 03 RULE-2 makes
+     * unconvertible, so the row keeps the prices it already holds (D63).
+     *
+     * @param offerId      the row the change is reported for
+     * @param readAt       when the change was reported
+     * @param currency     the currency the provider priced the change in
+     * @param currentPrice the price it named, in that currency
+     * @return the command the change is applied with
+     */
+    public static OfferObservationCommand aPriceChangeIn(String offerId, Instant readAt, String currency,
+            long currentPrice) {
+        return OfferObservationCommand.refreshed(offerId, readAt,
+                new OfferObservationCommand.OfferSnapshot(null, null,
+                        new Money(currentPrice, currency, Money.Kind.charge), null));
     }
 
     public static OfferRecord withoutASeller(String offerId) {
@@ -148,6 +182,23 @@ public class OfferCatalogFixture {
         OfferRecord.OfferDescription described = aDescription();
         return new OfferRecord.OfferDescription(described.seller(), null, described.pictureUrl(),
                 described.price(), described.currentPrice(), described.discount());
+    }
+
+    /**
+     * The provider's answer that describes the offer and names no price at all — a {@code 200} that says what the offer is and
+     * nothing about what it costs, which refreshes the row's content and leaves its last-known prices standing.
+     *
+     * @return the answer as the port read it
+     */
+    public static OfferRecord withoutAPrice() {
+        return new OfferRecord(OFFER, aDescriptionWithoutAPrice(), OfferObservation.OfferState.onSale,
+                new OfferObservation.Stock.Quantity(SOME_UNITS), READ_AT);
+    }
+
+    private static OfferRecord.OfferDescription aDescriptionWithoutAPrice() {
+        OfferRecord.OfferDescription described = aDescription();
+        return new OfferRecord.OfferDescription(described.seller(), described.title(), described.pictureUrl(),
+                described.price(), null, null);
     }
 
     public static OfferRecord.OfferDescription aDescriptionWithoutASeller() {

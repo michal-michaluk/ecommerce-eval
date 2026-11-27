@@ -20,6 +20,16 @@ import static shop.shopping.basket.OfferSeedFixture.A_CURRENT_PRICE_IN_PLN;
 import static shop.shopping.basket.OfferSeedFixture.NO_DISCOUNT_IN_PLN;
 import static shop.shopping.basket.OfferSeedFixture.aFixtureOf;
 import static shop.shopping.basket.OfferSeedFixture.aSeededOffer;
+import static shop.shopping.basket.OfferSeedFixture.aSeededOfferReadZeroTimes;
+import static shop.shopping.basket.OfferSeedFixture.aSeededOfferWhoseStockWasNeverRead;
+import static shop.shopping.basket.OfferSeedFixture.aSeededOfferWithABlankTitle;
+import static shop.shopping.basket.OfferSeedFixture.aSeededOfferWithoutAnswers;
+import static shop.shopping.basket.OfferSeedFixture.aSeededOfferWithoutCurrency;
+import static shop.shopping.basket.OfferSeedFixture.aSeededOfferWithoutId;
+import static shop.shopping.basket.OfferSeedFixture.aSeededOfferWithAnEmptyAnswerQueue;
+import static shop.shopping.basket.OfferSeedFixture.aSeededOfferWithoutListPrice;
+import static shop.shopping.basket.OfferSeedFixture.aSeededOfferWithoutPicture;
+import static shop.shopping.basket.OfferSeedFixture.aSeededOfferWithoutSeller;
 import static shop.shopping.basket.OfferSeedFixture.aSeededOfferWithoutTitle;
 import static shop.shopping.basket.BasketPriceFixture.aBasketOf;
 import static shop.shopping.basket.BasketPriceFixture.aPrice;
@@ -117,6 +127,79 @@ class BasketConfigurationTest {
         assertThatThrownBy(() -> BasketConfiguration.offeringsOf(aFixtureOf(aSeededOffer("OF-1002", "many", null))))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("neither notRead nor a count");
+    }
+
+    @Test
+    void refusesASeedThatStatesNoSeller() {
+        assertThatThrownBy(() -> BasketConfiguration.offeringsOf(aFixtureOf(aSeededOfferWithoutSeller("OF-1001"))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("states no seller");
+    }
+
+    @Test
+    void refusesASeedThatStatesNoPicture() {
+        assertThatThrownBy(() -> BasketConfiguration.offeringsOf(aFixtureOf(aSeededOfferWithoutPicture("OF-1001"))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("states no picture");
+    }
+
+    @Test
+    void refusesASeedThatStatesNoListPrice() {
+        assertThatThrownBy(() -> BasketConfiguration.offeringsOf(aFixtureOf(aSeededOfferWithoutListPrice("OF-1001"))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("states no list-price");
+    }
+
+    @Test
+    void refusesASeedThatStatesNoCurrency() {
+        assertThatThrownBy(() -> BasketConfiguration.offeringsOf(aFixtureOf(aSeededOfferWithoutCurrency("OF-1001"))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("states no currency");
+    }
+
+    @Test
+    void refusesASeedWhoseTitleIsStatedButBlank() {
+        assertThatThrownBy(() -> BasketConfiguration.offeringsOf(aFixtureOf(aSeededOfferWithABlankTitle("OF-1001"))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("states no title");
+    }
+
+    @Test
+    void refusesASeedThatAnswersAReadCountOfZero() {
+        assertThatThrownBy(() -> BasketConfiguration.offeringsOf(aFixtureOf(aSeededOfferReadZeroTimes("OF-1001"))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("reads, which is no answer");
+    }
+
+    @Test
+    void seedsAReadThatAnsweredNothingAsTheOneNeverReadAnswer() {
+        FixtureOfferCatalog.Offering seeded =
+                BasketConfiguration.offeringsOf(aFixtureOf(aSeededOfferWhoseStockWasNeverRead("OF-1001"))).get(0);
+
+        assertThat(seeded.stockAnswers()).containsExactly(OfferObservation.Stock.NotRead.notRead);
+    }
+
+    @Test
+    void seedsTheNeverReadAnswerForASeedThatStatesNoAnswers() {
+        FixtureOfferCatalog.Offering seeded =
+                BasketConfiguration.offeringsOf(aFixtureOf(aSeededOfferWithoutAnswers("OF-1001"))).get(0);
+
+        assertThat(seeded.stockAnswers()).containsExactly(OfferObservation.Stock.NotRead.notRead);
+    }
+
+    @Test
+    void seedsTheNeverReadAnswerForASeedWhoseAnswerQueueIsEmpty() {
+        FixtureOfferCatalog.Offering seeded =
+                BasketConfiguration.offeringsOf(aFixtureOf(aSeededOfferWithAnEmptyAnswerQueue("OF-1001"))).get(0);
+
+        assertThat(seeded.stockAnswers()).containsExactly(OfferObservation.Stock.NotRead.notRead);
+    }
+
+    @Test
+    void refusesASeedThatStatesNoId() {
+        assertThatThrownBy(() -> BasketConfiguration.offeringsOf(aFixtureOf(aSeededOfferWithoutId())))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("states no id");
     }
 
 }

@@ -44,11 +44,11 @@ class ArchitectureTest {
 
     @ArchTest
     public static final ArchRule basketAdaptersDependencies =
-            ArchitectureDescription.adaptersDependencies(BASKET, sharedKernelUsed).allowEmptyShould(true);
+            ArchitectureDescription.adaptersDependencies(BASKET, sharedKernelUsed);
 
     @ArchTest
     public static final ArchRule basketServicesDependencies =
-            ArchitectureDescription.servicesDependencies(BASKET, sharedKernelUsed).allowEmptyShould(true);
+            ArchitectureDescription.servicesDependencies(BASKET, sharedKernelUsed);
 
     @ArchTest
     public static final ArchRule basketModelDependencies =
@@ -56,11 +56,11 @@ class ArchitectureTest {
 
     @ArchTest
     public static final ArchRule basketAdaptersIsolation =
-            ArchitectureDescription.adaptersIsolation(BASKET).allowEmptyShould(true);
+            ArchitectureDescription.adaptersIsolation(BASKET);
 
     @ArchTest
     public static final ArchRule basketServicesIsolation =
-            ArchitectureDescription.servicesIsolation(BASKET, ArchitectureDescription.mediators).allowEmptyShould(true);
+            ArchitectureDescription.servicesIsolation(BASKET, ArchitectureDescription.mediators);
 
     @ArchTest
     public static final ArchRule basketModelIsolation =
@@ -72,7 +72,7 @@ class ArchitectureTest {
 
     @ArchTest
     public static final ArchRule checkoutServicesDependencies =
-            ArchitectureDescription.servicesDependencies(CHECKOUT, sharedKernelUsed).allowEmptyShould(true);
+            ArchitectureDescription.servicesDependencies(CHECKOUT, sharedKernelUsed);
 
     @ArchTest
     public static final ArchRule checkoutModelDependencies =
@@ -84,7 +84,7 @@ class ArchitectureTest {
 
     @ArchTest
     public static final ArchRule checkoutServicesIsolation =
-            ArchitectureDescription.servicesIsolation(CHECKOUT, ArchitectureDescription.mediators).allowEmptyShould(true);
+            ArchitectureDescription.servicesIsolation(CHECKOUT, ArchitectureDescription.mediators);
 
     @ArchTest
     public static final ArchRule checkoutModelIsolation =

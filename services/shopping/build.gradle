@@ -171,6 +171,11 @@ tasks.register("trivyScanImage", Exec) {
 
 
 jacocoTestCoverageVerification {
+    // Both halves of the report are inputs: the exec file is what `test` writes, and a verification that does not depend on it
+    // reads whatever the last run left behind — an exec narrowed by a filtered `test --tests '…'` reads as 0 % coverage and
+    // fails a gate that is actually met, while a stale full exec passes a gate nobody re-ran. The band is measured on the
+    // suite, so the suite is a dependency.
+    dependsOn test
     dependsOn jacocoTestReport
     // The skeleton ships no business context, so there is nothing to cover yet. A context is a package under the root
     // that is neither `tools` nor `mediators`; while none exists the gate stays off instead of demanding 80% of nothing.

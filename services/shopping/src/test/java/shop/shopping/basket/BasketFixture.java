@@ -123,6 +123,17 @@ public class BasketFixture {
         return new BasketItem(FIRST_OFFER, UGREEN, 1, true, Availability.available(), aLastKnown(), null);
     }
 
+    /**
+     * One row's snapshot priced in one currency and discounted in another — the pair no row may hold (D63, element 03
+     * RULE-2), so building it is the refusal under test.
+     *
+     * @return the snapshot as the row would have parsed it
+     */
+    public static BasketItem.LastKnown aLastKnownPricedInTwoCurrencies() {
+        return new BasketItem.LastKnown("UGREEN Nexode", "img-1001",
+                MoneyFixture.aCurrentPrice(), Money.zero(EUR, Money.Kind.discount));
+    }
+
     public static BasketItem.LastKnown aLastKnown() {
         return new BasketItem.LastKnown(
                 "UGREEN Nexode Szybka Ładowarka Sieciowa USB 2x USB Typ C Zasilacz QC PD 65W",

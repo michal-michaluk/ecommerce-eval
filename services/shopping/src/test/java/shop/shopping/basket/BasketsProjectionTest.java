@@ -3,6 +3,9 @@ package shop.shopping.basket;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+
 import shop.shopping.IntegrationTest;
 import shop.shopping.JsonAssert;
 
@@ -24,6 +27,8 @@ class BasketsProjectionTest {
     BasketsProjection projection;
     @Autowired
     BasketsProjection.SummaryRows summaries;
+    @PersistenceContext
+    EntityManager entityManager;
 
     @Test
     void createsTheBasketTheCustomerHasNoneOfAndAnswersItsRow() {
@@ -67,7 +72,26 @@ class BasketsProjectionTest {
         assertThat(versionOf(basketId)).isEqualTo(writtenOnce);
     }
 
+    /**
+     * The row a read has to correct: a basket whose stored row contradicts it is rewritten, and the rewrite is what bumps
+     * {@code version}. Nothing archives a basket in this increment (HAND-3, D4), so the contradiction is planted in the row
+     * itself — which is also the only way to tell a version apart from the constant zero a broken accessor would answer.
+     */
+    @Test
+    void rewritesARowThatContradictsTheBasketAndBumpsItsVersion() {
+        CustomerId customer = aFreshCustomer();
+        String basketId = projection.summariesOf(customer).get(0).basketId();
+        long writtenOnce = versionOf(basketId);
+        entityManager.createNativeQuery("update basket_summary set active = false where basket_id = :basketId")
+                .setParameter("basketId", basketId)
+                .executeUpdate();
+        entityManager.clear();
+
+        projection.summariesOf(customer);
+
+        assertThat(versionOf(basketId)).isGreaterThan(writtenOnce);
+    }
+
     private long versionOf(String basketId) {
         return summaries.findById(basketId).orElseThrow().version();
-    }
-}
+    }}

@@ -5,8 +5,29 @@ metadata:
 spec:
   template:
     spec:
+      # A strategic-merge patch is scanned as a whole Deployment, so the guard rails the base states are restated here — the
+      # same values, not a second policy: an overlay that carried only `env` reads to a scanner (and to a reader) as a pod with
+      # no security context at all. Trivy's KSV-0014/KSV-0118 are what that reading costs, and the merged pod is unchanged.
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: shopping
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
           # The base Deployment carries no telemetry: the collector is per namespace
           # (`k8s/infra/otel-collector.yaml`) and a developer's machine has none, so only this
           # overlay turns the exporter on. `env` merges by name, so the datasource and issuer

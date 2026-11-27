@@ -30,7 +30,7 @@ public class OfferSeedFixture {
     public static final Money A_CURRENT_PRICE_IN_PLN = new Money(CURRENT_PRICE, BasketFixture.PLN);
     public static final Money NO_DISCOUNT_IN_PLN = new Money(NO_DISCOUNT, BasketFixture.PLN, Money.Kind.discount);
 
-    private static final int ONE_READ = 1;
+    private static final List<StockAnswer> AN_ANSWER = List.of(new StockAnswer("9", null));
 
     private OfferSeedFixture() {
     }
@@ -66,11 +66,129 @@ public class OfferSeedFixture {
      * @return the seeded offer as it binds
      */
     public static SeededOffer aSeededOfferWithoutTitle(String offerId) {
-        return new SeededOffer(offerId, SELLER, null, "https://fixture.invalid/" + offerId + ".png",
-                LIST_PRICE, CURRENT_PRICE, NO_DISCOUNT, BasketFixture.PLN, null,
-                List.of(new StockAnswer(String.valueOf(ONE_READ), null)));
+        return new SeededOffer(offerId, SELLER, null, aPictureOf(offerId),
+                LIST_PRICE, CURRENT_PRICE, NO_DISCOUNT, BasketFixture.PLN, null, AN_ANSWER);
     }
 
+    /**
+     * One offer of that block that names no seller — the field RULE-7 groups the row into a shipment by, so a seed without it
+     * describes no row either.
+     *
+     * @param offerId the offer the deployment seeds
+     * @return the seeded offer as it binds
+     */
+    public static SeededOffer aSeededOfferWithoutSeller(String offerId) {
+        return new SeededOffer(offerId, null, aTitleOf(offerId), aPictureOf(offerId),
+                LIST_PRICE, CURRENT_PRICE, NO_DISCOUNT, A_LOWER_CASE_CURRENCY, null, AN_ANSWER);
+    }
+
+    /**
+     * One offer of that block that names no picture — a row renders one, so an offer that names none cannot answer it.
+     *
+     * @param offerId the offer the deployment seeds
+     * @return the seeded offer as it binds
+     */
+    public static SeededOffer aSeededOfferWithoutPicture(String offerId) {
+        return new SeededOffer(offerId, SELLER, aTitleOf(offerId), null,
+                LIST_PRICE, CURRENT_PRICE, NO_DISCOUNT, A_LOWER_CASE_CURRENCY, null, AN_ANSWER);
+    }
+
+    /**
+     * One offer of that block that names no list price — the one amount no row may hold yet every offer must state (D53).
+     *
+     * @param offerId the offer the deployment seeds
+     * @return the seeded offer as it binds
+     */
+    public static SeededOffer aSeededOfferWithoutListPrice(String offerId) {
+        return new SeededOffer(offerId, SELLER, aTitleOf(offerId), aPictureOf(offerId),
+                null, CURRENT_PRICE, NO_DISCOUNT, A_LOWER_CASE_CURRENCY, null, AN_ANSWER);
+    }
+
+    /**
+     * One offer of that block that names no currency — the one property every amount of the offer is read in.
+     *
+     * @param offerId the offer the deployment seeds
+     * @return the seeded offer as it binds
+     */
+    public static SeededOffer aSeededOfferWithoutCurrency(String offerId) {
+        return new SeededOffer(offerId, SELLER, aTitleOf(offerId), aPictureOf(offerId),
+                LIST_PRICE, CURRENT_PRICE, NO_DISCOUNT, null, null, AN_ANSWER);
+    }
+
+    /**
+     * One offer of that block whose title is stated but empty — present in the document, describing nothing.
+     *
+     * @param offerId the offer the deployment seeds
+     * @return the seeded offer as it binds
+     */
+    public static SeededOffer aSeededOfferWithABlankTitle(String offerId) {
+        return new SeededOffer(offerId, SELLER, "  ", aPictureOf(offerId),
+                LIST_PRICE, CURRENT_PRICE, NO_DISCOUNT, A_LOWER_CASE_CURRENCY, null, AN_ANSWER);
+    }
+
+    /**
+     * One offer of that block whose queue holds an answer for no read at all — a count that can never be handed out.
+     *
+     * @param offerId the offer the deployment seeds
+     * @return the seeded offer as it binds
+     */
+    public static SeededOffer aSeededOfferReadZeroTimes(String offerId) {
+        return new SeededOffer(offerId, SELLER, aTitleOf(offerId), aPictureOf(offerId),
+                LIST_PRICE, CURRENT_PRICE, NO_DISCOUNT, A_LOWER_CASE_CURRENCY, null,
+                List.of(new StockAnswer("9", 0)));
+    }
+
+    /**
+     * One offer of that block whose warehouse answered {@code notRead} — the read that says nothing about stock (A5).
+     *
+     * @param offerId the offer the deployment seeds
+     * @return the seeded offer as it binds
+     */
+    public static SeededOffer aSeededOfferWhoseStockWasNeverRead(String offerId) {
+        return new SeededOffer(offerId, SELLER, aTitleOf(offerId), aPictureOf(offerId),
+                LIST_PRICE, CURRENT_PRICE, NO_DISCOUNT, A_LOWER_CASE_CURRENCY, null,
+                List.of(new StockAnswer(OfferObservation.Stock.NotRead.notRead.name(), null)));
+    }
+
+    /**
+     * One offer of that block that states no queue — an offer whose stock nobody reads at all (A5).
+     *
+     * @param offerId the offer the deployment seeds
+     * @return the seeded offer as it binds
+     */
+    public static SeededOffer aSeededOfferWithoutAnswers(String offerId) {
+        return new SeededOffer(offerId, SELLER, aTitleOf(offerId), aPictureOf(offerId),
+                LIST_PRICE, CURRENT_PRICE, NO_DISCOUNT, A_LOWER_CASE_CURRENCY, null, null);
+    }
+
+    /**
+     * One offer of that block whose queue is stated but empty — an offer nobody read either.
+     *
+     * @param offerId the offer the deployment seeds
+     * @return the seeded offer as it binds
+     */
+    public static SeededOffer aSeededOfferWithAnEmptyAnswerQueue(String offerId) {
+        return new SeededOffer(offerId, SELLER, aTitleOf(offerId), aPictureOf(offerId),
+                LIST_PRICE, CURRENT_PRICE, NO_DISCOUNT, A_LOWER_CASE_CURRENCY, null, List.of());
+    }
+
+    /**
+     * One entry of that block that names no offer at all — a row of the document that matches nothing the provider reads.
+     *
+     * @return the seeded offer as it binds
+     */
+    public static SeededOffer aSeededOfferWithoutId() {
+        return new SeededOffer(null, SELLER, "Fixture offer without an id", "https://fixture.invalid/no-id.png",
+                LIST_PRICE, CURRENT_PRICE, NO_DISCOUNT, A_LOWER_CASE_CURRENCY, null, AN_ANSWER);
+    }
+
+    private static String aTitleOf(String offerId) {
+        return "Fixture offer " + offerId;
+    }
+
+    private static String aPictureOf(String offerId) {
+        return "https://fixture.invalid/" + offerId + ".png";
+    }
     /**
      * The catalog a deployment's seed makes, as the port answers from it.
      *
