@@ -6,7 +6,7 @@ Session: `2026-11-26T20:18:12Z` · branch `feat/basket` off `main` @ `62fed7a` �
 
 - Spec ticket: [#70 basket — specification session](https://github.com/michal-michaluk/ecommerce-eval/issues/70) (closed)
 - Plan ticket: [#83 basket — implementation plan](https://github.com/michal-michaluk/ecommerce-eval/issues/83)
-- Impl: sub-tasks created by the `implement` skill; report and PRs recorded there
+- Impl: sub-tasks #84 (scaffold), #85 (customer-security), #86 (kernel-money), #87 (basket-editor), #88 (price), #89 (availability), #90 (estimate), #91 (offer port), #92 (handover), #93 (http-api), #94 (prove-harness), #95 (prove-contract), #96 (service-gates), #97 (prove-dod), #98 (documentation), #99 (review-branch) — all closed; report #100
 
 ## Implementation Plan
 
@@ -260,6 +260,7 @@ Session: `2026-11-26T20:18:12Z` · branch `feat/basket` off `main` @ `62fed7a` �
 - **`BasketFixture` is at 39 methods against an `error` bound of 40** — one helper away from turning the `sqt` gate red. The next fixture growth must split the class, not extend it.
 - **The two kernel/slice shape checks close only the import-shaped half of the gap** the aggregate node recorded: a framework type named by fully-qualified name, a nested `@ConfigurationProperties` record, and a `*Configuration` declared as a `record` still pass. They are improvements, not closures — the doctrine's own `utils.no-context-dependency` is unimplemented in every service.
 - **The service's operations material lives in `services/shopping/docs/offer-fixture.md` and `tech-update.md`**, not under a `docs/runbook/` directory — no service in this repo has one, and the docset node is where operator-facing prose belongs.
+- **`run-apps` port-forward bookkeeping is wrong and it blocks the contract**: the pid recorded in `.agents/runtime/processes.json` is not the pid that holds the port, and a later `deploy` aborts with "host port 8082 is already taken by pid …" — taken by its own child. `status --json` then reports `alive: false`, so `prove-local.sh` refuses to start. Fix belongs in the skill: record the pid of the process that actually listens, and do not probe the port before the child has bound it.
 - **The default (fulfillment) docset's `drift` stage is red on `main`**: `docs/generated/data/git_history.json` was last written at `aa370ee` and 33+ commits have landed since, so the stage reports the revision history as stale. One command closes it — `python3 docs/scripts/extract-data.py` with the default config — but that regenerates fulfillment's rendered revision history, which is the operator's call, not a docset node's side effect.
 - **The generated docset does not cover `shopping`** — `docs/scripts/config.json` is pinned to `services/fulfillment` with exact expected counts; repointing it would break every authored chapter, so the service carries its own `docs/runbook` instead.
 - **No `retro` skill is installed**, so the plan's retrospective phase is dropped rather than improvised.
