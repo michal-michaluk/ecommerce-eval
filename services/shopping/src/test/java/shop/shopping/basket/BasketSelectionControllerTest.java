@@ -145,16 +145,70 @@ class BasketSelectionControllerTest {
 
     @Test
     void refusesACommandThatNamesNoSubjectOnItsOwn() throws Exception {
-        assertThat(select("""
+        MockHttpServletResponse response = select("""
                 { "scope": "item", "selected": false }
-                """).getStatus()).isEqualTo(400);
+                """);
+
+        assertThat(response.getStatus()).isEqualTo(400);
+        JsonAssert.assertThat(HttpFixture.body(response)).isExactlyLike("""
+                { "errors": [ { "field": "subjectNamed", "message": "scope item names an offer and scope shipment names a seller" } ] }
+                """);
     }
 
     @Test
     void refusesACommandWithoutAScopeAsTheMalformedRequestItIs() throws Exception {
-        assertThat(select("""
+        MockHttpServletResponse response = select("""
                 { "selected": true }
-                """).getStatus()).isEqualTo(400);
+                """);
+
+        assertThat(response.getStatus()).isEqualTo(400);
+        JsonAssert.assertThat(HttpFixture.body(response)).isExactlyLike("""
+                { "errors": [ { "field": "scope", "message": "a selection names its scope: item, shipment or all" } ] }
+                """);
+    }
+
+    @Test
+    void refusesAComponentNoSelectionCommandDeclaresAndNamesIt() throws Exception {
+        MockHttpServletResponse response = select("""
+                { "scope": "all", "selected": true, "scopes": "all" }
+                """);
+
+        assertThat(response.getStatus()).isEqualTo(400);
+        JsonAssert.assertThat(HttpFixture.body(response)).isExactlyLike("""
+                { "errors": [ { "field": "scopes", "message": "scopes is not a component of this command" } ] }
+                """);
+    }
+
+    @Test
+    void refusesAScopeTheSelectionDoesNotKnow() throws Exception {
+        MockHttpServletResponse response = select("""
+                { "scope": "bogus", "selected": true }
+                """);
+
+        assertThat(response.getStatus()).isEqualTo(400);
+        JsonAssert.assertThat(HttpFixture.body(response)).isExactlyLike("""
+                { "errors": [ { "field": "scope", "message": "the body does not read as this command" } ] }
+                """);
+    }
+
+    @Test
+    void refusesABodyThatIsNotJSONAtAll() throws Exception {
+        MockHttpServletResponse response = select("{ \"scope\": ");
+
+        assertThat(response.getStatus()).isEqualTo(400);
+        JsonAssert.assertThat(HttpFixture.body(response)).isExactlyLike("""
+                { "errors": [ { "message": "the body does not read as this command" } ] }
+                """);
+    }
+
+    @Test
+    void refusesABodyThatIsNoCommandObjectAtAll() throws Exception {
+        MockHttpServletResponse response = select("[]");
+
+        assertThat(response.getStatus()).isEqualTo(400);
+        JsonAssert.assertThat(HttpFixture.body(response)).isExactlyLike("""
+                { "errors": [ { "message": "the body does not read as this command" } ] }
+                """);
     }
 
     @Test

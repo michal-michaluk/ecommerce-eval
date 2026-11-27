@@ -213,11 +213,6 @@ public class OfferCatalogFixture {
                 described.price(), currentPrice, described.discount());
     }
 
-    public static OfferObservationCommand.OfferSnapshot aSnapshotPricedInTwoCurrencies() {
-        return new OfferObservationCommand.OfferSnapshot(null, null, A_CHARGED_PRICE,
-                new Money(DISCOUNT, "EUR", Money.Kind.discount));
-    }
-
     public static BasketItem.LastKnown aSnapshotOfTheAnswer() {
         return new BasketItem.LastKnown("UGREEN Nexode 65W", "img-1001", A_CHARGED_PRICE, A_DISCOUNTED_AMOUNT);
     }

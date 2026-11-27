@@ -169,7 +169,7 @@ class BasketContentTest {
     /** The payload of one snapshot, priced and dated by the two policies the service holds — no HTTP, no container. */
     private static BasketContent contentOf(Basket basket) {
         return BasketContent.of(basket,
-                BasketPriceCalculation.defaultCalculation().calculate(basket, Channel.standard),
+                new BasketPriceCalculation(DeliveryRates.defaultRates()).calculate(basket, Channel.standard),
                 ShipmentEstimates.answeredBy(BasketDeliveryEstimate.defaultEstimate())
                         .latestTo(basket.items(), Channel.standard, BasketFixture.NOW),
                 DeliveryRates.defaultRates().rateFor(Channel.standard, BasketFixture.PLN));

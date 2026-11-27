@@ -59,8 +59,10 @@ class CheckoutServiceTest {
         checkout.accept(aHandover(3));
 
         assertThatThrownBy(() -> checkout.accept(aHandoverOfOtherContent(2)))
-                .isInstanceOfSatisfying(ShoppingException.class, refused -> assertThat(refused.error())
-                        .isEqualTo(ShoppingException.Error.CONCURRENT_MODIFICATION));
+                .isInstanceOfSatisfying(ShoppingException.class, refused -> {
+                    assertThat(refused.error()).isEqualTo(ShoppingException.Error.HANDOVER_STALE);
+                    assertThat(refused.details()).containsExactly(BASKET_ID, 2L, 3L);
+                });
     }
 
     @Test

@@ -29,6 +29,12 @@ import shop.shopping.kernel.ShoppingException;
  * previous one, and it is accepted rather than swallowed. Keying on the revision alone would answer the old receipt for new
  * content and leave the customer's change un-ordered.
  *
+ * <p>The stale handover is refused with {@link ShoppingException.Error#HANDOVER_STALE} — the slice's own code, which the
+ * advice deliberately leaves unmapped, so the answer is the {@code 500} element 09 §Failure outcomes gives "checkout slice
+ * rejects the payload". It is unreachable from the wire in this increment: the basket hands over the revision it just stored
+ * and the revision only grows, so nothing older can arrive. Borrowing {@code CONCURRENT_MODIFICATION} for it would tell a
+ * client to retry a payload the receiver has already discarded.
+ *
  * <p>What it holds is per process and unbounded: one accepted revision, digest and receipt per basket ever handed over. D4's
  * precondition is that this becomes a durable row written in the same transaction as the order it creates — anything less and
  * a restart can lose the receipt of a checkout that was already accepted. Forgetting it on a restart today forgets an id, not a
@@ -46,7 +52,8 @@ class CheckoutService implements CheckoutHandovers {
     public CheckoutHandover accept(Handover handover) {
         Accepted held = acceptedPerBasket.get(handover.basketId());
         if (held != null && handover.revision() < held.revision()) {
-            throw new ShoppingException(ShoppingException.Error.CONCURRENT_MODIFICATION, handover.basketId());
+            throw new ShoppingException(ShoppingException.Error.HANDOVER_STALE, handover.basketId(),
+                    handover.revision(), held.revision());
         }
         return held != null && held.contentDigest().equals(handover.contentDigest())
                 ? held.receipt()

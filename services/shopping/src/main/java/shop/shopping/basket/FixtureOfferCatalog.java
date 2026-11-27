@@ -2,7 +2,8 @@ package shop.shopping.basket;
 
 import java.time.Clock;
 import java.time.Instant;
-import java.util.ArrayList;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,8 +22,10 @@ import shop.shopping.kernel.Money;
  * (D67): {@link Offering} carries every field a read answers — seller, title, picture, list price, current price, discount,
  * currency, {@code offerState} — and the stock answers in the order the reads of that offer receive them, the last one
  * repeating. That queue is per offer, because the contract's own sequence turns one row out of stock while the others stay
- * on sale. {@link #failingWith} injects the whole-read faults of element 08 §Failure mapping; the read records every call it
- * receives, so a test can prove what was asked of the provider and that nothing else — a reservation above all — was (DoD17).
+ * on sale. {@link #failingWith} injects the whole-read faults of element 08 §Failure mapping; the read records the calls it
+ * receives, so a test can prove what was asked of the provider and that nothing else — a reservation above all — was
+ * (DoD17). The ledger is a ring of the {@value #LEDGER_CAPACITY} newest reads, because a deployed pod serves the pull of
+ * every render (D66) and a ledger that only grows would be a leak nobody reads.
  *
  * <p>The two malformed answers are answered as the provider would answer them, never repaired here: a stock count below zero
  * travels through untouched (D56) and a {@code 404} for the whole batch answers nothing at all, because the call was wrong, not
@@ -35,8 +38,11 @@ import shop.shopping.kernel.Money;
  */
 final class FixtureOfferCatalog implements OfferCatalog {
 
-    /** The seller the fixture provider names — every offer it seeds belongs to this one (02 RULE-7). */
+    /** The seller the fixture provider names when a seed states none (02 RULE-7) — the shipped seed names its own. */
     static final String SELLER = "FIXTURE_SELLER";
+
+    /** How many of the newest reads {@link #reads()} keeps: more than any test's sequence, small enough for a pod. */
+    static final int LEDGER_CAPACITY = 32;
     private static final String CURRENCY = "PLN";
     private static final long LIST_PRICE = 109890;
     private static final long CURRENT_PRICE = 99890;
@@ -44,7 +50,7 @@ final class FixtureOfferCatalog implements OfferCatalog {
 
     private final Clock clock;
     private final Map<String, Seeded> offers = new LinkedHashMap<>();
-    private final List<List<String>> reads = new ArrayList<>();
+    private final Deque<List<String>> reads = new ArrayDeque<>(LEDGER_CAPACITY);
     private Failure failure = Failure.none;
 
     FixtureOfferCatalog(Clock clock) {
@@ -69,7 +75,7 @@ final class FixtureOfferCatalog implements OfferCatalog {
             offers.values().forEach(Seeded::rewind);
             return List.of();
         }
-        reads.add(List.copyOf(offerIds));
+        remember(offerIds);
         return switch (failureOf(offerIds)) {
             case malformedRequest -> List.of();
             case unauthorized, forbidden, timeout, serverError -> offerIds.stream().map(this::unreadable).toList();
@@ -140,12 +146,20 @@ final class FixtureOfferCatalog implements OfferCatalog {
     }
 
     /**
-     * Every call this adapter received, in order, each one the ids it was asked for — the ledger DoD17 reads.
+     * The newest calls this adapter received, in order, each one the ids it was asked for — the ledger DoD17 reads.
      *
-     * @return one entry per read, immutable
+     * @return the last {@value #LEDGER_CAPACITY} reads, immutable
      */
     List<List<String>> reads() {
         return List.copyOf(reads);
+    }
+
+    /** Appends to the ledger, dropping the oldest read when it is full — the bound is the ring's size, never the pod's uptime. */
+    private void remember(List<String> offerIds) {
+        if (reads.size() == LEDGER_CAPACITY) {
+            reads.removeFirst();
+        }
+        reads.addLast(List.copyOf(offerIds));
     }
 
     private void seed(Offering offering) {

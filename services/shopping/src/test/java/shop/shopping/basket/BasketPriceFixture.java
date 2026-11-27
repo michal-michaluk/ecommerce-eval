@@ -83,7 +83,7 @@ public class BasketPriceFixture {
     }
 
     public static BasketPriceCalculation aCalculation() {
-        return BasketPriceCalculation.defaultCalculation();
+        return new BasketPriceCalculation(DeliveryRates.defaultRates());
     }
 
     public static BasketPriceCalculation aCalculationThatChargesSmart() {

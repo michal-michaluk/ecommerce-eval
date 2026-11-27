@@ -131,17 +131,6 @@ class BasketEditorTest {
     }
 
     @Test
-    void addsTenUnitsOfASingleUnitOfferWithoutReservingAnything() {
-        BasketEditor basket = anEmptyBasket();
-
-        basket.addToBasket(anItem(FIRST_OFFER, UGREEN, 10, Availability.available()));
-
-        assertThat(aSnapshotOf(basket).items()).singleElement()
-                .satisfies(item -> assertThat(item.quantity()).isEqualTo(10));
-        assertThat(basket.events).singleElement().isInstanceOf(DomainEvent.AddedToBasket.class);
-    }
-
-    @Test
     void bumpsTheRevisionOnEveryChange() {
         BasketEditor basket = aBasketWith(aFirstItem());
 

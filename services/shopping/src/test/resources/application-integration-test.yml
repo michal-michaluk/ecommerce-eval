@@ -16,7 +16,3 @@ basket:
   delivery:
     rate: 12340
     free-when-smart: false
-
-outbox:
-  delay: PT0.1S
-  batch: 1000

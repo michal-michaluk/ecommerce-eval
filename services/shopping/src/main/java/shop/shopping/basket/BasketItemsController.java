@@ -3,6 +3,7 @@ package shop.shopping.basket;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Null;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -58,30 +59,26 @@ class BasketItemsController {
      *
      * @param quantity the units the row should hold, never a change relative to what it held
      */
-    record UpdateQuantity(@NotNull Integer quantity) {
+    record UpdateQuantity(
+            @NotNull(message = "a quantity change names the quantity it sets, at least 1") Integer quantity) {
     }
 
     /**
      * Which rows a removal takes (element 07 §Contract decisions). The contract states the command as
-     * {@code {"scope": …, "offerId": …, "quantity": null}}; the null is what removes, so this route reads the scope and the
-     * offer and refuses any other quantity rather than ignoring it — a number here would be a second, silent way to change a
-     * quantity the item route already owns, and a removal that quietly ignored it would remove what the client meant to keep
-     * (D28).
+     * {@code {"scope": …, "offerId": …, "quantity": null}}; the null is what removes, so this route refuses any
+     * other quantity rather than ignoring it — a number here would be a second, silent way to change a quantity the item
+     * route already owns, and a removal that quietly ignored it would remove what the client meant to keep (D28).
      *
      * @param scope    one row, the current selection, or the whole basket
      * @param offerId  the offer, required exactly when the scope names one
      * @param quantity always absent: {@code null} is the contract's way of saying "this command removes"
      */
-    record RemoveItems(@NotNull BasketRemoval scope, String offerId, Integer quantity) {
+    record RemoveItems(@NotNull(message = "a removal names its scope: item, selection or all") BasketRemoval scope,
+            String offerId, @Null(message = "this route removes rows, it never changes a quantity") Integer quantity) {
 
-        @AssertTrue(message = "offerId is required when scope is item")
+        @AssertTrue(message = "scope item names the offer it removes")
         boolean isOfferNamed() {
             return scope != BasketRemoval.item || offerId != null;
-        }
-
-        @AssertTrue(message = "quantity must be null: this route removes, it never changes a quantity")
-        boolean isAQuantityAbsent() {
-            return quantity == null;
         }
     }
 }

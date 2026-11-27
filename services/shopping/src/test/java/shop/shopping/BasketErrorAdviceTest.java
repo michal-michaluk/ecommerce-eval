@@ -2,6 +2,7 @@ package shop.shopping;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockHttpServletRequest;
 
 import shop.shopping.kernel.Availability;
 import shop.shopping.kernel.HandoverFixture;
@@ -82,13 +83,25 @@ class BasketErrorAdviceTest {
 
     @Test
     void rethrowsACodeTheContractDoesNotNameSoTheFrameworkAnswers500() {
-        assertThatThrownBy(() -> advice.refused(aRefusalOf(Error.AMOUNT_NEGATIVE, -1)))
+        assertThatThrownBy(() -> advice.refused(aRefusalOf(Error.AMOUNT_NEGATIVE, -1), aRoute()))
                 .isInstanceOfSatisfying(ShoppingException.class,
                         refused -> assertThat(refused.error()).isEqualTo(Error.AMOUNT_NEGATIVE));
     }
 
+    @Test
+    void rethrowsACheckoutRefusalSoTheFrameworkAnswers500() {
+        assertThatThrownBy(() -> advice.refused(
+                aRefusalOf(Error.HANDOVER_STALE, "B-7f3a", 2L, 3L), aRoute()))
+                .isInstanceOfSatisfying(ShoppingException.class,
+                        refused -> assertThat(refused.error()).isEqualTo(Error.HANDOVER_STALE));
+    }
+
+    private static MockHttpServletRequest aRoute() {
+        return new MockHttpServletRequest("PATCH", "/baskets/B-7f3a/items/OF-1001");
+    }
+
     private void assertRefused(Error error, int status, String body, Object... details) {
-        ResponseEntity<Object> answer = advice.refused(aRefusalOf(error, details));
+        ResponseEntity<Object> answer = advice.refused(aRefusalOf(error, details), aRoute());
         assertThat(answer.getStatusCode().value()).isEqualTo(status);
         JsonAssert.assertThat(answer.getBody()).isExactlyLike(body);
     }

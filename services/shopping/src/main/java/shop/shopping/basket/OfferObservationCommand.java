@@ -155,16 +155,20 @@ sealed interface OfferObservationCommand
      * prices here are the ones a row is priced with, each with its kind stated as it enters the snapshot — a {@code charge}
      * and a {@code discount} (element 03 RULE-6, D40).
      *
+     * <p>Two currencies in one snapshot are not refused here, and deliberately. From a read they cannot arrive:
+     * {@link OfferRecord.OfferDescription} refuses them at the adapter's own boundary, before any command exists. A snapshot a
+     * future adapter built anyway is answered by the row instead of by an exception, because a {@code 500} out of a render is
+     * exactly what D63 forbids: {@link #pricedInAnotherCurrencyThan} keeps the prices the row already holds, and the applier
+     * makes of that what its shape allows — an {@link Answered} answer greys the row {@code stale}
+     * ({@code BasketItem.pricedAsLastKnown}), while a {@link Refreshed} observation leaves its availability exactly as it was
+     * (element 03 RULE-2, D63).
+     *
      * @param title        the product title, absent when the provider named none
      * @param pictureUrl   the one picture the row shows, absent when the provider named none
      * @param currentPrice the price the offer is sold at, absent when the provider named none
      * @param discount     the flattened discount, absent when the provider named none
      */
     record OfferSnapshot(String title, String pictureUrl, Money currentPrice, Money discount) {
-
-        public OfferSnapshot {
-            ensureOneCurrency(currentPrice, discount);
-        }
 
         /**
          * The answer as the port's record states it — the one place a record's content becomes something a row may hold
@@ -221,14 +225,6 @@ sealed interface OfferObservationCommand
 
         private static Money asDiscount(Money amount) {
             return new Money(amount.amount(), amount.currency(), Money.Kind.discount);
-        }
-
-        private static void ensureOneCurrency(Money currentPrice, Money discount) {
-            if (currentPrice != null && discount != null
-                    && !currentPrice.currency().equals(discount.currency())) {
-                throw new IllegalArgumentException("one offer is priced in one currency, got " + currentPrice
-                        + " and " + discount);
-            }
         }
     }
 }

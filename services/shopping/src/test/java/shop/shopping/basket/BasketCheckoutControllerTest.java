@@ -143,6 +143,20 @@ class BasketCheckoutControllerTest {
     }
 
     @Test
+    void refusesAComponentTheCheckoutCommandDoesNotDeclare() throws Exception {
+        addToBasket(FIRST_OFFER);
+
+        MockHttpServletResponse response = HttpFixture.asCustomer(mvc, customer,
+                patch("/baskets/{basketId}/checkout", basketId).contentType(APPLICATION_JSON)
+                        .content("{\"selection\": [\"OF-1001\"]}"));
+
+        assertThat(response.getStatus()).isEqualTo(400);
+        JsonAssert.assertThat(HttpFixture.body(response)).isExactlyLike("""
+                { "errors": [ { "field": "selection", "message": "selection is not a component of this command" } ] }
+                """);
+    }
+
+    @Test
     void refusesTheHandoverWithoutAToken() throws Exception {
         MockHttpServletResponse response = HttpFixture.anonymous(mvc,
                 patch("/baskets/{basketId}/checkout", basketId));

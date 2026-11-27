@@ -14,11 +14,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static shop.shopping.basket.BasketFixture.BASKET_ID;
 import static shop.shopping.basket.BasketFixture.FIRST_OFFER;
+import static shop.shopping.basket.BasketFixture.NOW;
+import static shop.shopping.basket.BasketFixture.aBasketCurrency;
 import static shop.shopping.basket.BasketFixture.aBasketWith;
 import static shop.shopping.basket.BasketFixture.aCaller;
 import static shop.shopping.basket.BasketFixture.aFirstItem;
 import static shop.shopping.basket.BasketFixture.aLastKnown;
 import static shop.shopping.basket.BasketFixture.aRowFromBeforeTheReadInstantWasKept;
+import static shop.shopping.basket.BasketFixture.aServiceOf;
 import static shop.shopping.basket.BasketFixture.aServiceWith;
 import static shop.shopping.basket.BasketFixture.anItemReadAt;
 import static shop.shopping.basket.BasketFixture.anotherBasketId;
@@ -203,15 +206,17 @@ class OfferIngestionTest {
     @Test
     void neverReservesWhatItReads() {
         FixtureOfferCatalog catalog = aCatalog();
-        catalog.sells(OFFER, 1);
-        baskets.save(aBasketWith(aFirstItem().withQuantity(10)));
+        catalog.sells(FIRST_OFFER, 1);
+        BasketService readingTheCatalog = aServiceOf(aBasketCurrency(), NOW, baskets, catalog, checkout);
+        baskets.save(aBasketWith(aFirstItem()));
 
-        List<OfferRecord> read = catalog.read(List.of(FIRST_OFFER));
-        service.applyObservation(BASKET_ID, aCommandOf(read.get(0)));
+        readingTheCatalog.setQuantity(BASKET_ID, FIRST_OFFER, 10, aCaller());
 
         assertThat(catalog.reads()).singleElement().isEqualTo(List.of(FIRST_OFFER));
         assertThat(catalog.read(List.of(FIRST_OFFER)).get(0).stock())
                 .isEqualTo(new OfferObservation.Stock.Quantity(1));
+        assertThat(baskets.get(BASKET_ID.value()).orElseThrow().toSnapshot().items()).singleElement()
+                .satisfies(item -> assertThat(item.quantity()).isEqualTo(10));
     }
 
     @Test

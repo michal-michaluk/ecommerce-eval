@@ -36,11 +36,6 @@ record BasketPriceCalculation(DeliveryRates delivery) {
         Objects.requireNonNull(delivery, "delivery");
     }
 
-    /** The calculation the capture configures: 9,99 zł a shipment, free on SMART (element 04 §Parameters). */
-    static BasketPriceCalculation defaultCalculation() {
-        return new BasketPriceCalculation(DeliveryRates.defaultRates());
-    }
-
     /**
      * Prices the basket's current selection.
      *

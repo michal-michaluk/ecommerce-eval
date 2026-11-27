@@ -5,6 +5,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
 import java.util.List;
+import java.util.stream.IntStream;
 
 import shop.shopping.kernel.Availability;
 import shop.shopping.kernel.Money;
@@ -27,7 +28,6 @@ import static shop.shopping.basket.OfferSeedFixture.anOnSaleSeed;
 import static shop.shopping.basket.OfferSeedFixture.anOnSaleSeedThatFaultsAfter;
 import static shop.shopping.basket.OfferSeedFixture.anUnreadableSeed;
 import static shop.shopping.basket.OfferCatalogFixture.aDescriptionPricedIn;
-import static shop.shopping.basket.OfferCatalogFixture.aSnapshotPricedInTwoCurrencies;
 import static shop.shopping.basket.OfferCatalogFixture.aWithdrawnOffer;
 import static shop.shopping.basket.OfferCatalogFixture.anUnreadOfferDescribing;
 import static shop.shopping.basket.OfferCatalogFixture.anOfferIdPerRow;
@@ -62,6 +62,17 @@ class OfferCatalogTest {
     void asksTheProviderNothingWhenThereIsNothingToRead() {
         assertThat(catalog.read(List.of())).isEmpty();
         assertThat(catalog.reads()).isEmpty();
+    }
+
+    @Test
+    void keepsTheNewestReadsAndForgetsTheOldestWhenTheLedgerIsFull() {
+        IntStream.rangeClosed(0, FixtureOfferCatalog.LEDGER_CAPACITY)
+                .forEach(read -> catalog.read(List.of(OFFER + read)));
+
+        assertThat(catalog.reads()).hasSize(FixtureOfferCatalog.LEDGER_CAPACITY);
+        assertThat(catalog.reads()).last()
+                .isEqualTo(List.of(OFFER + FixtureOfferCatalog.LEDGER_CAPACITY));
+        assertThat(catalog.reads()).doesNotContain(List.of(OFFER + 0));
     }
 
     @Test
@@ -216,13 +227,6 @@ class OfferCatalogTest {
     @Test
     void refusesAnOfferPricedInTwoCurrencies() {
         assertThatThrownBy(() -> aDescriptionPricedIn(new Money(CURRENT_PRICE, "EUR")))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("one currency");
-    }
-
-    @Test
-    void refusesASnapshotWhoseTwoPricesAreInTwoCurrencies() {
-        assertThatThrownBy(() -> OfferObservationCommand.refreshed(OFFER, READ_AT, aSnapshotPricedInTwoCurrencies()))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("one currency");
     }

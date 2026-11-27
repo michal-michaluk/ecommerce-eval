@@ -334,7 +334,7 @@ class BasketConfiguration {
         record EstimateSettings(DefaultDays defaultDays, String zone, String fallback) {
 
             /**
-             * {@code basket.estimate.defaultDays} — the two ends of the estimate, in calendar days from today.
+             * {@code basket.estimate.default-days} — the two ends of the estimate, in calendar days from today.
              *
              * @param from days from today to the first day of the range, inclusive
              * @param to   days from today to the last day of the range, inclusive

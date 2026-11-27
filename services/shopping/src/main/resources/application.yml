@@ -1,5 +1,12 @@
 spring:
   application.name: shopping
+  # `http.rejection-status`: a component the command does not declare is a 400, never a silently dropped
+  # value. This is Boot's own HTTP JsonMapper and nothing else — the JSONB document mapper is
+  # `tools/JsonConfiguration`'s, keeps `FAIL_ON_UNKNOWN_PROPERTIES` off and is pinned by
+  # `JsonConfigurationTest.ignoresUnknownProperties`, so a stored document may grow a field without failing a read.
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
   datasource:
     driverClassName: org.postgresql.Driver
     hikari:

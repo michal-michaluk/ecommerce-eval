@@ -21,6 +21,12 @@ import java.util.Objects;
  * and {@link #render()} is the {@code pl-PL} text built from it (RULE-5, RULE-7). Zero is an amount, never an absence
  * (RULE-8).
  *
+ * <p>Neither of the two has a caller in this service, and that is a fact of the contract rather than an oversight: the wire
+ * carries {@code amount}, {@code currency} and {@code kind} and no display label (element 07 §Money in the payload, D70), so
+ * the client renders and nothing here ever needs the text. They stay as the shapes RULE-5 and RULE-7 state — {@link #render()}
+ * is the rule, and removing it would remove the rule's only proof from this repository — while every route publishes the three
+ * components and no {@code label}.
+ *
  * <p>Every refusal of a value the client supplied is {@link ShoppingException} (D48): a value object may not throw a JDK
  * type, because no error advice can map one to the code its contract promises. An absent component is not such a refusal —
  * a missing {@code amount} or {@code currency} is a programming error and stays an {@link Objects#requireNonNull}

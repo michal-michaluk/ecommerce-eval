@@ -183,7 +183,7 @@ public class BasketFixture {
     /** The same port reading the offers through the catalog a test seeded — the pull and the add path read it. */
     public static BasketService aServiceOf(BasketCurrency currency, Instant now, FakeBasketRepository baskets,
             OfferCatalog offers, CheckoutHandovers checkouts) {
-        return new BasketService(baskets, currency, BasketPriceCalculation.defaultCalculation(),
+        return new BasketService(baskets, currency, new BasketPriceCalculation(DeliveryRates.defaultRates()),
                 BasketDeliveryEstimate.defaultEstimate(), offers, checkouts, Clock.fixed(now, ZoneOffset.UTC));
     }
 

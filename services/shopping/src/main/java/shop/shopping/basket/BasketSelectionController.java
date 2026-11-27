@@ -54,7 +54,9 @@ class BasketSelectionController {
      * @param seller   the seller, required exactly when the scope names a shipment
      * @param selected true to switch the rows on, false to switch them off
      */
-    record SelectItems(@NotNull Scope scope, String offerId, String seller, @NotNull Boolean selected) {
+    record SelectItems(@NotNull(message = "a selection names its scope: item, shipment or all") Scope scope,
+            String offerId, String seller,
+            @NotNull(message = "a selection says whether its rows are selected: true or false") Boolean selected) {
 
         BasketSelection asSelection() {
             return switch (scope) {

@@ -31,6 +31,11 @@ public class ShoppingException extends RuntimeException {
      * row cannot change (D19), an amount is never stored negative and a discount is never added to a charge (element 03
      * RULE-6), the fine unit cannot hold the result (element 03 RULE-3/RULE-4), a code without a decimal scale carries no
      * amount (element 03 RULE-2, D21) and a merged quantity cannot leave the range a basket holds (element 02 RULE-4).
+     *
+     * <p>{@code HANDOVER_STALE} is the checkout slice's own refusal, and no element-07 code names it: element 09 §Failure
+     * outcomes answers "checkout slice rejects the payload" with a {@code 500}, which is what an unmapped code already is, so
+     * the advice rethrows it instead of borrowing {@code CONCURRENT_MODIFICATION} — that code is the basket's own lost race,
+     * and the client retries it (D62).
      */
     public enum Error {
         QUANTITY_NOT_POSITIVE("quantity must be at least 1, got %s"),
@@ -48,6 +53,7 @@ public class ShoppingException extends RuntimeException {
         BLOCKED_BY_ITEMS("basket %s cannot be handed over, blocked by %s"),
         BASKET_INACTIVE("basket %s is %s, only an active basket changes"),
         CONCURRENT_MODIFICATION("basket %s was changed by someone else"),
+        HANDOVER_STALE("basket %s handed over revision %s, checkout already holds %s"),
         OFFER_READ_UNAVAILABLE("offer %s could not be read");
 
         private final String template;

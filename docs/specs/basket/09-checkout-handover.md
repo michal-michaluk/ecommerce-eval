@@ -52,7 +52,7 @@ The basket keeps exactly one derived field of it — `lastHandover { revision, c
 | nothing selected | refused before handover — `422 NOTHING_SELECTED` (element 07) |
 | a selected item is `unavailable` or `outOfStock` | refused — `422 BLOCKED_BY_ITEMS` with the offer ids, their statuses and the `stale` flag (D33) |
 | basket became `active → archived` meanwhile | refused — `422 BASKET_INACTIVE` |
-| checkout slice rejects the payload | `500`, logged; basket unchanged, retry allowed. **Unreachable in this increment**: the only refusal the in-process receiver can answer is `CONCURRENT_MODIFICATION` (D35) |
+| checkout slice rejects the payload | `500`, logged; basket unchanged, retry allowed. **Unreachable in this increment**: the only refusal the in-process receiver can answer is its own `HANDOVER_STALE` (D35), and the basket hands over the revision it has just stored |
 | checkout slice not deployed yet | `503`; basket unchanged — expected until D4's spec lands. **Unreachable in this increment**: both slices ship in one process, so there is nothing to be undeployed |
 
 ## Resolved questions

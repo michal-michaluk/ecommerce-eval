@@ -172,7 +172,62 @@ class BasketItemsControllerTest {
                 """.formatted(FIRST_OFFER));
 
         assertThat(response.getStatus()).isEqualTo(400);
+        JsonAssert.assertThat(HttpFixture.body(response)).isExactlyLike("""
+                { "errors": [ { "field": "quantity", "message": "this route removes rows, it never changes a quantity" } ] }
+                """);
         assertThat(HttpFixture.json(getBasket(), "$.items[0].quantity")).isEqualTo(4);
+    }
+
+    @Test
+    void refusesAComponentNoRemovalCommandDeclaresAndNamesIt() throws Exception {
+        setQuantity(FIRST_OFFER, "1");
+
+        MockHttpServletResponse response = remove("""
+                { "scope": "all", "quantity": null, "quantitiy": 2 }
+                """);
+
+        assertThat(response.getStatus()).isEqualTo(400);
+        JsonAssert.assertThat(HttpFixture.body(response)).isExactlyLike("""
+                { "errors": [ { "field": "quantitiy", "message": "quantitiy is not a component of this command" } ] }
+                """);
+        assertThat(HttpFixture.json(getBasket(), "$.items.length()")).isEqualTo(1);
+    }
+
+    @Test
+    void refusesARemovalThatNamesNoScope() throws Exception {
+        setQuantity(FIRST_OFFER, "1");
+
+        MockHttpServletResponse response = remove("""
+                { "offerId": "%s", "quantity": null }
+                """.formatted(FIRST_OFFER));
+
+        assertThat(response.getStatus()).isEqualTo(400);
+        JsonAssert.assertThat(HttpFixture.body(response)).isExactlyLike("""
+                { "errors": [ { "field": "scope", "message": "a removal names its scope: item, selection or all" } ] }
+                """);
+        assertThat(HttpFixture.json(getBasket(), "$.items.length()")).isEqualTo(1);
+    }
+
+    @Test
+    void refusesAQuantityChangeThatNamesNoQuantity() throws Exception {
+        MockHttpServletResponse response = HttpFixture.asCustomer(mvc, customer,
+                patch("/baskets/{basketId}/items/{offerId}", basketId, FIRST_OFFER)
+                        .contentType(APPLICATION_JSON).content("{}"));
+
+        assertThat(response.getStatus()).isEqualTo(400);
+        JsonAssert.assertThat(HttpFixture.body(response)).isExactlyLike("""
+                { "errors": [ { "field": "quantity", "message": "a quantity change names the quantity it sets, at least 1" } ] }
+                """);
+    }
+
+    @Test
+    void refusesAQuantityThatIsNotANumberAtAll() throws Exception {
+        MockHttpServletResponse response = setQuantity(FIRST_OFFER, "\"two\"");
+
+        assertThat(response.getStatus()).isEqualTo(400);
+        JsonAssert.assertThat(HttpFixture.body(response)).isExactlyLike("""
+                { "errors": [ { "field": "quantity", "message": "the body does not read as this command" } ] }
+                """);
     }
 
     @Test

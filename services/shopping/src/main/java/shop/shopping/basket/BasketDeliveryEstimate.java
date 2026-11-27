@@ -21,8 +21,9 @@ import shop.shopping.kernel.Estimate;
  *
  * <h2>Time</h2>
  * The policy never reads a clock: {@code now} arrives in the {@link Request} (element 05 §Interface; {@code clock.injected},
- * {@code policy.no-io}). The caller takes it from the service's request-scoped {@link java.time.Clock}, never from a cached
- * one, because a basket left open overnight must not keep showing yesterday's range (element 05 §Recommendations 4). The
+ * {@code policy.no-io}). The caller takes it from the service's one {@link java.time.Clock} — the single
+ * {@code Clock.systemUTC()} bean in {@code AppConfiguration} — and reads it per request instead of holding a date, because a
+ * basket left open overnight must not keep showing yesterday's range (element 05 §Recommendations 4). The
  * <em>day</em> is the customer's calendar day in {@code basket.estimate.zone} (D43): {@code 23:30} in {@code Europe/Warsaw} is
  * still today even though UTC has already moved on, and {@code 00:30} there is already tomorrow though UTC says yesterday. A
  * range counted from any other day would arrive one day early for half the evening.
@@ -58,7 +59,11 @@ import shop.shopping.kernel.Estimate;
  * every key behind a placeholder ({@code ${SHOPPING_BASKET_ESTIMATE_FROM:2}}), so a deployment always has a value and I5's
  * {@code unknown} is reachable only when the whole block is absent — which is the case a unit test holds. {@link #defaultEstimate()}
  * is the other half of D7: the constant {@code {from: 2, to: 4}} / {@code Europe/Warsaw} / {@code unknown} this element fixes,
- * stated once in code so a runner or a test can install it without a deployment.
+ * as what code states when nothing is configured. The same three numbers are stated in four places and nothing derives one from
+ * another: here, {@code application.yml} ({@code basket.estimate.*}), the deployment's {@code k8s/base/configmap.yaml}
+ * ({@code basket-estimate-*}) and the contract runner {@code prototypes/prove-local.sh} ({@code warsaw_day 2}, {@code warsaw_day 4}
+ * — a range that disagrees with the pod mismatches every {@code deliveryEstimate} golden). What keeps them equal is the gates:
+ * the binder test pins the shipped {@code application.yml}, and {@code prove} pins the deployed answer.
  *
  * <h2>What it is not</h2>
  * The channel arrives in the request and changes nothing (I6): SMART changes the <em>price</em> of delivery, not the day range
@@ -166,7 +171,7 @@ record BasketDeliveryEstimate(EstimateSettings settings) {
      *
      * @param items   the shipment's rows, selected or not — the row's own flag is the selection
      * @param channel how the customer arrives; SMART changes the price, never the range (element 04 S6)
-     * @param now     the instant the caller's request-scoped clock reports
+     * @param now     the instant the service's {@code Clock} reports when the request is served
      */
     record Request(List<BasketItem> items, Channel channel, Instant now) {
 

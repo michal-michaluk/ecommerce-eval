@@ -18,11 +18,13 @@ import shop.shopping.kernel.ShoppingException;
  * The basket's primary port: one method per operation of element 02, each loading the aggregate by its identity, letting the
  * aggregate decide, and storing it back.
  *
- * <p>It holds no rule of its own — merge, quantity, blocking and handover identity belong to {@link BasketEditor}. What it
- * does own is the one write behind a read: a customer always has an active basket, so asking for it creates it when none
- * exists (RULE-1, D42, element 07 §Recorded deviations). Compiling a payload is the other thing it owns, because the totals and
- * the delivery estimate are policies over configuration that no aggregate may hold — the handover's (element 09 §Shape of
- * record) and the screen's {@link BasketContent} alike.
+ * <p>The aggregate's own rules are {@link BasketEditor}'s: merge, quantity, blocking and handover identity. What this port
+ * owns is what no aggregate can decide — which code an answer about an offer becomes ({@code OFFER_READ_UNAVAILABLE} when the
+ * item has no snapshot to grey a row with, {@code OFFER_NOT_FOUND} when the provider no longer sells it), the rule that an
+ * answer naming no title, picture, price or discount describes no row (RULE-8), the one write behind a read: a customer always
+ * has an active basket, so asking for it creates it when none exists (RULE-1, D42, element 07 §Recorded deviations). Compiling
+ * a payload is the other thing it owns, because the totals and the delivery estimate are policies over configuration that no
+ * aggregate may hold — the handover's (element 09 §Shape of record) and the screen's {@link BasketContent} alike.
  *
  * <p>The render route is the third write behind a read, and the recorded deviation D62: every route that answers basket content
  * re-reads the basket's offers through {@link OfferCatalog}, applies each answer through the same ingestion path an event takes
