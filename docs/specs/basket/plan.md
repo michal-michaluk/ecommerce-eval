@@ -6,7 +6,7 @@ Session: `2026-11-26T20:18:12Z` · branch `feat/basket` off `main` @ `62fed7a` �
 
 - Spec ticket: [#70 basket — specification session](https://github.com/michal-michaluk/ecommerce-eval/issues/70) (closed)
 - Plan ticket: [#83 basket — implementation plan](https://github.com/michal-michaluk/ecommerce-eval/issues/83)
-- Impl: sub-tasks #84 (scaffold), #85 (customer-security), #86 (kernel-money), #87 (basket-editor), #88 (price), #89 (availability), #90 (estimate), #91 (offer port), #92 (handover), #93 (http-api), #94 (prove-harness), #95 (prove-contract), #96 (service-gates), #97 (prove-dod), #98 (documentation), #99 (review-branch) — all closed; report #100
+- Impl: sub-tasks #84 (scaffold), #85 (customer-security), #86 (kernel-money), #87 (basket-editor), #88 (price), #89 (availability), #90 (estimate), #91 (offer port), #92 (handover), #93 (http-api), #94 (prove-harness), #95 (prove-contract), #96 (service-gates), #97 (prove-dod), #98 (documentation), #99 (review-branch) — all closed; report #100 · PR: see the branch `feat/basket`
 
 ## Implementation Plan
 
