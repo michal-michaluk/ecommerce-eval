@@ -6,6 +6,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.time.Clock;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import shop.shopping.kernel.Money;
 
 /**
  * The basket's own configuration, in one place and one style for the {@code basket} prefix.
@@ -23,7 +28,7 @@ import java.time.Clock;
  * and without the beans neither a render nor the handover could price or date anything.
  */
 @Configuration(proxyBeanMethods = false)
-@EnableConfigurationProperties(BasketConfiguration.Settings.class)
+@EnableConfigurationProperties({BasketConfiguration.Settings.class, BasketConfiguration.OfferFixture.class})
 class BasketConfiguration {
 
     @Bean
@@ -38,12 +43,17 @@ class BasketConfiguration {
      * <p>It is a bean because the render route is the port's first caller (D60): without it neither the pull on read nor an add
      * could answer anything, and the service would not start with a dependency nobody provides.
      *
-     * @param clock the clock the adapter stamps its reads with
+     * <p>The seed is the deployment's (D67): {@code basket.offer-fixture.offers} is what the cluster states, so a fixture with
+     * no key is an empty catalog — the shape every test and every deployment that states no seed keeps — and a stated one is
+     * converted here, at bean creation, so a malformed seed fails the pod instead of answering a wrong row on step 3.
+     *
+     * @param clock   the clock the adapter stamps its reads with
+     * @param fixture the {@code basket.offer-fixture.*} block, absent when the deployment seeds nothing
      * @return the catalog the basket reads its offers through
      */
     @Bean
-    OfferCatalog offerCatalog(Clock clock) {
-        return new FixtureOfferCatalog(clock);
+    OfferCatalog offerCatalog(Clock clock, OfferFixture fixture) {
+        return new FixtureOfferCatalog(clock, offeringsOf(fixture));
     }
 
     /**
@@ -95,6 +105,133 @@ class BasketConfiguration {
         return new DeliveryRates(
                 delivery.rate() == null ? stated.ratePerShipment() : delivery.rate(),
                 delivery.freeWhenSmart() == null ? stated.freeWhenSmart() : delivery.freeWhenSmart());
+    }
+
+    /**
+     * The offers the deployment seeds into element 08's fixture adapter (D67), read as configuration and never compiled in:
+     * the contract's offers are the browsing slice's data, and this increment states them beside the currency and the delivery
+     * rate it states the same way.
+     *
+     * <p>One entry per offer, every field a read answers. {@code answers} is the warehouse's answer per read of that offer,
+     * in order, the last one repeating — the queue is per offer because the contract turns one row out of stock while its
+     * neighbours stay on sale. A seed without {@code answers} is an offer whose stock nobody read (A5).
+     *
+     * @param offers the seeded offers, absent when the deployment seeds none
+     */
+    @ConfigurationProperties(prefix = "basket.offer-fixture")
+    record OfferFixture(List<SeededOffer> offers) {
+
+        /**
+         * One seeded offer, as the deployment states it.
+         *
+         * @param id           the offer the provider knows, the identity every read is matched on
+         * @param seller       the seller the row is grouped into as a shipment (02 RULE-7)
+         * @param title        the product title, one line in the row
+         * @param picture      the one picture the row shows, a URL
+         * @param listPrice    the catalog's list price in fine units, which no row may hold (D53)
+         * @param currentPrice the price the offer is sold at, in fine units, flattened by the provider (D22)
+         * @param discount     the discount the provider flattened, in fine units, {@code 0} when it names none (D22)
+         * @param currency     the ISO-4217 code every amount of this offer is in
+         * @param state        {@code onSale} or {@code removed}; absent reads as {@code onSale}
+         * @param answers      the warehouse answers in order of this offer's reads, absent for never read
+         */
+        record SeededOffer(String id, String seller, String title, String picture, Long listPrice,
+                Long currentPrice, Long discount, String currency, OfferObservation.OfferState state,
+                List<StockAnswer> answers) {
+        }
+
+        /**
+         * One entry of an offer's queue: the stock this read answers and how many reads it holds for.
+         *
+         * @param stock {@code notRead} or a count of units, which may be {@code 0} or below and is never repaired (D56)
+         * @param reads how many consecutive reads answer it, {@code 1} when absent
+         */
+        record StockAnswer(String stock, Integer reads) {
+        }
+    }
+
+    /**
+     * The seeded offers as element 08's adapter takes them, field by field, refusing a seed that cannot answer a row.
+     *
+     * <p>Every refusal happens at bean creation, never on the first read: the seed is deployment configuration, never a
+     * client's request, so a missing title or an unknown currency must stop the pod the way a bad {@code basket.currency}
+     * does — an offer that answers {@code 200} and describes nothing would surface as {@code OFFER_READ_UNAVAILABLE} on the
+     * first add (element 07 §Error contract), which is the wrong complaint about the wrong file. An absent field is an
+     * {@link IllegalArgumentException}; the currency is normalised and refused by {@link BasketCurrency}, the one type that
+     * already owns that judgement.
+     *
+     * @param fixture the {@code basket.offer-fixture.*} block, absent when the deployment seeds nothing
+     * @return one offering per seeded offer, in the order the deployment states them
+     */
+    static List<FixtureOfferCatalog.Offering> offeringsOf(OfferFixture fixture) {
+        if (fixture == null || fixture.offers() == null) {
+            return List.of();
+        }
+        return fixture.offers().stream().map(BasketConfiguration::offeringOf).toList();
+    }
+
+    private static FixtureOfferCatalog.Offering offeringOf(OfferFixture.SeededOffer seed) {
+        String offerId = stated(seed.id(), null, "id");
+        return new FixtureOfferCatalog.Offering(offerId, descriptionOf(offerId, seed),
+                seed.state() == null ? OfferObservation.OfferState.onSale : seed.state(),
+                stockAnswersOf(offerId, seed.answers()));
+    }
+
+    private static OfferRecord.OfferDescription descriptionOf(String offerId, OfferFixture.SeededOffer seed) {
+        String currency = new BasketCurrency(stated(seed.currency(), offerId, "currency")).code();
+        return new OfferRecord.OfferDescription(stated(seed.seller(), offerId, "seller"),
+                stated(seed.title(), offerId, "title"), stated(seed.picture(), offerId, "picture"),
+                new Money(stated(seed.listPrice(), offerId, "list-price"), currency),
+                new Money(stated(seed.currentPrice(), offerId, "current-price"), currency),
+                new Money(stated(seed.discount(), offerId, "discount"), currency, Money.Kind.discount));
+    }
+
+    private static List<OfferObservation.Stock> stockAnswersOf(String offerId, List<OfferFixture.StockAnswer> answers) {
+        if (answers == null || answers.isEmpty()) {
+            return List.of(OfferObservation.Stock.NotRead.notRead);
+        }
+        List<OfferObservation.Stock> queue = new ArrayList<>();
+        for (OfferFixture.StockAnswer answer : answers) {
+            queue.addAll(Collections.nCopies(readsOf(offerId, answer.reads()), stockOf(offerId, answer.stock())));
+        }
+        return List.copyOf(queue);
+    }
+
+    private static int readsOf(String offerId, Integer reads) {
+        int stated = reads == null ? 1 : reads;
+        if (stated < 1) {
+            throw new IllegalArgumentException(
+                    "basket.offer-fixture of " + offerId + " states " + reads + " reads, which is no answer");
+        }
+        return stated;
+    }
+
+    private static OfferObservation.Stock stockOf(String offerId, String stock) {
+        String answer = stated(stock, offerId, "answers[].stock").trim();
+        if (answer.equalsIgnoreCase(OfferObservation.Stock.NotRead.notRead.name())) {
+            return OfferObservation.Stock.NotRead.notRead;
+        }
+        try {
+            return new OfferObservation.Stock.Quantity(Integer.parseInt(answer));
+        } catch (NumberFormatException notACount) {
+            throw new IllegalArgumentException("basket.offer-fixture of " + offerId + " states stock '" + stock
+                    + "', which is neither notRead nor a count of units", notACount);
+        }
+    }
+
+    private static String stated(String value, String offerId, String key) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException("basket.offer-fixture" + (offerId == null ? "" : " of " + offerId)
+                    + " states no " + key);
+        }
+        return value;
+    }
+
+    private static long stated(Long value, String offerId, String key) {
+        if (value == null) {
+            throw new IllegalArgumentException("basket.offer-fixture of " + offerId + " states no " + key);
+        }
+        return value;
     }
 
     /**

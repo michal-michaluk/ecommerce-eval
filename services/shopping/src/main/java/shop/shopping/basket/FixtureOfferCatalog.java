@@ -17,9 +17,12 @@ import shop.shopping.kernel.Money;
  * <p>It is seeded by whoever constructs it: {@link #sells} states an offer the catalog offers and the warehouse has,
  * {@link #sellsWithoutStockRead} states one whose warehouse did not answer, {@link #removed} states one the provider no longer
  * has, and an id nobody seeded is answered as {@code removed} — which is exactly what a {@code 200} that leaves an id out
- * means, so the fixture never has to invent an offer to stay truthful. {@link #failingWith} injects the whole-read faults of
- * element 08 §Failure mapping; the read records every call it receives, so a test can prove what was asked of the provider and
- * that nothing else — a reservation above all — was (DoD17).
+ * means, so the fixture never has to invent an offer to stay truthful. A deployment states its seed as configuration instead
+ * (D67): {@link Offering} carries every field a read answers — seller, title, picture, list price, current price, discount,
+ * currency, {@code offerState} — and the stock answers in the order the reads of that offer receive them, the last one
+ * repeating. That queue is per offer, because the contract's own sequence turns one row out of stock while the others stay
+ * on sale. {@link #failingWith} injects the whole-read faults of element 08 §Failure mapping; the read records every call it
+ * receives, so a test can prove what was asked of the provider and that nothing else — a reservation above all — was (DoD17).
  *
  * <p>The two malformed answers are answered as the provider would answer them, never repaired here: a stock count below zero
  * travels through untouched (D56) and a {@code 404} for the whole batch answers nothing at all, because the call was wrong, not
@@ -44,10 +47,22 @@ final class FixtureOfferCatalog implements OfferCatalog {
         this.clock = Objects.requireNonNull(clock, "clock");
     }
 
+    /**
+     * The fixture a deployment states: the offers configuration seeds, each one answered as its own seed says.
+     *
+     * @param clock     the clock the adapter stamps its reads with
+     * @param offerings the seeded offers, none of them twice
+     */
+    FixtureOfferCatalog(Clock clock, List<Offering> offerings) {
+        this(clock);
+        offerings.forEach(this::seed);
+    }
+
     @Override
     public List<OfferRecord> read(List<String> offerIds) {
         Objects.requireNonNull(offerIds, "offerIds");
         if (offerIds.isEmpty()) {
+            offers.values().forEach(Seeded::rewind);
             return List.of();
         }
         reads.add(List.copyOf(offerIds));
@@ -67,7 +82,7 @@ final class FixtureOfferCatalog implements OfferCatalog {
      */
     void sells(String offerId, int units) {
         offers.put(offerId, new Seeded(aDescription(offerId), OfferObservation.OfferState.onSale,
-                new OfferObservation.Stock.Quantity(units)));
+                List.of(new OfferObservation.Stock.Quantity(units))));
     }
 
     /**
@@ -77,7 +92,7 @@ final class FixtureOfferCatalog implements OfferCatalog {
      */
     void sellsWithoutStockRead(String offerId) {
         offers.put(offerId, new Seeded(aDescription(offerId), OfferObservation.OfferState.onSale,
-                OfferObservation.Stock.NotRead.notRead));
+                List.of(OfferObservation.Stock.NotRead.notRead)));
     }
 
     /**
@@ -87,7 +102,7 @@ final class FixtureOfferCatalog implements OfferCatalog {
      */
     void removed(String offerId) {
         offers.put(offerId, new Seeded(null, OfferObservation.OfferState.removed,
-                OfferObservation.Stock.NotRead.notRead));
+                List.of(OfferObservation.Stock.NotRead.notRead)));
     }
 
     /**
@@ -106,6 +121,13 @@ final class FixtureOfferCatalog implements OfferCatalog {
      */
     List<List<String>> reads() {
         return List.copyOf(reads);
+    }
+
+    private void seed(Offering offering) {
+        Seeded seeded = new Seeded(offering.description(), offering.offerState(), offering.stockAnswers());
+        if (offers.put(offering.offerId(), seeded) != null) {
+            throw new IllegalArgumentException("the fixture seeds one offer twice, got " + offering.offerId());
+        }
     }
 
     private OfferRecord answered(String offerId) {
@@ -131,12 +153,59 @@ final class FixtureOfferCatalog implements OfferCatalog {
                 new Money(DISCOUNT, CURRENCY, Money.Kind.discount));
     }
 
-    /** What the provider knows about one offer, without the instant — the read stamps that when it answers. */
-    private record Seeded(OfferRecord.OfferDescription description, OfferObservation.OfferState offerState,
-            OfferObservation.Stock stock) {
+    /**
+     * One offer as a deployment seeds it — every field a read answers about the offer itself, and the warehouse answers in the
+     * order this offer's reads receive them.
+     *
+     * <p>The queue is what makes a row's availability move inside the contract's own sequence: the third read of an offer may
+     * answer no units left while the row is on sale, and the last answer repeats, because an offer that runs out stays out.
+     * A seed here is data, never a rule — a {@code null} description is the id a {@code 200} left out (A3) and stays
+     * {@code OFFER_NOT_FOUND} for an add, while a described removal greys a row with the price the provider still names.
+     *
+     * @param offerId      the identity the seed states
+     * @param description  what the provider says about the offer, absent when it says nothing about the content
+     * @param offerState   whether the provider offers the thing or has withdrawn it
+     * @param stockAnswers the warehouse answers in order of the reads of this offer, at least one, the last repeating
+     */
+    record Offering(String offerId, OfferRecord.OfferDescription description,
+            OfferObservation.OfferState offerState, List<OfferObservation.Stock> stockAnswers) {
 
-        OfferRecord asRecord(String offerId, Instant readAt) {
-            return new OfferRecord(offerId, description, offerState, stock, readAt);
+        Offering {
+            Objects.requireNonNull(offerId, "offerId");
+            Objects.requireNonNull(offerState, "offerState");
+            if (stockAnswers == null || stockAnswers.isEmpty()) {
+                throw new IllegalArgumentException("an offer answers at least one read, got none for " + offerId);
+            }
+        }
+    }
+
+    /** What the provider knows about one offer, without the instant — the read stamps that when it answers. */
+    private static final class Seeded {
+
+        private final OfferRecord.OfferDescription description;
+        private final OfferObservation.OfferState offerState;
+        private final List<OfferObservation.Stock> stockAnswers;
+        private int read;
+
+        private Seeded(OfferRecord.OfferDescription description, OfferObservation.OfferState offerState,
+                List<OfferObservation.Stock> stockAnswers) {
+            this.description = description;
+            this.offerState = offerState;
+            this.stockAnswers = List.copyOf(stockAnswers);
+        }
+
+        private OfferRecord asRecord(String offerId, Instant readAt) {
+            return new OfferRecord(offerId, description, offerState, next(), readAt);
+        }
+
+        private OfferObservation.Stock next() {
+            OfferObservation.Stock stock = stockAnswers.get(Math.min(read, stockAnswers.size() - 1));
+            read = Math.min(read + 1, stockAnswers.size());
+            return stock;
+        }
+
+        private void rewind() {
+            read = 0;
         }
     }
 

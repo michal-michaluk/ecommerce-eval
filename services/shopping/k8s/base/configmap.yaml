@@ -9,6 +9,13 @@
 # There is no messaging key: the service consumes no event channel (plan D39), so a broker address
 # here would be a config key nothing reads.
 #
+# `offer-fixture.yaml` is the one key that is a document, not a value: element 08's fixture adapter is
+# seeded from `basket.offer-fixture.offers` (D67), and a list of offers with a per-read answer queue
+# cannot be a set of kebab-case keys. `base/deployment.yaml` mounts this key as a file and points
+# `SPRING_CONFIG_ADDITIONAL_LOCATION` at it, so the seed binds through the same configuration
+# machinery as every value above and never ships inside the image. What each offer is for, and why
+# this is a stand-in rather than a catalogue, is `services/shopping/docs/offer-fixture.md`.
+#
 # `JWT_ISSUER_URI` and `SHOPPING_BASKET_CURRENCY` keep their environment-variable spelling because the
 # application's own default already names them: `spring.security...issuer-uri` reads
 # `${JWT_ISSUER_URI}` and `basket.currency` reads `${SHOPPING_BASKET_CURRENCY:PLN}`, so the cluster
@@ -35,3 +42,48 @@ data:
   basket-estimate-default-days-to: "4"
   basket-estimate-zone: "Europe/Warsaw"
   basket-estimate-fallback: "unknown"
+  offer-fixture.yaml: |
+    basket:
+      offer-fixture:
+        offers:
+          - id: OF-1001
+            seller: UGREEN_POLSKA
+            title: Fixture offer OF-1001
+            picture: https://fixture.invalid/of-1001.png
+            list-price: 109890
+            current-price: 99890
+            discount: 0
+            currency: PLN
+            answers:
+              - stock: 9
+          - id: OF-1002
+            seller: UGREEN_POLSKA
+            title: Fixture offer OF-1002
+            picture: https://fixture.invalid/of-1002.png
+            list-price: 69900
+            current-price: 64990
+            discount: 0
+            currency: PLN
+            answers:
+              - stock: 9
+                reads: 9
+              - stock: 0
+          - id: OF-2007
+            seller: ANKER_STORE
+            title: Fixture offer OF-2007
+            picture: https://fixture.invalid/of-2007.png
+            list-price: 129000
+            current-price: 129000
+            discount: 0
+            currency: PLN
+            state: removed
+          - id: OF-9001
+            seller: UGREEN_POLSKA
+            title: Fixture offer OF-9001
+            picture: https://fixture.invalid/of-9001.png
+            list-price: 5990
+            current-price: 4990
+            discount: 0
+            currency: EUR
+            answers:
+              - stock: 9

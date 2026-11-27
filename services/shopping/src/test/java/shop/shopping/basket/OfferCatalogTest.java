@@ -14,12 +14,16 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static shop.shopping.basket.OfferCatalogFixture.ANOTHER_OFFER;
 import static shop.shopping.basket.OfferCatalogFixture.A_NEGATIVE_COUNT;
 import static shop.shopping.basket.OfferCatalogFixture.CURRENT_PRICE;
+import static shop.shopping.basket.OfferCatalogFixture.NO_UNITS;
 import static shop.shopping.basket.OfferCatalogFixture.OFFER;
 import static shop.shopping.basket.OfferCatalogFixture.READ_AT;
 import static shop.shopping.basket.OfferCatalogFixture.SELLER;
 import static shop.shopping.basket.OfferCatalogFixture.SOME_UNITS;
 import static shop.shopping.basket.OfferCatalogFixture.aCatalog;
 import static shop.shopping.basket.OfferCatalogFixture.aDescription;
+import static shop.shopping.basket.OfferSeedFixture.aDescribedRemoval;
+import static shop.shopping.basket.OfferSeedFixture.aSeededCatalog;
+import static shop.shopping.basket.OfferSeedFixture.anOnSaleSeed;
 import static shop.shopping.basket.OfferCatalogFixture.aDescriptionPricedIn;
 import static shop.shopping.basket.OfferCatalogFixture.aSnapshotPricedInTwoCurrencies;
 import static shop.shopping.basket.OfferCatalogFixture.aWithdrawnOffer;
@@ -193,6 +197,49 @@ class OfferCatalogTest {
         assertThatThrownBy(() -> OfferObservationCommand.refreshed(OFFER, READ_AT, aSnapshotPricedInTwoCurrencies()))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("one currency");
+    }
+
+    @Test
+    void answersOneSeedQueueEntryPerReadAndRepeatsTheLast() {
+        FixtureOfferCatalog seeded = aSeededCatalog(anOnSaleSeed(OFFER, SOME_UNITS, NO_UNITS));
+
+        assertThat(seeded.read(List.of(OFFER))).extracting(OfferRecord::stock)
+                .containsExactly(new OfferObservation.Stock.Quantity(SOME_UNITS));
+        assertThat(seeded.read(List.of(OFFER))).extracting(OfferRecord::stock)
+                .containsExactly(new OfferObservation.Stock.Quantity(NO_UNITS));
+        assertThat(seeded.read(List.of(OFFER))).extracting(OfferRecord::stock)
+                .containsExactly(new OfferObservation.Stock.Quantity(NO_UNITS));
+    }
+
+    @Test
+    void startsTheSeedQueueOverWhenThereIsNothingToRead() {
+        FixtureOfferCatalog seeded = aSeededCatalog(anOnSaleSeed(OFFER, SOME_UNITS, NO_UNITS));
+        seeded.read(List.of(OFFER));
+
+        assertThat(seeded.read(List.of())).isEmpty();
+
+        assertThat(seeded.read(List.of(OFFER))).extracting(OfferRecord::stock)
+                .containsExactly(new OfferObservation.Stock.Quantity(SOME_UNITS));
+    }
+
+    @Test
+    void answersADescribedRemovalWithThePriceTheProviderStillNames() {
+        FixtureOfferCatalog seeded = aSeededCatalog(aDescribedRemoval(OFFER));
+
+        OfferRecord read = seeded.read(List.of(OFFER)).get(0);
+
+        assertThat(read.offerState()).isEqualTo(OfferObservation.OfferState.removed);
+        assertThat(read.description()).satisfies(described ->
+                assertThat(described.currentPrice().amount()).isEqualTo(CURRENT_PRICE));
+    }
+
+    @Test
+    void refusesASeedThatNamesOneOfferTwice() {
+        FixtureOfferCatalog.Offering offering = anOnSaleSeed(OFFER, SOME_UNITS);
+
+        assertThatThrownBy(() -> aSeededCatalog(offering, offering))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("twice");
     }
 
     private static BasketSelection aShipmentOf(String seller) {

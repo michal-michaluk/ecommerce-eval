@@ -7,6 +7,7 @@ import shop.shopping.IntegrationTest;
 import shop.shopping.kernel.Estimate;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static shop.shopping.basket.BasketDeliveryEstimateFixture.FROM;
 import static shop.shopping.basket.BasketDeliveryEstimateFixture.THE_CLOCK;
 import static shop.shopping.basket.BasketDeliveryEstimateFixture.TO;
@@ -15,6 +16,11 @@ import static shop.shopping.basket.BasketDeliveryEstimateFixture.anEstimatedRang
 import static shop.shopping.basket.BasketDeliveryEstimateFixture.settingsWithDelivery;
 import static shop.shopping.basket.BasketDeliveryEstimateFixture.settingsWithoutDelivery;
 import static shop.shopping.basket.BasketFixture.aFirstItem;
+import static shop.shopping.basket.OfferSeedFixture.A_CURRENT_PRICE_IN_PLN;
+import static shop.shopping.basket.OfferSeedFixture.NO_DISCOUNT_IN_PLN;
+import static shop.shopping.basket.OfferSeedFixture.aFixtureOf;
+import static shop.shopping.basket.OfferSeedFixture.aSeededOffer;
+import static shop.shopping.basket.OfferSeedFixture.aSeededOfferWithoutTitle;
 import static shop.shopping.basket.BasketPriceFixture.aBasketOf;
 import static shop.shopping.basket.BasketPriceFixture.aPrice;
 import static shop.shopping.basket.BasketPriceFixture.theFirstItem;
@@ -76,4 +82,41 @@ class BasketConfigurationTest {
         assertThat(BasketConfiguration.deliveryRatesOf(settingsWithoutDelivery()))
                 .isEqualTo(DeliveryRates.defaultRates());
     }
+
+    @Test
+    void convertsTheOffersTheDeploymentSeeds() {
+        FixtureOfferCatalog.Offering seeded =
+                BasketConfiguration.offeringsOf(aFixtureOf(aSeededOffer("OF-1002", "9", 2))).get(0);
+
+        assertThat(seeded.offerId()).isEqualTo("OF-1002");
+        assertThat(seeded.offerState()).isEqualTo(OfferObservation.OfferState.onSale);
+        assertThat(seeded.stockAnswers()).containsExactly(new OfferObservation.Stock.Quantity(9),
+                new OfferObservation.Stock.Quantity(9), new OfferObservation.Stock.Quantity(0));
+        assertThat(seeded.description()).satisfies(described -> {
+            assertThat(described.seller()).isEqualTo("UGREEN_POLSKA");
+            assertThat(described.currentPrice()).isEqualTo(A_CURRENT_PRICE_IN_PLN);
+            assertThat(described.discount()).isEqualTo(NO_DISCOUNT_IN_PLN);
+        });
+    }
+
+    @Test
+    void seedsNothingWhenTheDeploymentStatesNoOffer() {
+        assertThat(BasketConfiguration.offeringsOf(null)).isEmpty();
+        assertThat(BasketConfiguration.offeringsOf(aFixtureOf())).isEmpty();
+    }
+
+    @Test
+    void refusesASeedThatCannotDescribeARow() {
+        assertThatThrownBy(() -> BasketConfiguration.offeringsOf(aFixtureOf(aSeededOfferWithoutTitle("OF-1001"))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("states no title");
+    }
+
+    @Test
+    void refusesAStockThatIsNeitherACountNorSilence() {
+        assertThatThrownBy(() -> BasketConfiguration.offeringsOf(aFixtureOf(aSeededOffer("OF-1002", "many", null))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("neither notRead nor a count");
+    }
+
 }

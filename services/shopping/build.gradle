@@ -67,6 +67,10 @@ test {
     // The HTTP contract is its own task: it boots the application and drives hurl against it, which
     // costs minutes and needs hurl — `./gradlew build` stays the second-scale gate.
     exclude "**/e2e/**"
+    // The offer fixture's seed is a ConfigMap, not a resource on the test classpath, so it is declared
+    // here: `OfferSeedDocumentTest` reads it, and a seed edited without this line would leave that test
+    // UP-TO-DATE — green against a document no pod ever binds.
+    inputs.file("k8s/base/configmap.yaml").withPropertyName("offerFixture")
 }
 
 /**

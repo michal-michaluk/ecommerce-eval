@@ -35,6 +35,7 @@ workspace=$(cd -- "$here/../../../.." && pwd)
 run_apps="$workspace/.agents/skills/run-apps/scripts/run-apps"
 run_apps_label=.agents/skills/run-apps/scripts/run-apps
 tokens_env="$workspace/.agents/runtime/tokens.env"
+kubeconfig="$workspace/.agents/runtime/kubeconfig-shop.yaml"
 document=prototypes/basket-api.prove.md
 base_url=http://127.0.0.1:8082
 caller_dir=$PWD
@@ -202,6 +203,13 @@ read -r state bridge port <<<"$verdict"
 [[ $state == green ]] ||
     die "the local cluster is not GREEN (state: $state) — '$run_apps_label deploy' brings it up; this runner starts nothing"
 # `run-apps` owns the port map; the runner and prove.yaml only mirror it.
+# The fixture's stock queue counts reads in ONE process (D72): a second replica, or a rollout mid-run,
+# restarts the sequence and fails step 15 as though the golden were wrong. Ask the cluster directly —
+# `run-apps status` reports pods, not the replica count.
+replicas=$(kubectl --kubeconfig "$kubeconfig" -n shopping get deploy shopping \
+    -o jsonpath='{.status.readyReplicas}' 2>/dev/null || true)
+[[ $replicas == 1 ]] ||
+    die "shopping has ${replicas:-0} ready replica(s); the contract's stock queue is calibrated to a single process (D72) — 'kubectl -n shopping scale deploy/shopping --replicas=1', then rerun"
 [[ $port == 8082 ]] ||
     die "run-apps reports shopping on port $port, this runner and prove.yaml use 8082 — $run_apps_label is the source of truth, so fix the two mirrors, not the skill"
 [[ $bridge == live ]] ||

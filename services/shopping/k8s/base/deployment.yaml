@@ -44,6 +44,14 @@ spec:
           volumeMounts:
             - name: tmp
               mountPath: /tmp
+            # Element 08's seeded fixture (D67): the ConfigMap key is the configuration document, and
+            # `SPRING_CONFIG_ADDITIONAL_LOCATION` binds it over the packaged `application.yml`.
+            # `readOnlyRootFilesystem` is untouched by a mount, and the mount is not `optional:` — a
+            # pod that lost the seed would answer step 3 with `404 OFFER_NOT_FOUND` instead of failing
+            # to start, so the path is stated rather than defaulted.
+            - name: offer-fixture
+              mountPath: /etc/shopping
+              readOnly: true
           # Every ConfigMap key is kebab-case, so it cannot be an environment variable name and
           # `envFrom` would deliver nothing: each one is bound explicitly below. A key added to
           # base/configmap.yaml without an entry here is dead.
@@ -93,6 +101,8 @@ spec:
                 configMapKeyRef:
                   name: shopping
                   key: basket-estimate-fallback
+            - name: SPRING_CONFIG_ADDITIONAL_LOCATION
+              value: file:/etc/shopping/offer-fixture.yaml
             - name: SPRING_DATASOURCE_URL
               valueFrom:
                 secretKeyRef:
@@ -142,3 +152,9 @@ spec:
       volumes:
         - name: tmp
           emptyDir: {}
+        - name: offer-fixture
+          configMap:
+            name: shopping
+            items:
+              - key: offer-fixture.yaml
+                path: offer-fixture.yaml
