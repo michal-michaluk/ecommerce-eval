@@ -73,23 +73,10 @@ test {
     inputs.file("k8s/base/configmap.yaml").withPropertyName("offerFixture")
 }
 
-/**
- * The HTTP contract over a booted application.
- *
- * It is a Test task so the suite gets the same classpath, test runtime and Testcontainers config as every integration
- * test: the harness starts PostgreSQL and Keycloak itself, and `hurl --test` exits non-zero on any failing request, which
- * fails this task and therefore the gate.
- */
-tasks.register("e2eHurl", Test) {
-    description = "Runs the HTTP contract (e2e/healthcheck.hurl) against the booted service"
-    group = "verification"
-    useJUnitPlatform()
-    testClassesDirs = sourceSets.test.output.classesDirs
-    classpath = sourceSets.test.runtimeClasspath
-    include "**/e2e/**"
-    systemProperty "shopping.e2e.suite", layout.projectDirectory.file("e2e/healthcheck.hurl").asFile.absolutePath
-    outputs.upToDateWhen { false }
-}
+// There is no e2eHurl task: the HTTP contract of this service is the prove scenario
+// (docs/specs/basket/prototypes/prove-local.sh, 24 steps, run against the cluster). The blueprint's task included the
+// e2e test source and set a system property nothing read, so it ran zero tests and reported success — a gate satisfied
+// rather than met, and one a reader would trust.
 
 jacoco {
     toolVersion = "0.8.15"
