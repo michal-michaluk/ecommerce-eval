@@ -45,7 +45,7 @@ Session: `2026-11-26T20:18:12Z` · branch `feat/basket` off `main` @ `62fed7a` �
 8. Prove of done
 - prove-dod (index §Prove DoD, 36 rows)
 9. Evidence
-- demo-recording (DoD rows → scenarios),
+- documentation (the slice's own docset, `add-docs`),
 - review-branch (whole `feat/basket` diff)
 
 ---
@@ -227,16 +227,17 @@ Session: `2026-11-26T20:18:12Z` · branch `feat/basket` off `main` @ `62fed7a` �
 
 ### Evidence
 
-#### demo-recording
-- **Goal:** record a chaptered demo of the finished slice — acceptance scenarios derived from the DoD rows, the CLI/terminal medium (the deliverable is an HTTP API, there is no UI), one video, one chapter per scenario — then attach it to the **spec ticket** #70.
+#### documentation
+- **Goal:** the basket slice's own docset — system documentation, integrator guide, operations manual, business guide — built by the `add-docs` skill from the repository's own facts, as a **second configuration of the existing pipeline** (`DOCS_CONFIG=docs/scripts/config.shopping.json`): `services/fulfillment`'s docset, its pinned `expected_counts` and every authored chapter stay untouched and must stay green.
 - **Executor:** general
-- **Docs:** `docs/specs/basket/index.md` §Prove Definition of Done (scenario source), the `demo` skill (terminal medium: `references/terminal-demo-cli.md`), the storybook gallery in `prototypes/.storybook` as static evidence
-- **IN / OUT:** IN: the deployed service on `http://127.0.0.1:8082`, `prove-local.sh`; OUT: `demo/scenarios.md`, `demo/scripts/*.sh`, `demo/record.js`, `demo/chapters.json`, `demo/basket-api.webm`, `demo/basket-api.chapters.mkv`
+- **Docs:** `~/.agents/skills/add-docs/SKILL.md` and its references (`docset`, `chapter-catalog`, `pipeline-contracts`, `manual-authoring`, `composition-quarto`, `quality-control`, `document-kind-index`); `docs/scripts/README.md` and `docs/scripts/config.py` (`DOCS_CONFIG` is the supported switch); `docs/specs/basket/index.md` + elements 01–10 (the facts the manual tier must trace to)
+- **IN / OUT:** IN: `services/shopping/**` (code, `k8s/`, `db/changelog`, `e2e/`, the seeded offer fixture), `docs/specs/basket/**`, `docs/scripts/{config.py,extract-data.py,render-docs.py,verify-evidence.py,docs-gate.py}`; OUT: `docs/scripts/config.shopping.json` (paths, sources, `expected_counts` read from a real extract, `documents`), `docs/generated/shopping/**`, `docs/{shopping-system-documentation,shopping-integrator-guide,shopping-operations-manual,shopping-business-guide}.qmd` wired into `docs/_quarto.yml`, `docs/decisions/genre-provenance.md` rows for the four genres, and the authored manual-tier chapters. **Not touched:** `docs/scripts/config.json`, `docs/{system-documentation,integrator-guide,business-guide}.qmd`, `docs/generated/{data,chapters,diagrams}` (fulfillment's)
 - **checks:**
-  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce && test -f demo/scenarios.md`
-  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce && test -f demo/basket-api.chapters.mkv`
-  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce && ffprobe -v error -show_entries chapter=start_time,end_time:chapter_tags=title demo/basket-api.chapters.mkv | grep -q 'TAG:title='`
-- **review_prompt:** Review the work in /Users/michal/workspace/bottega-ai-mind/eval/ecommerce; do not inspect any other repository. Check the demo's chapter list against the user-visible rows of `docs/specs/basket/index.md` §Prove Definition of Done: report every demonstrable row that has no chapter, every chapter whose claim the video does not show, and any recording where the outcome is asserted without the response being visible. If a premise below is false, say so and stop. Do not edit files — report only.
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce && DOCS_CONFIG=docs/scripts/config.shopping.json python3 docs/scripts/docs-gate.py --fast`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce && DOCS_CONFIG=docs/scripts/config.shopping.json python3 docs/scripts/docs-gate.py`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce && for f in docs/shopping-*.qmd; do test -s "$f"; done`
+  - `cd /Users/michal/workspace/bottega-ai-mind/eval/ecommerce && python3 docs/scripts/docs-gate.py --fast` (fulfillment's docset is unchanged — the regression guard)
+- **review_prompt:** Review the work in /Users/michal/workspace/bottega-ai-mind/eval/ecommerce; do not inspect any other repository. Judge the new docset against the `add-docs` skill's three tiers: every factual sentence traces to an `<!-- evidence: path:line -->` marker that resolves, every judgement traces to a recorded operator answer or a numbered gap, and no chapter was written from imagination. Check that the four documents match the genre kinds the skill prescribes and that `docs/decisions/genre-provenance.md` carries a row per genre claim; that `expected_counts` are the numbers a real extract produced (not aspirational); and that `services/fulfillment`'s docset is byte-identical to before. Report every unsupported claim, every count that disagrees with the extract, and every chapter that merely restates a table. If a premise below is false, say so and stop. Do not edit files — report only.
 
 #### review-branch
 - **Goal:** review the whole `feat/basket` diff (merge-base `main` → HEAD) against the spec and the architecture docs; report findings, do not edit.
@@ -257,4 +258,5 @@ Session: `2026-11-26T20:18:12Z` · branch `feat/basket` off `main` @ `62fed7a` �
 - **`sqt` reports seven accepted hints**: four `vo.builder-when-wide` on `Handover`, `Line`, `Basket` and `BasketItem` after the dead `@Builder`s were removed (the named factories are the construction path and the document adapter uses the canonical constructor), and three `event.past-tense` on `AddedToBasket`, `RemovedFromBasket` and `GoToCheckout` — those are element 02's own names, taken from the board, and renaming them would break the event vocabulary the spec fixes.
 - **The generated docset does not cover `shopping`** — `docs/scripts/config.json` is pinned to `services/fulfillment` with exact expected counts; repointing it would break every authored chapter, so the service carries its own `docs/runbook` instead.
 - **No `retro` skill is installed**, so the plan's retrospective phase is dropped rather than improvised.
+- **The demo recording is skipped by operator decision** — the slice is an HTTP API with no UI, and the contract already produces a replayable artefact (`prototypes/prove-local.sh`, 24 steps). The evidence phase therefore carries the docset and the branch review only.
 - **DoV1–DoV5 have no baseline** — they stay hypotheses until production data exists (R10).
