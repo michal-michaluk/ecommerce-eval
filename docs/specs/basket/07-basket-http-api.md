@@ -2,7 +2,7 @@
 
 **Role:** the API the customer's client calls. Reads are `GET`, every update is `PATCH` (**D28**). A customer may own **several active baskets** and always owns at least one (**D29**), so `basketId` is in every path and a list endpoint exists.
 
-**Spec artifact:** [`prototypes/basket-api.prove.md`](prototypes/basket-api.prove.md) — the `prove` scenario **is** the contract: 24 steps, full-body goldens, every error path. Nothing below repeats it. Gate after every change: `prove validate` → `prove explain` → `prove run`.
+**Spec artifact:** [`prototypes/basket-api.prove.md`](prototypes/basket-api.prove.md) — the `prove` scenario **is** the contract: 24 steps, full-body goldens, every error path. Nothing below repeats it. Gate after every change: `prove validate` → `prove explain` (both offline); the run itself goes through `prototypes/prove-local.sh`, never a hand-typed `prove run` — it mints the tokens, derives the Warsaw dates and passes them as `--var`.
 
 **Provenance:** board commands `add to basket`, `remove from basket`, `go to checkout` (`lanes[2].commands`) plus `basket quantity changed`, which the board lacks and the transcript and stepper require (R4, D19). Error shape and status choice follow `services/fulfillment` (`processing/OrderIntakeController.java:28`, `FulfillmentErrorAdvice.java:30,59-73,75-110`).
 

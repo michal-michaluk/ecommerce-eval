@@ -1,0 +1,33 @@
+# prove run configuration for the basket contract (prototypes/basket-api.prove.md).
+#
+# Run the contract through prototypes/prove-local.sh, never by hand: prove resolves a variable in four
+# tiers — capture > `--var` > the document's own `**vars:**` block > this file's `env.<name>.vars` — so
+# a value written in basket-api.prove.md **beats** the value written here. Every environment-derived
+# value therefore travels as `--var` from the runner (base_url: the cluster's port; customer_token and
+# service_token: minted per run; est_from/est_to: `today+2`/`today+4` in Europe/Warsaw, D43), and the
+# document's defaults stay inert placeholders. What is left here is the one thing a `--var` cannot
+# express: the HTTP driver's bound.
+#
+# The base_url below is therefore documentation of the intended target, not a value that wins: it is
+# unreachable while the document carries the same key, and the runner's `--var` is the authority. If the
+# runner ever stops passing it, prove resolves the document's :8080 — a runner bug that shows up as
+# requests against catalog, not as a config fallback.
+#
+# This file sits beside the scenario, so from docs/specs/basket it is `--config prototypes/prove.yaml`
+# (the runner passes an absolute path and works from any directory).
+#
+# No secret, and no placeholder: config values are never substituted, so a `{{name}}` written in this
+# file would reach the wire as those literal six characters.
+
+version: 1
+
+env:
+  local:
+    vars:
+      base_url: http://127.0.0.1:8082
+    drivers:
+      http:
+        # The compiled default, written down so the bound of a slow first request is greppable: step 1
+        # of the contract is also the service's first JWKS fetch, and Keycloak's first realm-key load
+        # can outlast a tight timeout. Lower it per run with `--timeout`, never here.
+        request_timeout: 30s

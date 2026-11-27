@@ -7,10 +7,14 @@ active baskets and always owns at least one); authority follows D27 (`SCOPE_cust
 status vocabulary is element 06 — `available` / `outOfStock` / `unavailable` + `stale`.
 
 ```bash
-prove validate prototypes/basket-api.prove.md
-prove explain  prototypes/basket-api.prove.md --config prove.yaml --env local --format json
-prove run      prototypes/basket-api.prove.md --config prove.yaml --env local --format json
+# from docs/specs/basket — the runner mints both tokens, derives est_from/est_to as
+# today+2 / today+4 in Europe/Warsaw and passes them as --var, then runs all 24 steps
+./prototypes/prove-local.sh                    # add --format json, --dry-run, or a scenario path
+prove validate prototypes/*.prove.md           # offline: no cluster, no tokens
+prove explain  prototypes/basket-api.prove.md --format json
 ```
+
+`prove.yaml` documents the target (`env.local`, port 8082) and the timeout; **every environment-specific value travels as `--var`**, because a document's `**vars:**` outranks the config's env set — a dropped `--var` shows up as requests against the wrong service, not as a silent config fallback.
 
 **vars:**
 - base_url: http://127.0.0.1:8080

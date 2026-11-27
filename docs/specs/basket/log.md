@@ -137,6 +137,7 @@
 | D68 | Decision | a basket owned by another customer answers **`404 BASKET_NOT_FOUND`**, never `403` (which would confirm the id exists) and never a body echoing the owner's id | accepted | element 07 §Ownership |
 | D69 | Decision | `OFFER_UNAVAILABLE` is the sixth `422` code — element 07 stated the condition ("quantity change on an `unavailable` row") without naming a code, and the type had to name one | accepted | element 07 §Error contract |
 | D70 | Decision | this increment's payload carries **no item attributes and no shipment label**: the capture's attribute summary is not in the goldens, and the label is derived by the client from `seller`. Element 01 keeps them as view facts, not wire facts | accepted | element 01 §Data shown |
+| D71 | Decision | the `prove` runner carries both tokens on `prove`'s command line: prove 0.1.0 offers no env/file indirection for a variable, the document's `**vars:**` outranks the config's env set, and the alternative — a rewritten 0600 copy of the scenario — trades a `ps` exposure for a secret on disk *and* runs an off-spec document. The exposure is the token's lifetime (realm `accessTokenLifespan` 3600 s), not the run's, and it is stated in the runner's header | accepted | `prove-harness`; `prototypes/prove-local.sh` |
 
 ## Spec Corrections Applied during Plan
 
@@ -172,3 +173,4 @@ Every correction below was applied to the artifact that owns the fact; the regis
 | `05-basket-delivery-estimate.md` §Configuration, I1 | the key is `basket.estimate.default-days` (kebab, as the deployment ships it); a deployment that states a placeholder always has a value, so I5's `unknown` is reachable only when the block is absent entirely | D58, D64 |
 | `prototypes/basket-api.prove.md` step 13 | the step's title promised a `422` while it answers `200`, and its golden carried an estimate range with nothing selected, contradicting element 05 I4 — title fixed, `deliveryEstimate: null` | D58 |
 | `prototypes/basket-api.prove.md` `**vars:**` | the default estimate pair was `+2…+6`; element 05 fixes `+2…+4` | D36 |
+| `07-basket-http-api.md` §Spec artifact | the gate line names the runner, not a hand-typed `prove run` | D46 |
