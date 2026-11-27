@@ -1,0 +1,349 @@
+{
+  "adapter_tables": [
+    "basket",
+    "basket_summary",
+    "features_configuration"
+  ],
+  "adapters": [
+    {
+      "line": 83,
+      "path": "services/shopping/src/main/java/shop/shopping/basket/BasketsProjection.java",
+      "table": "basket_summary"
+    },
+    {
+      "line": 129,
+      "path": "services/shopping/src/main/java/shop/shopping/basket/DocumentBasketRepository.java",
+      "table": "basket"
+    },
+    {
+      "line": 63,
+      "path": "services/shopping/src/main/java/shop/shopping/tools/FeatureConfiguration.java",
+      "table": "features_configuration"
+    }
+  ],
+  "changelog": {
+    "path": "services/shopping/src/main/resources/db/db.changelog.yaml"
+  },
+  "changesets": [
+    {
+      "author": "michal.michaluk",
+      "column_count": 2,
+      "evidence": [
+        "services/shopping/src/main/resources/db/db.changelog.yaml:4"
+      ],
+      "id": "0001-features-configuration",
+      "line": 4,
+      "path": "services/shopping/src/main/resources/db/db.changelog.yaml",
+      "tables": [
+        "features_configuration"
+      ]
+    },
+    {
+      "author": "template",
+      "column_count": 0,
+      "evidence": [
+        "services/shopping/src/main/resources/db/db.changelog.yaml:23"
+      ],
+      "id": "0002-template-placeholder",
+      "line": 23,
+      "path": "services/shopping/src/main/resources/db/db.changelog.yaml",
+      "tables": []
+    },
+    {
+      "author": "michal.michaluk",
+      "column_count": 5,
+      "evidence": [
+        "services/shopping/src/main/resources/db/changelog/0001-basket.yaml:6"
+      ],
+      "id": "0001-basket",
+      "line": 6,
+      "path": "services/shopping/src/main/resources/db/changelog/0001-basket.yaml",
+      "tables": [
+        "basket"
+      ]
+    },
+    {
+      "author": "michal.michaluk",
+      "column_count": 5,
+      "evidence": [
+        "services/shopping/src/main/resources/db/changelog/0002-basket-summary.yaml:6"
+      ],
+      "id": "0002-basket-summary",
+      "line": 6,
+      "path": "services/shopping/src/main/resources/db/changelog/0002-basket-summary.yaml",
+      "tables": [
+        "basket_summary"
+      ]
+    }
+  ],
+  "dropped_columns": [],
+  "json_columns": [
+    {
+      "changelog_line": 17,
+      "changelog_path": "services/shopping/src/main/resources/db/db.changelog.yaml",
+      "changeset": "0001-features-configuration",
+      "column": "configuration",
+      "column_source": "field",
+      "entity_paths": [
+        {
+          "line": 68,
+          "path": "services/shopping/src/main/java/shop/shopping/tools/FeatureConfiguration.java"
+        }
+      ],
+      "evidence": [
+        "services/shopping/src/main/resources/db/db.changelog.yaml:17",
+        "services/shopping/src/main/java/shop/shopping/tools/FeatureConfiguration.java:68"
+      ],
+      "field": "configuration",
+      "field_type": "JsonNode",
+      "line": 17,
+      "path": "services/shopping/src/main/resources/db/db.changelog.yaml",
+      "table": "features_configuration",
+      "type": "jsonb"
+    },
+    {
+      "changelog_line": 36,
+      "changelog_path": "services/shopping/src/main/resources/db/changelog/0001-basket.yaml",
+      "changeset": "0001-basket",
+      "column": "snapshot",
+      "column_source": "field",
+      "entity_paths": [
+        {
+          "line": 142,
+          "path": "services/shopping/src/main/java/shop/shopping/basket/DocumentBasketRepository.java"
+        }
+      ],
+      "evidence": [
+        "services/shopping/src/main/resources/db/changelog/0001-basket.yaml:36",
+        "services/shopping/src/main/java/shop/shopping/basket/DocumentBasketRepository.java:142"
+      ],
+      "field": "snapshot",
+      "field_type": "Basket",
+      "line": 36,
+      "path": "services/shopping/src/main/resources/db/changelog/0001-basket.yaml",
+      "table": "basket",
+      "type": "jsonb"
+    },
+    {
+      "changelog_line": 36,
+      "changelog_path": "services/shopping/src/main/resources/db/changelog/0002-basket-summary.yaml",
+      "changeset": "0002-basket-summary",
+      "column": "summary",
+      "column_source": "field",
+      "entity_paths": [
+        {
+          "line": 96,
+          "path": "services/shopping/src/main/java/shop/shopping/basket/BasketsProjection.java"
+        }
+      ],
+      "evidence": [
+        "services/shopping/src/main/resources/db/changelog/0002-basket-summary.yaml:36",
+        "services/shopping/src/main/java/shop/shopping/basket/BasketsProjection.java:96"
+      ],
+      "field": "summary",
+      "field_type": "BasketSummary",
+      "line": 36,
+      "path": "services/shopping/src/main/resources/db/changelog/0002-basket-summary.yaml",
+      "table": "basket_summary",
+      "type": "jsonb"
+    }
+  ],
+  "renamed_columns": [],
+  "tables": [
+    {
+      "changeset": "0001-features-configuration",
+      "columns": [
+        {
+          "changeset": "0001-features-configuration",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 11,
+          "name": "name",
+          "nullable": "false",
+          "path": "services/shopping/src/main/resources/db/db.changelog.yaml",
+          "primary_key": true,
+          "type": "varchar(255)",
+          "unique": false
+        },
+        {
+          "changeset": "0001-features-configuration",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": true,
+          "line": 17,
+          "name": "configuration",
+          "nullable": "false",
+          "path": "services/shopping/src/main/resources/db/db.changelog.yaml",
+          "primary_key": false,
+          "type": "jsonb",
+          "unique": false
+        }
+      ],
+      "evidence": [
+        "services/shopping/src/main/resources/db/db.changelog.yaml:8"
+      ],
+      "line": 8,
+      "name": "features_configuration",
+      "path": "services/shopping/src/main/resources/db/db.changelog.yaml"
+    },
+    {
+      "changeset": "0001-basket",
+      "columns": [
+        {
+          "changeset": "0001-basket",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 13,
+          "name": "basket_id",
+          "nullable": "false",
+          "path": "services/shopping/src/main/resources/db/changelog/0001-basket.yaml",
+          "primary_key": true,
+          "type": "varchar(64)",
+          "unique": false
+        },
+        {
+          "changeset": "0001-basket",
+          "default": {
+            "kind": "numeric",
+            "value": "1"
+          },
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 20,
+          "name": "version",
+          "nullable": "false",
+          "path": "services/shopping/src/main/resources/db/changelog/0001-basket.yaml",
+          "primary_key": false,
+          "type": "bigint",
+          "unique": false
+        },
+        {
+          "changeset": "0001-basket",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 26,
+          "name": "customer_id",
+          "nullable": "false",
+          "path": "services/shopping/src/main/resources/db/changelog/0001-basket.yaml",
+          "primary_key": false,
+          "type": "varchar(64)",
+          "unique": false
+        },
+        {
+          "changeset": "0001-basket",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 31,
+          "name": "active",
+          "nullable": "false",
+          "path": "services/shopping/src/main/resources/db/changelog/0001-basket.yaml",
+          "primary_key": false,
+          "type": "boolean",
+          "unique": false
+        },
+        {
+          "changeset": "0001-basket",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": true,
+          "line": 36,
+          "name": "snapshot",
+          "nullable": "false",
+          "path": "services/shopping/src/main/resources/db/changelog/0001-basket.yaml",
+          "primary_key": false,
+          "type": "jsonb",
+          "unique": false
+        }
+      ],
+      "evidence": [
+        "services/shopping/src/main/resources/db/changelog/0001-basket.yaml:10"
+      ],
+      "line": 10,
+      "name": "basket",
+      "path": "services/shopping/src/main/resources/db/changelog/0001-basket.yaml"
+    },
+    {
+      "changeset": "0002-basket-summary",
+      "columns": [
+        {
+          "changeset": "0002-basket-summary",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 13,
+          "name": "basket_id",
+          "nullable": "false",
+          "path": "services/shopping/src/main/resources/db/changelog/0002-basket-summary.yaml",
+          "primary_key": true,
+          "type": "varchar(64)",
+          "unique": false
+        },
+        {
+          "changeset": "0002-basket-summary",
+          "default": {
+            "kind": "numeric",
+            "value": "1"
+          },
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 20,
+          "name": "version",
+          "nullable": "false",
+          "path": "services/shopping/src/main/resources/db/changelog/0002-basket-summary.yaml",
+          "primary_key": false,
+          "type": "bigint",
+          "unique": false
+        },
+        {
+          "changeset": "0002-basket-summary",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 26,
+          "name": "customer_id",
+          "nullable": "false",
+          "path": "services/shopping/src/main/resources/db/changelog/0002-basket-summary.yaml",
+          "primary_key": false,
+          "type": "varchar(64)",
+          "unique": false
+        },
+        {
+          "changeset": "0002-basket-summary",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": false,
+          "line": 31,
+          "name": "active",
+          "nullable": "false",
+          "path": "services/shopping/src/main/resources/db/changelog/0002-basket-summary.yaml",
+          "primary_key": false,
+          "type": "boolean",
+          "unique": false
+        },
+        {
+          "changeset": "0002-basket-summary",
+          "default": null,
+          "foreign_key": null,
+          "jsonb": true,
+          "line": 36,
+          "name": "summary",
+          "nullable": "false",
+          "path": "services/shopping/src/main/resources/db/changelog/0002-basket-summary.yaml",
+          "primary_key": false,
+          "type": "jsonb",
+          "unique": false
+        }
+      ],
+      "evidence": [
+        "services/shopping/src/main/resources/db/changelog/0002-basket-summary.yaml:10"
+      ],
+      "line": 10,
+      "name": "basket_summary",
+      "path": "services/shopping/src/main/resources/db/changelog/0002-basket-summary.yaml"
+    }
+  ]
+}

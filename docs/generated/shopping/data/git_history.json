@@ -1,0 +1,435 @@
+{
+  "commits_read": 34,
+  "quality": {
+    "conventional": 34,
+    "conventional_share": 1.0,
+    "counts": {
+      "chore": 5,
+      "docs": 2,
+      "feat": 22,
+      "fix": 3,
+      "refactor": 1,
+      "test": 1
+    },
+    "dropped": {},
+    "non_conventional": 0,
+    "non_conventional_share": 0.0,
+    "other": 0,
+    "other_share": 0.0,
+    "path_classified": 0,
+    "rows": 34
+  },
+  "repository": "ecommerce",
+  "rows": [
+    {
+      "category": "docs",
+      "change": "correct the drifts the branch review found",
+      "date": "2026-11-27",
+      "evidence": [
+        "git:e52c9c5fef137afaf26ab1db45ceefd69ab0c95c"
+      ],
+      "ref": {
+        "sha": "e52c9c5"
+      },
+      "scope": "."
+    },
+    {
+      "category": "feat",
+      "change": "a seeded fault makes the failed-read path reachable",
+      "date": "2026-11-27",
+      "evidence": [
+        "git:2251d784b1dc638c147efc418d1cd2775eaa4b61"
+      ],
+      "ref": {
+        "sha": "2251d78"
+      },
+      "scope": "."
+    },
+    {
+      "category": "fix",
+      "change": "delete a gate that ran zero tests, and make the rows match reality",
+      "date": "2026-11-27",
+      "evidence": [
+        "git:e5dc47e92fa16184ee728fb2ab047911b5b0a9d1"
+      ],
+      "ref": {
+        "sha": "e5dc47e"
+      },
+      "scope": "."
+    },
+    {
+      "category": "test",
+      "change": "close the coverage holes, and make the gates bite harder",
+      "date": "2026-11-27",
+      "evidence": [
+        "git:edc186a51e4d158e3332e8d5800b3cd17dbe8dd0"
+      ],
+      "ref": {
+        "sha": "edc186a"
+      },
+      "scope": "."
+    },
+    {
+      "category": "feat",
+      "change": "the contract passes — 24/24 against the cluster",
+      "date": "2026-11-27",
+      "evidence": [
+        "git:a94ef76662a9c4d8dff2e1d205ac54332849d090"
+      ],
+      "ref": {
+        "sha": "a94ef76"
+      },
+      "scope": "."
+    },
+    {
+      "category": "feat",
+      "change": "one command runs the basket contract against the cluster",
+      "date": "2026-11-27",
+      "evidence": [
+        "git:4af31495d3b7550f500708cbf577affb5d966efd"
+      ],
+      "ref": {
+        "sha": "4af3149"
+      },
+      "scope": "."
+    },
+    {
+      "category": "feat",
+      "change": "ownership and the pull on every answering route",
+      "date": "2026-11-27",
+      "evidence": [
+        "git:1226f54f164a53003f5849e8a40e36b18885e90f"
+      ],
+      "ref": {
+        "sha": "1226f54"
+      },
+      "scope": "."
+    },
+    {
+      "category": "feat",
+      "change": "the basket HTTP API — six routes against the contract of record",
+      "date": "2026-11-27",
+      "evidence": [
+        "git:873d0ee07fdef8260a685bc2c78056aa97ee1dfb"
+      ],
+      "ref": {
+        "sha": "873d0ee"
+      },
+      "scope": "."
+    },
+    {
+      "category": "feat",
+      "change": "checkout handover — an in-process command keyed by basketId",
+      "date": "2026-11-27",
+      "evidence": [
+        "git:ffe1838917996ee773ab577fabd467951d399ae8"
+      ],
+      "ref": {
+        "sha": "ffe1838"
+      },
+      "scope": "."
+    },
+    {
+      "category": "feat",
+      "change": "the offer read path and the observation it applies",
+      "date": "2026-11-27",
+      "evidence": [
+        "git:f19e18a8a269aad0a48780a45ae9015ad07543b8"
+      ],
+      "ref": {
+        "sha": "f19e18a"
+      },
+      "scope": "."
+    },
+    {
+      "category": "feat",
+      "change": "BasketDeliveryEstimate — a fixed range behind an interface",
+      "date": "2026-11-26",
+      "evidence": [
+        "git:74445cae477123a11a92df6fc5b8c460b99d8e5b"
+      ],
+      "ref": {
+        "sha": "74445ca"
+      },
+      "scope": "."
+    },
+    {
+      "category": "feat",
+      "change": "OfferAvailabilityDecision — the three outcomes, fail-closed",
+      "date": "2026-11-26",
+      "evidence": [
+        "git:79c48017c9ccf610ce83b6df8ccc6a18f146632c"
+      ],
+      "ref": {
+        "sha": "79c4801"
+      },
+      "scope": "."
+    },
+    {
+      "category": "feat",
+      "change": "BasketPriceCalculation — what the selection costs",
+      "date": "2026-11-26",
+      "evidence": [
+        "git:15b9bfb4c11aaa9ab0151c1c0336eb35c5971d26"
+      ],
+      "ref": {
+        "sha": "15b9bfb"
+      },
+      "scope": "."
+    },
+    {
+      "category": "feat",
+      "change": "BasketEditor — the basket aggregate and its document",
+      "date": "2026-11-26",
+      "evidence": [
+        "git:347908fcbfea2c7b1ac1629322c8065a61d1398c"
+      ],
+      "ref": {
+        "sha": "347908f"
+      },
+      "scope": "."
+    },
+    {
+      "category": "feat",
+      "change": "the customer identity, realm shopping",
+      "date": "2026-11-26",
+      "evidence": [
+        "git:3dc9e0cde67bdcc42786d2d7a19a6c76b3eed144"
+      ],
+      "ref": {
+        "sha": "3dc9e0c"
+      },
+      "scope": "."
+    },
+    {
+      "category": "fix",
+      "change": "stop Money from teaching the discount double count",
+      "date": "2026-11-26",
+      "evidence": [
+        "git:ff4123013c873709b6f7146c441f0b4d5c161f46"
+      ],
+      "ref": {
+        "sha": "ff41230"
+      },
+      "scope": "."
+    },
+    {
+      "category": "feat",
+      "change": "Money — exact amounts in one fine unit",
+      "date": "2026-11-26",
+      "evidence": [
+        "git:322294607a3bd79463416ecfc765e3248f14c868"
+      ],
+      "ref": {
+        "sha": "3222946"
+      },
+      "scope": "."
+    },
+    {
+      "category": "feat",
+      "change": "scaffold the service from the java-spring blueprint",
+      "date": "2026-11-26",
+      "evidence": [
+        "git:69137f4059ffed3d7ea2416af2085fd20f9691b7"
+      ],
+      "ref": {
+        "sha": "69137f4"
+      },
+      "scope": "."
+    },
+    {
+      "category": "feat",
+      "change": "run catalog and fulfillment as two apps in one shop cluster",
+      "date": "2026-11-26",
+      "evidence": [
+        "git:263dcff397cbcf2c886045a7f1dcdee10efe2914"
+      ],
+      "ref": {
+        "sha": "263dcff"
+      },
+      "scope": "."
+    },
+    {
+      "category": "fix",
+      "change": "review blockers — orders-list facts, order identity, registration",
+      "date": "2026-11-19",
+      "evidence": [
+        "git:18b57a0097d8e40a681522a859d66ed78b86896d"
+      ],
+      "ref": {
+        "sha": "18b57a0"
+      },
+      "scope": "."
+    },
+    {
+      "category": "docs",
+      "change": "prove-of-done — 17/17 rows executed, plus assertion hardening",
+      "date": "2026-11-19",
+      "evidence": [
+        "git:7968023ab5e1e758aa7da6aae3115b8779381635"
+      ],
+      "ref": {
+        "sha": "7968023"
+      },
+      "scope": "."
+    },
+    {
+      "category": "feat",
+      "change": "phase 4 delivery — issues, hold with resume, dashboard",
+      "date": "2026-11-19",
+      "evidence": [
+        "git:cae383dd42b2939557edd3f1c8142e1fe75dce58"
+      ],
+      "ref": {
+        "sha": "cae383d"
+      },
+      "scope": "."
+    },
+    {
+      "category": "feat",
+      "change": "phase 3 delivery — parcel, readiness, carrier, label, customer state",
+      "date": "2026-11-19",
+      "evidence": [
+        "git:9311ac9e049c5cf9b88ded89dd4dcac840f93ba9"
+      ],
+      "ref": {
+        "sha": "9311ac9"
+      },
+      "scope": "."
+    },
+    {
+      "category": "feat",
+      "change": "phase 2 delivery — warehouse adapter, pick list, picking, packing",
+      "date": "2026-11-19",
+      "evidence": [
+        "git:8f510585e2b9a65d7675084a5914dbb9130a9739"
+      ],
+      "ref": {
+        "sha": "8f51058"
+      },
+      "scope": "."
+    },
+    {
+      "category": "feat",
+      "change": "phase 1 delivery — intake, assignment, orders list, security",
+      "date": "2026-11-19",
+      "evidence": [
+        "git:fc51884165a9b89ccf90c394030ae2ce32f33ffd"
+      ],
+      "ref": {
+        "sha": "fc51884"
+      },
+      "scope": "."
+    },
+    {
+      "category": "refactor",
+      "change": "shared kernel plus two slices, aggregate renamed",
+      "date": "2026-11-19",
+      "evidence": [
+        "git:a2f3f973dbdef51972bacd7ca9f5fc97900a9c45"
+      ],
+      "ref": {
+        "sha": "a2f3f97"
+      },
+      "scope": "."
+    },
+    {
+      "category": "feat",
+      "change": "domain model of the order processing context",
+      "date": "2026-11-19",
+      "evidence": [
+        "git:b5377471b14d2d1d0b1f044e1e409daab7125a06"
+      ],
+      "ref": {
+        "sha": "b537747"
+      },
+      "scope": "."
+    },
+    {
+      "category": "feat",
+      "change": "scaffold services/fulfillment from the java-spring blueprint",
+      "date": "2026-11-19",
+      "evidence": [
+        "git:7c427b0ae4a4c1a68892a6d533164f1916db010b"
+      ],
+      "ref": {
+        "sha": "7c427b0"
+      },
+      "scope": "."
+    },
+    {
+      "category": "chore",
+      "change": "the run-apps skill",
+      "date": "2026-11-19",
+      "evidence": [
+        "git:84930cd0c95c040d6d8f35b42a36f1bb41213177"
+      ],
+      "ref": {
+        "sha": "84930cd"
+      },
+      "scope": "."
+    },
+    {
+      "category": "chore",
+      "change": "track the spec's Storybook gallery and stop ignoring .storybook",
+      "date": "2026-11-16",
+      "evidence": [
+        "git:9cf2ca2703b5df6f44eaeb8ac6ea2c69663c929f"
+      ],
+      "ref": {
+        "sha": "9cf2ca2"
+      },
+      "scope": "."
+    },
+    {
+      "category": "chore",
+      "change": "drop derived raw/ material, move api docs under docs/",
+      "date": "2026-11-16",
+      "evidence": [
+        "git:d16a2190e14135d2d3226f95a0f670f60b11db55"
+      ],
+      "ref": {
+        "sha": "d16a219"
+      },
+      "scope": "."
+    },
+    {
+      "category": "chore",
+      "change": "add software-delivery-platform config for this repo",
+      "date": "2026-11-16",
+      "evidence": [
+        "git:c937c0c75fcec4870f67e47a7b1cbc1ee7e5b1a0"
+      ],
+      "ref": {
+        "sha": "c937c0c"
+      },
+      "scope": "."
+    },
+    {
+      "category": "chore",
+      "change": "add gitlink bump post-commit hook",
+      "date": "2026-11-16",
+      "evidence": [
+        "git:472a5a818aeb7aaba0881228b07ffaf5d78b81df"
+      ],
+      "ref": {
+        "sha": "472a5a8"
+      },
+      "scope": "."
+    },
+    {
+      "category": "feat",
+      "change": "e-commerce eval monorepo — business materials, warehouse API spec, catalog service",
+      "date": "2026-11-16",
+      "evidence": [
+        "git:5f81b0c07e776c4005cf69c8df08f17ef8992430"
+      ],
+      "ref": {
+        "sha": "5f81b0c"
+      },
+      "scope": "."
+    }
+  ],
+  "scope": ".",
+  "source": "git log"
+}

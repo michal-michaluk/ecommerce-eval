@@ -1,0 +1,339 @@
+{
+  "examples": [
+    {
+      "assertions": [
+        "jsonpath \"$.status\" == \"UP\""
+      ],
+      "body": null,
+      "body_raw": null,
+      "captures": [],
+      "end": 8,
+      "evidence": [
+        "services/shopping/e2e/healthcheck.hurl:5-8"
+      ],
+      "expected_status": "200",
+      "form_params": [],
+      "headers": [],
+      "index": 1,
+      "method": "GET",
+      "operation": null,
+      "path": "/actuator/health",
+      "path_matches_template": null,
+      "query": null,
+      "raw": "GET {{BASE_URL}}/actuator/health\nHTTP 200\n[Asserts]\njsonpath \"$.status\" == \"UP\"",
+      "start": 5,
+      "target": "{{BASE_URL}}/actuator/health"
+    },
+    {
+      "assertions": [],
+      "body": null,
+      "body_raw": null,
+      "captures": [],
+      "end": 12,
+      "evidence": [
+        "services/shopping/e2e/healthcheck.hurl:11-12"
+      ],
+      "expected_status": "401",
+      "form_params": [],
+      "headers": [],
+      "index": 2,
+      "method": "GET",
+      "operation": null,
+      "path": "/actuator/info",
+      "path_matches_template": null,
+      "query": null,
+      "raw": "GET {{BASE_URL}}/actuator/info\nHTTP 401",
+      "start": 11,
+      "target": "{{BASE_URL}}/actuator/info"
+    },
+    {
+      "assertions": [],
+      "body": null,
+      "body_raw": null,
+      "captures": [],
+      "end": 17,
+      "evidence": [
+        "services/shopping/e2e/healthcheck.hurl:15-17"
+      ],
+      "expected_status": "401",
+      "form_params": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer invalid-token"
+        }
+      ],
+      "index": 3,
+      "method": "GET",
+      "operation": null,
+      "path": "/actuator/info",
+      "path_matches_template": null,
+      "query": null,
+      "raw": "GET {{BASE_URL}}/actuator/info\nAuthorization: Bearer invalid-token\nHTTP 401",
+      "start": 15,
+      "target": "{{BASE_URL}}/actuator/info"
+    }
+  ],
+  "operations": [
+    {
+      "access": "authenticated",
+      "access_evidence": [
+        "services/shopping/src/main/java/shop/shopping/AppConfiguration.java:73"
+      ],
+      "access_scope": [
+        "Scopes.CUSTOMER"
+      ],
+      "chapter": "patch-checkout",
+      "consumes": [],
+      "evidence": [
+        "services/shopping/src/main/java/shop/shopping/AppConfiguration.java:73",
+        "services/shopping/src/main/java/shop/shopping/basket/BasketCheckoutController.java:31",
+        "services/shopping/src/main/java/shop/shopping/basket/BasketCheckoutController.java:32"
+      ],
+      "handlers": [
+        {
+          "name": "handOver",
+          "return_type": "HandoverAnswer"
+        }
+      ],
+      "method": "PATCH",
+      "operation_id": "patch-baskets-basketid-checkout",
+      "path": "/baskets/{basketId}/checkout",
+      "path_params": [
+        "basketId"
+      ],
+      "produces": [
+        "application/json"
+      ],
+      "query_params": [],
+      "request_types": [
+        "HandOver"
+      ],
+      "sources": [
+        {
+          "class_line": 25,
+          "line": 31,
+          "path": "services/shopping/src/main/java/shop/shopping/basket/BasketCheckoutController.java",
+          "signature_line": 32
+        }
+      ]
+    },
+    {
+      "access": "authenticated",
+      "access_evidence": [
+        "services/shopping/src/main/java/shop/shopping/AppConfiguration.java:69"
+      ],
+      "access_scope": [
+        "Scopes.CUSTOMER"
+      ],
+      "chapter": "get-basket",
+      "consumes": [],
+      "evidence": [
+        "services/shopping/src/main/java/shop/shopping/AppConfiguration.java:69",
+        "services/shopping/src/main/java/shop/shopping/basket/BasketController.java:27",
+        "services/shopping/src/main/java/shop/shopping/basket/BasketController.java:28"
+      ],
+      "handlers": [
+        {
+          "name": "read",
+          "return_type": "BasketContent"
+        }
+      ],
+      "method": "GET",
+      "operation_id": "get-baskets-basketid",
+      "path": "/baskets/{basketId}",
+      "path_params": [
+        "basketId"
+      ],
+      "produces": [
+        "application/json"
+      ],
+      "query_params": [],
+      "request_types": [],
+      "sources": [
+        {
+          "class_line": 21,
+          "line": 27,
+          "path": "services/shopping/src/main/java/shop/shopping/basket/BasketController.java",
+          "signature_line": 28
+        }
+      ]
+    },
+    {
+      "access": "authenticated",
+      "access_evidence": [
+        "services/shopping/src/main/java/shop/shopping/AppConfiguration.java:71"
+      ],
+      "access_scope": [
+        "Scopes.CUSTOMER"
+      ],
+      "chapter": "patch-item-quantity",
+      "consumes": [
+        "application/json"
+      ],
+      "evidence": [
+        "services/shopping/src/main/java/shop/shopping/AppConfiguration.java:71",
+        "services/shopping/src/main/java/shop/shopping/basket/BasketItemsController.java:38",
+        "services/shopping/src/main/java/shop/shopping/basket/BasketItemsController.java:40"
+      ],
+      "handlers": [
+        {
+          "name": "setQuantity",
+          "return_type": "BasketContent"
+        }
+      ],
+      "method": "PATCH",
+      "operation_id": "patch-baskets-basketid-items-offerid",
+      "path": "/baskets/{basketId}/items/{offerId}",
+      "path_params": [
+        "basketId",
+        "offerId"
+      ],
+      "produces": [
+        "application/json"
+      ],
+      "query_params": [],
+      "request_types": [
+        "UpdateQuantity"
+      ],
+      "sources": [
+        {
+          "class_line": 32,
+          "line": 38,
+          "path": "services/shopping/src/main/java/shop/shopping/basket/BasketItemsController.java",
+          "signature_line": 40
+        }
+      ]
+    },
+    {
+      "access": "authenticated",
+      "access_evidence": [
+        "services/shopping/src/main/java/shop/shopping/AppConfiguration.java:70"
+      ],
+      "access_scope": [
+        "Scopes.CUSTOMER"
+      ],
+      "chapter": "patch-items-removal",
+      "consumes": [
+        "application/json"
+      ],
+      "evidence": [
+        "services/shopping/src/main/java/shop/shopping/AppConfiguration.java:70",
+        "services/shopping/src/main/java/shop/shopping/basket/BasketItemsController.java:45",
+        "services/shopping/src/main/java/shop/shopping/basket/BasketItemsController.java:47"
+      ],
+      "handlers": [
+        {
+          "name": "remove",
+          "return_type": "BasketContent"
+        }
+      ],
+      "method": "PATCH",
+      "operation_id": "patch-baskets-basketid-items",
+      "path": "/baskets/{basketId}/items",
+      "path_params": [
+        "basketId"
+      ],
+      "produces": [
+        "application/json"
+      ],
+      "query_params": [],
+      "request_types": [
+        "RemoveItems"
+      ],
+      "sources": [
+        {
+          "class_line": 32,
+          "line": 45,
+          "path": "services/shopping/src/main/java/shop/shopping/basket/BasketItemsController.java",
+          "signature_line": 47
+        }
+      ]
+    },
+    {
+      "access": "authenticated",
+      "access_evidence": [
+        "services/shopping/src/main/java/shop/shopping/AppConfiguration.java:72"
+      ],
+      "access_scope": [
+        "Scopes.CUSTOMER"
+      ],
+      "chapter": "patch-selection",
+      "consumes": [
+        "application/json"
+      ],
+      "evidence": [
+        "services/shopping/src/main/java/shop/shopping/AppConfiguration.java:72",
+        "services/shopping/src/main/java/shop/shopping/basket/BasketSelectionController.java:33",
+        "services/shopping/src/main/java/shop/shopping/basket/BasketSelectionController.java:35"
+      ],
+      "handlers": [
+        {
+          "name": "select",
+          "return_type": "BasketContent"
+        }
+      ],
+      "method": "PATCH",
+      "operation_id": "patch-baskets-basketid-selection",
+      "path": "/baskets/{basketId}/selection",
+      "path_params": [
+        "basketId"
+      ],
+      "produces": [
+        "application/json"
+      ],
+      "query_params": [],
+      "request_types": [
+        "SelectItems"
+      ],
+      "sources": [
+        {
+          "class_line": 27,
+          "line": 33,
+          "path": "services/shopping/src/main/java/shop/shopping/basket/BasketSelectionController.java",
+          "signature_line": 35
+        }
+      ]
+    },
+    {
+      "access": "authenticated",
+      "access_evidence": [
+        "services/shopping/src/main/java/shop/shopping/AppConfiguration.java:68"
+      ],
+      "access_scope": [
+        "Scopes.CUSTOMER"
+      ],
+      "chapter": "get-baskets",
+      "consumes": [],
+      "evidence": [
+        "services/shopping/src/main/java/shop/shopping/AppConfiguration.java:68",
+        "services/shopping/src/main/java/shop/shopping/basket/BasketsController.java:29",
+        "services/shopping/src/main/java/shop/shopping/basket/BasketsController.java:30"
+      ],
+      "handlers": [
+        {
+          "name": "list",
+          "return_type": "Baskets"
+        }
+      ],
+      "method": "GET",
+      "operation_id": "get-baskets",
+      "path": "/baskets",
+      "path_params": [],
+      "produces": [
+        "application/json"
+      ],
+      "query_params": [],
+      "request_types": [],
+      "sources": [
+        {
+          "class_line": 23,
+          "line": 29,
+          "path": "services/shopping/src/main/java/shop/shopping/basket/BasketsController.java",
+          "signature_line": 30
+        }
+      ]
+    }
+  ],
+  "scenario": "services/shopping/e2e/healthcheck.hurl"
+}

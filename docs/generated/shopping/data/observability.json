@@ -1,0 +1,313 @@
+{
+  "actuator": {
+    "endpoint_options": [
+      {
+        "enabled": true,
+        "endpoint": "env",
+        "evidence": [
+          "services/shopping/src/main/resources/application.yml:56"
+        ]
+      }
+    ],
+    "evidence": [
+      "services/shopping/src/main/resources/application.yml:57"
+    ],
+    "exposure": [
+      "health",
+      "info",
+      "env",
+      "prometheus"
+    ]
+  },
+  "agent": {
+    "declared_by": [
+      "k3d"
+    ],
+    "environment": [
+      {
+        "evidence": [
+          "services/shopping/k8s/overlays/k3d/deployment-patch.yaml:36"
+        ],
+        "name": "JAVA_TOOL_OPTIONS",
+        "overlay": "k3d",
+        "value": "-javaagent:/app/opentelemetry-javaagent.jar"
+      },
+      {
+        "evidence": [
+          "services/shopping/k8s/overlays/k3d/deployment-patch.yaml:38"
+        ],
+        "name": "OTEL_SERVICE_NAME",
+        "overlay": "k3d",
+        "value": "shopping"
+      },
+      {
+        "evidence": [
+          "services/shopping/k8s/overlays/k3d/deployment-patch.yaml:40"
+        ],
+        "name": "OTEL_EXPORTER_OTLP_ENDPOINT",
+        "overlay": "k3d",
+        "value": "http://otel-collector:4317"
+      },
+      {
+        "evidence": [
+          "services/shopping/k8s/overlays/k3d/deployment-patch.yaml:42"
+        ],
+        "name": "OTEL_EXPORTER_OTLP_PROTOCOL",
+        "overlay": "k3d",
+        "value": "grpc"
+      },
+      {
+        "evidence": [
+          "services/shopping/k8s/overlays/k3d/deployment-patch.yaml:44"
+        ],
+        "name": "OTEL_TRACES_EXPORTER",
+        "overlay": "k3d",
+        "value": "otlp"
+      },
+      {
+        "evidence": [
+          "services/shopping/k8s/overlays/k3d/deployment-patch.yaml:46"
+        ],
+        "name": "OTEL_LOGS_EXPORTER",
+        "overlay": "k3d",
+        "value": "otlp"
+      },
+      {
+        "evidence": [
+          "services/shopping/k8s/overlays/k3d/deployment-patch.yaml:48"
+        ],
+        "name": "OTEL_METRICS_EXPORTER",
+        "overlay": "k3d",
+        "value": "none"
+      },
+      {
+        "evidence": [
+          "services/shopping/k8s/overlays/k3d/deployment-patch.yaml:50"
+        ],
+        "name": "OTEL_TRACES_SAMPLER",
+        "overlay": "k3d",
+        "value": "parentbased_traceidratio"
+      },
+      {
+        "evidence": [
+          "services/shopping/k8s/overlays/k3d/deployment-patch.yaml:52"
+        ],
+        "name": "OTEL_TRACES_SAMPLER_ARG",
+        "overlay": "k3d",
+        "value": "1.0"
+      }
+    ],
+    "evidence": [
+      "services/shopping/build.gradle:220",
+      "services/shopping/build.gradle:222",
+      "services/shopping/build.gradle:226",
+      "services/shopping/build.gradle:237",
+      "services/shopping/build.gradle:238",
+      "services/shopping/build.gradle:239",
+      "services/shopping/k8s/overlays/k3d/deployment-patch.yaml:36",
+      "services/shopping/k8s/overlays/k3d/deployment-patch.yaml:38",
+      "services/shopping/k8s/overlays/k3d/deployment-patch.yaml:40",
+      "services/shopping/k8s/overlays/k3d/deployment-patch.yaml:42",
+      "services/shopping/k8s/overlays/k3d/deployment-patch.yaml:44",
+      "services/shopping/k8s/overlays/k3d/deployment-patch.yaml:46",
+      "services/shopping/k8s/overlays/k3d/deployment-patch.yaml:48",
+      "services/shopping/k8s/overlays/k3d/deployment-patch.yaml:50",
+      "services/shopping/k8s/overlays/k3d/deployment-patch.yaml:52"
+    ],
+    "image_environment": [
+      {
+        "evidence": [
+          "services/shopping/build.gradle:241"
+        ],
+        "name": "SPRING_OUTPUT_ANSI_ENABLED",
+        "value": "never"
+      },
+      {
+        "evidence": [
+          "services/shopping/build.gradle:242"
+        ],
+        "name": "JAVA_TOOL_OPTIONS",
+        "value": "-javaagent:/app/opentelemetry-javaagent.jar"
+      }
+    ],
+    "jar": "opentelemetry-javaagent.jar",
+    "version": "2.17.0"
+  },
+  "collector": {
+    "config_map": "otel-collector-config",
+    "deployment": {
+      "image": "otel/opentelemetry-collector-contrib:0.127.0",
+      "mounts": [
+        "/etc/otel",
+        "/var/lib/otel"
+      ],
+      "name": "otel-collector",
+      "replicas": 1,
+      "volumes": [
+        {
+          "kind": "configMap",
+          "name": "otel-config"
+        },
+        {
+          "kind": "emptyDir",
+          "name": "otel-data"
+        }
+      ]
+    },
+    "evidence": [
+      "services/shopping/k8s/infra/otel-collector.yaml:15",
+      "services/shopping/k8s/infra/otel-collector.yaml:31",
+      "services/shopping/k8s/infra/otel-collector.yaml:122",
+      "services/shopping/k8s/infra/otel-collector.yaml:86"
+    ],
+    "exporters": [
+      {
+        "max_days": null,
+        "max_megabytes": null,
+        "name": "debug",
+        "path": null
+      },
+      {
+        "max_days": 7,
+        "max_megabytes": 50,
+        "name": "file/traces",
+        "path": "/var/lib/otel/traces.jsonl"
+      },
+      {
+        "max_days": 7,
+        "max_megabytes": 50,
+        "name": "file/logs",
+        "path": "/var/lib/otel/logs.jsonl"
+      }
+    ],
+    "pipelines": [
+      {
+        "exporters": [
+          "debug",
+          "file/traces"
+        ],
+        "name": "traces",
+        "receivers": [
+          "otlp"
+        ]
+      },
+      {
+        "exporters": [
+          "debug",
+          "file/logs"
+        ],
+        "name": "logs",
+        "receivers": [
+          "otlp"
+        ]
+      }
+    ],
+    "present": true,
+    "receivers": [
+      {
+        "endpoint": "0.0.0.0:4317",
+        "name": "otlp",
+        "protocol": "grpc"
+      },
+      {
+        "endpoint": "0.0.0.0:4318",
+        "name": "otlp",
+        "protocol": "http"
+      }
+    ],
+    "service": {
+      "name": "otel-collector",
+      "ports": [
+        4317,
+        4318
+      ]
+    }
+  },
+  "documentation": {
+    "evidence": [],
+    "show_actuator": null
+  },
+  "evidence": [
+    "services/shopping/src/main/resources/application.yml:54"
+  ],
+  "log_levels": [
+    {
+      "evidence": [
+        "services/shopping/src/main/resources/application.yml:60"
+      ],
+      "level": "ERROR",
+      "logger": "org.apache.catalina.startup.DigesterFactory"
+    },
+    {
+      "evidence": [
+        "services/shopping/src/main/resources/application.yml:61"
+      ],
+      "level": "ERROR",
+      "logger": "org.apache.catalina.util.LifecycleBase"
+    },
+    {
+      "evidence": [
+        "services/shopping/src/main/resources/application.yml:62"
+      ],
+      "level": "WARN",
+      "logger": "org.apache.coyote.http11.Http11NioProtocol"
+    },
+    {
+      "evidence": [
+        "services/shopping/src/main/resources/application.yml:63"
+      ],
+      "level": "WARN",
+      "logger": "org.apache.sshd.common.util.SecurityUtils"
+    },
+    {
+      "evidence": [
+        "services/shopping/src/main/resources/application.yml:64"
+      ],
+      "level": "WARN",
+      "logger": "org.apache.tomcat.util.net.NioSelectorPool"
+    },
+    {
+      "evidence": [
+        "services/shopping/src/main/resources/application.yml:65"
+      ],
+      "level": "ERROR",
+      "logger": "org.eclipse.jetty.util.component.AbstractLifeCycle"
+    },
+    {
+      "evidence": [
+        "services/shopping/src/main/resources/application.yml:66"
+      ],
+      "level": "WARN",
+      "logger": "org.hibernate.validator.internal.util.Version"
+    },
+    {
+      "evidence": [
+        "services/shopping/src/main/resources/application.yml:67"
+      ],
+      "level": "WARN",
+      "logger": "org.springframework.boot.actuate.endpoint.jmx"
+    },
+    {
+      "evidence": [
+        "services/shopping/src/main/resources/application.yml:68"
+      ],
+      "level": "INFO",
+      "logger": "org.springframework.web"
+    }
+  ],
+  "metrics": {
+    "evidence": [
+      "services/shopping/src/main/resources/application.yml:55"
+    ],
+    "prometheus_enabled": true
+  },
+  "profiles": [
+    {
+      "evidence": [
+        "services/shopping/k8s/base/deployment.yaml:59"
+      ],
+      "name": null,
+      "overlay": null
+    }
+  ]
+}

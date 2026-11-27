@@ -1,0 +1,31 @@
+---
+title: "shopping — Business Guide"
+subtitle: "The business capability the basket serves, and the rules by which it decides"
+version: "1.0"
+date: "2026-11-27"
+status: "Draft for review"
+audience: "Business analysts, product owners and auditors; no code knowledge assumed"
+owner: "shopping context team"
+---
+
+# Part I — The domain
+
+{{< include shopping/business/01-domain-overview.md >}}
+
+# Part II — The language
+
+{{< include shopping/business/02-glossary.md >}}
+
+# Part III — The rules
+
+{{< include shopping/business/03-business-rules.md >}}
+
+# Part IV — The processes
+
+{{< include shopping/business/04-process-maps.md >}}
+
+# Part V — Business impact
+
+{{< include shopping/business/05-business-impact.md >}}
+
+{{< include shopping/business/06-gaps.md >}}

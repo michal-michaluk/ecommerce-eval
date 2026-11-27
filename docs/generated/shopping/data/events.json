@@ -1,0 +1,129 @@
+{
+  "events": [
+    {
+      "declared_in": {
+        "line": 17,
+        "path": "services/shopping/src/main/java/shop/shopping/basket/DomainEvent.java"
+      },
+      "evidence": [
+        "services/shopping/src/main/java/shop/shopping/basket/DomainEvent.java:17"
+      ],
+      "fields": [
+        {
+          "name": "basketId",
+          "type": "BasketId"
+        },
+        {
+          "name": "offerId",
+          "type": "String"
+        },
+        {
+          "name": "quantity",
+          "type": "int"
+        }
+      ],
+      "handlers": [],
+      "java_type": "DomainEvent.AddedToBasket",
+      "persisted_as": [],
+      "record_line": 31,
+      "version": "1",
+      "wire_name": "AddedToBasket_v1",
+      "wired_type": "AddedToBasket"
+    },
+    {
+      "declared_in": {
+        "line": 18,
+        "path": "services/shopping/src/main/java/shop/shopping/basket/DomainEvent.java"
+      },
+      "evidence": [
+        "services/shopping/src/main/java/shop/shopping/basket/DomainEvent.java:18"
+      ],
+      "fields": [
+        {
+          "name": "basketId",
+          "type": "BasketId"
+        },
+        {
+          "name": "offerId",
+          "type": "String"
+        },
+        {
+          "name": "from",
+          "type": "int"
+        },
+        {
+          "name": "to",
+          "type": "int"
+        }
+      ],
+      "handlers": [],
+      "java_type": "DomainEvent.BasketQuantityChanged",
+      "persisted_as": [],
+      "record_line": 35,
+      "version": "1",
+      "wire_name": "BasketQuantityChanged_v1",
+      "wired_type": "BasketQuantityChanged"
+    },
+    {
+      "declared_in": {
+        "line": 19,
+        "path": "services/shopping/src/main/java/shop/shopping/basket/DomainEvent.java"
+      },
+      "evidence": [
+        "services/shopping/src/main/java/shop/shopping/basket/DomainEvent.java:19"
+      ],
+      "fields": [
+        {
+          "name": "basketId",
+          "type": "BasketId"
+        },
+        {
+          "name": "offerId",
+          "type": "String"
+        }
+      ],
+      "handlers": [],
+      "java_type": "DomainEvent.RemovedFromBasket",
+      "persisted_as": [],
+      "record_line": 39,
+      "version": "1",
+      "wire_name": "RemovedFromBasket_v1",
+      "wired_type": "RemovedFromBasket"
+    },
+    {
+      "declared_in": {
+        "line": 20,
+        "path": "services/shopping/src/main/java/shop/shopping/basket/DomainEvent.java"
+      },
+      "evidence": [
+        "services/shopping/src/main/java/shop/shopping/basket/DomainEvent.java:20"
+      ],
+      "fields": [
+        {
+          "name": "basketId",
+          "type": "BasketId"
+        },
+        {
+          "name": "selection",
+          "type": "List<String>"
+        }
+      ],
+      "handlers": [],
+      "java_type": "DomainEvent.GoToCheckout",
+      "persisted_as": [],
+      "record_line": 43,
+      "version": "1",
+      "wire_name": "GoToCheckout_v1",
+      "wired_type": "GoToCheckout"
+    }
+  ],
+  "handlers": [],
+  "registration": {
+    "evidence": [
+      "services/shopping/src/main/java/shop/shopping/basket/DomainEvent.java:15"
+    ],
+    "interface": "DomainEvent",
+    "line": 15,
+    "path": "services/shopping/src/main/java/shop/shopping/basket/DomainEvent.java"
+  }
+}

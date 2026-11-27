@@ -1,0 +1,14 @@
+%% The shopping service and everything it talks to, at one abstraction level.
+%% Drawn from: docs/specs/basket/index.md:66-84 (the spec's own system context)
+%% services/shopping/src/main/java/shop/shopping/basket/BasketConfiguration.java:40-56   OfferCatalog is answered by the seeded fixture in this increment (D38)
+%% services/shopping/src/main/java/shop/shopping/basket/Caller.java:6-14                 the token's subject is the customer, its channel claim prices delivery
+%% services/shopping/src/main/resources/application.yml:14-19                            the bearer token is validated against the issuer
+%% services/shopping/k8s/overlays/k3d/deployment-patch.yaml:35-53                        the collector address and exporters
+flowchart LR
+  CUS["Customer<br/>browser or app"] -->|"bearer token of realm shopping"| SHOP["Shopping service<br/>basket slice<br/>(checkout slice deferred)"]
+  SHOP -->|"validates the token"| KC["Identity provider<br/>Keycloak, realm shopping"]
+  SHOP -->|"one JSONB document per basket"| DB["PostgreSQL<br/>database shopping"]
+  SHOP -->|"offer read: description, price, stock"| OC["Offer source<br/>seeded fixture in this increment"]
+  SHOP -->|"handover: an in-process command"| CO["Checkout slice<br/>receives, creates no order"]
+  SHOP -->|"traces and logs over OTLP"| OTEL["OpenTelemetry collector"]
+  OC -.->|"replaced by the browsing slice's adapter"| BROWSING["Browsing slice<br/>not built in this increment"]

@@ -5,6 +5,10 @@ project:
     - system-documentation.qmd
     - integrator-guide.qmd
     - business-guide.qmd
+    - shopping-system-documentation.qmd
+    - shopping-integrator-guide.qmd
+    - shopping-operations-manual.qmd
+    - shopping-business-guide.qmd
 
 # Evidence and generator markers are provenance for reviewers of the sources. They stay in the
 # authored directories and in generated/ and never reach a rendered deliverable.

@@ -1,0 +1,84 @@
+{% import "partials/macros.md.tmpl" as m -%}
+{% include "partials/banner.md.tmpl" %}
+{{ m.evidence(operation.evidence) }}
+
+## {{ operation.number }} {{ operation.method }} {{ operation.path }}
+
+{{ m.definition("Method and path", m.code(operation.method) ~ " " ~ m.code(operation.path)) }}
+
+{{ m.definition("Authentication", m.code("bearer JWT") if operation.authenticated else "none, public endpoint") }}
+
+{{ m.evidence(operation.access_evidence) }}
+
+{{ m.definition("Consumes", m.codes(operation.consumes) if operation.consumes else "no request body") }}
+
+{{ m.definition("Produces", m.codes(operation.produces) if operation.produces else "no response media type is declared in a machine-readable contract") }}
+
+### {{ operation.number }}.1 Parameters
+
+{% if operation.parameters %}{% set parameter_rows = operation.parameters %}{% include "chapters/api-parameter-table.md.tmpl" %}
+{% else %}
+This operation declares no path or query parameters.
+{% endif %}
+
+### {{ operation.number }}.2 Request
+{% for table in operation.request_tables %}
+
+Media type
+: {{ m.codes(table.media_types) }}
+
+{{ m.evidence(api_evidence) }}
+
+{% set field_rows = table.rows %}{% include "chapters/api-field-table.md.tmpl" %}
+{% endfor %}
+{% if not operation.request_tables %}
+{% if operation.consumes %}
+The route accepts {{ m.codes(operation.consumes) }}. This repository carries no machine-readable schema for that body — no OpenAPI artifact and no scenario asserts its fields — so the response-bodies chapter of this guide states them from the handler's own record.
+{% else %}
+This operation takes no request body.
+{% endif %}
+{% endif %}
+
+### {{ operation.number }}.3 Responses
+{% for response in operation.responses %}
+
+Status
+: {{ m.code(response.status) }} — {{ m.cell(response.description) }}
+{% for table in response.tables %}
+
+Media type
+: {{ m.codes(table.media_types) }}
+
+{{ m.evidence(api_evidence) }}
+
+{% set field_rows = table.rows %}{% include "chapters/api-field-table.md.tmpl" %}
+{% endfor %}
+{% if not response.tables %}
+
+No body is declared for this status.
+{% endif %}
+{% endfor %}
+{% if not operation.responses %}
+
+No status and no media type is declared for this route anywhere the pipeline can read: the service ships no OpenAPI artifact, the annotations name only the media type, and the executable scenario addresses the management surface. The statuses the advice raises for it are the ones the errors chapter tabulates, and the body it answers is in the response-bodies chapter of this guide.
+{% endif %}
+
+### {{ operation.number }}.4 Example
+{% if excerpts %}{% for excerpt in excerpts %}
+
+{{ m.evidence(excerpt.evidence) }}
+
+{% if excerpt.kind == "request" %}
+**Request example** — the complete block is entry {{ excerpt.entry }} in Appendix B of this guide.
+{% else %}
+**Response example** — {{ excerpt.note }}; the complete block is entry {{ excerpt.entry }} in Appendix A of this guide.
+{% endif %}
+
+{{ m.fence("json", excerpt.lines | join("\n")) }}
+{% if excerpt.total > excerpt.lines | length %}
+Entry {{ excerpt.entry }} holds the complete block; the excerpt above is its first {{ excerpt.lines | length }} lines of {{ excerpt.total }}.
+{% endif %}
+{% endfor %}{% else %}
+
+No request or response body is recorded for this operation: the executable scenario this service ships addresses the management surface only. The contract of record is the separate scenario named in the contract chapter of this guide.
+{% endif %}

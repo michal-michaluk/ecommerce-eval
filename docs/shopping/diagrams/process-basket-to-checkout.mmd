@@ -1,0 +1,20 @@
+%% The process a customer goes through, with the routes that carry each step.
+%% Drawn from: docs/specs/basket/prototypes/basket-api.prove.md (24 steps, the contract of record)
+%% services/shopping/src/main/java/shop/shopping/basket/BasketService.java:101-157   render, set quantity, remove, select
+%% services/shopping/src/main/java/shop/shopping/basket/BasketService.java:231-237   the handover
+%% services/shopping/src/main/java/shop/shopping/checkout/CheckoutService.java:1-40  checkout receives; no order is created (HAND-3)
+flowchart LR
+  A["Customer opens the basket<br/>GET /baskets"] --> B["Basket shown<br/>content, totals, estimate"]
+  B --> C{"Add, change or remove?"}
+  C -->|"add or set quantity"| D["PATCH /baskets/{id}/items/{offerId}"]
+  C -->|"remove"| E["PATCH /baskets/{id}/items"]
+  C -->|"tick or untick"| F["PATCH /baskets/{id}/selection"]
+  D --> G["Every answering route re-reads the offers<br/>availability and price move here"]
+  E --> G
+  F --> G
+  G --> B
+  B --> H["Customer goes to checkout<br/>PATCH /baskets/{id}/checkout"]
+  H -->|"nothing selected, blocked row, or inactive basket"| R["422, the basket is unchanged"]
+  H -->|"a selection worth handing over"| I["Handover composed<br/>identity, revision, totals"]
+  I --> J["Checkout slice receives it<br/>creates no order in this increment"]
+  J --> K["The client reads handoverId, revision and totals<br/>the basket stays active and editable"]

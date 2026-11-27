@@ -1,0 +1,123 @@
+{
+  "repository_root": "../..",
+  "docs_root": "docs",
+  "data_dir": "docs/generated/shopping/data",
+  "chapters_dir": "docs/generated/shopping/chapters",
+  "diagrams_dir": "docs/generated/shopping/diagrams",
+  "diagram_source_dir": "docs/shopping/diagrams",
+  "templates_dir": "docs/templates-shopping",
+  "authored_dirs": [
+    "shopping",
+    "generated/shopping/chapters"
+  ],
+  "openapi": {
+    "source": "",
+    "target": "docs/generated/shopping/data/openapi.json"
+  },
+  "sources": {
+    "application_root": "services/shopping",
+    "main_root": "services/shopping/src/main/java",
+    "test_root": "services/shopping/src/test/java",
+    "changeset": "services/shopping/src/main/resources/db/db.changelog.yaml",
+    "app_config": "services/shopping/src/main/java/shop/shopping/AppConfiguration.java",
+    "app_yaml": "services/shopping/src/main/resources/application.yml",
+    "build": "services/shopping/build.gradle",
+    "e2e_scenario": "services/shopping/e2e/healthcheck.hurl",
+    "k8s": "services/shopping/k8s",
+    "json_example_sources": []
+  },
+  "adr": {
+    "directory": "docs/shopping/adr",
+    "filename": "^ADR-(\\d+).*\\.md$"
+  },
+  "events": {
+    "domain_event": "services/shopping/src/main/java/shop/shopping/basket/DomainEvent.java"
+  },
+  "observability": {
+    "collector_manifest": "services/shopping/k8s/infra/otel-collector.yaml"
+  },
+  "examples": {
+    "operation_chapters": {
+      "GET /baskets": "get-baskets",
+      "GET /baskets/{basketId}": "get-basket",
+      "PATCH /baskets/{basketId}/items/{offerId}": "patch-item-quantity",
+      "PATCH /baskets/{basketId}/items": "patch-items-removal",
+      "PATCH /baskets/{basketId}/selection": "patch-selection",
+      "PATCH /baskets/{basketId}/checkout": "patch-checkout"
+    }
+  },
+  "expected_counts": {
+    "tables": 3,
+    "changesets": 4,
+    "jsonb_columns": 3,
+    "payload_examples": 0,
+    "request_response_blocks": 3,
+    "domain_events": 4,
+    "business_operations": 6
+  },
+  "documents": [
+    {
+      "slug": "shopping-system-documentation",
+      "title": "shopping \u2014 System Documentation",
+      "max_pages": 90,
+      "required": [
+        "Part V \u2014 Limits",
+        "GAP-1",
+        "GAP-7",
+        "Appendix A",
+        "Appendix B"
+      ],
+      "forbidden": [
+        "{@code",
+        "GAP-B1"
+      ]
+    },
+    {
+      "slug": "shopping-integrator-guide",
+      "title": "shopping \u2014 Integrator Guide",
+      "max_pages": 90,
+      "required": [
+        "GAP-1",
+        "GAP-4",
+        "Appendix A",
+        "Appendix B"
+      ],
+      "forbidden": [
+        "{@code",
+        "GAP-B1"
+      ]
+    },
+    {
+      "slug": "shopping-operations-manual",
+      "title": "shopping \u2014 Operations Manual",
+      "max_pages": 60,
+      "required": [
+        "GAP-1",
+        "GAP-7",
+        "GAP-4"
+      ],
+      "forbidden": [
+        "{@code",
+        "GAP-B1"
+      ]
+    },
+    {
+      "slug": "shopping-business-guide",
+      "title": "shopping \u2014 Business Guide",
+      "max_pages": 60,
+      "required": [
+        "GAP-B1",
+        "GAP-B5",
+        "Inputs",
+        "Internal data fetched"
+      ],
+      "forbidden": [
+        "{@code",
+        "BasketEditor",
+        "BasketService",
+        "ShoppingException"
+      ]
+    }
+  ],
+  "chrome": ""
+}

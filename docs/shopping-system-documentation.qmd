@@ -1,0 +1,63 @@
+---
+title: "shopping — System Documentation"
+subtitle: "What the basket service is made of, how a request becomes a priced basket, and what it does not claim"
+version: "1.0"
+date: "2026-11-27"
+status: "Draft for review"
+audience: "Engineers and architects joining, operating or changing the shopping service"
+owner: "shopping context team"
+---
+
+# Part I — What this system is
+
+{{< include shopping/system/01-purpose-and-scope.md >}}
+
+{{< include shopping/system/02-architecture.md >}}
+
+{{< include shopping/system/03-context.md >}}
+
+# Part II — Access and cross-cutting rules
+
+## 4 Security decisions
+
+{{< include generated/shopping/chapters/security-policy.md >}}
+
+{{< include shopping/system/05-crosscutting.md >}}
+
+# Part III — Persistence
+
+## 6 Schema
+
+{{< include generated/shopping/chapters/schema.md >}}
+
+## 7 Migrations
+
+{{< include generated/shopping/chapters/migrations.md >}}
+
+{{< include shopping/system/08-write-path.md >}}
+
+## 9 Stored payload columns
+
+{{< include generated/shopping/chapters/payload-columns.md >}}
+
+{{< include shopping/system/10-events.md >}}
+
+# Part IV — Rationale
+
+{{< include shopping/system/11-decisions.md >}}
+
+## 12 Decision index
+
+{{< include generated/shopping/chapters/appendix-decisions.md >}}
+
+# Part V — Limits
+
+{{< include shopping/system/13-gaps.md >}}
+
+# Appendix A — Payload catalogue
+
+{{< include generated/shopping/chapters/appendix-payloads.md >}}
+
+# Appendix B — Recorded transcripts
+
+{{< include generated/shopping/chapters/appendix-fixtures.md >}}

@@ -1,0 +1,11 @@
+{% import "partials/macros.md.tmpl" as m -%}
+{% include "partials/banner.md.tmpl" %}
+{{ m.evidence(changesets | map(attribute="evidence") | sum(start=[]) | unique | list) }}
+
+| ChangeSet | Author | Tables created |
+|---|---|---|
+{% for changeset in changesets -%}
+| {{ m.code(changeset.id) }} | {{ m.code(changeset.author) }} | {{ m.codes(changeset.tables) if changeset.tables else '—' }} |
+{% endfor %}
+
+: Change sets declared in the Liquibase changelog, in declaration order.

@@ -1,0 +1,418 @@
+{
+  "components": {
+    "schemas": {},
+    "securitySchemes": {}
+  },
+  "contract": {
+    "base_url": {
+      "declaration": "services/shopping/e2e/healthcheck.hurl:2",
+      "declared": "http://localhost:8080",
+      "first_request": "services/shopping/e2e/healthcheck.hurl:5",
+      "kind": "base_url",
+      "name": "BASE_URL",
+      "requests": 3
+    },
+    "evidence": [
+      "services/shopping/e2e/healthcheck.hurl:5"
+    ],
+    "exercised_operations": 0,
+    "lines": 17,
+    "operations": 6,
+    "path": "services/shopping/e2e/healthcheck.hurl",
+    "requests": 3,
+    "variables": [
+      {
+        "declaration": "services/shopping/e2e/healthcheck.hurl:2",
+        "declared": "http://localhost:8080",
+        "first_request": "services/shopping/e2e/healthcheck.hurl:5",
+        "kind": "base_url",
+        "name": "BASE_URL",
+        "requests": 3
+      }
+    ]
+  },
+  "info": {},
+  "not_exercised": [
+    {
+      "evidence": [
+        "services/shopping/src/main/java/shop/shopping/basket/BasketCheckoutController.java:31"
+      ],
+      "method": "PATCH",
+      "path": "/baskets/{basketId}/checkout"
+    },
+    {
+      "evidence": [
+        "services/shopping/src/main/java/shop/shopping/basket/BasketController.java:27"
+      ],
+      "method": "GET",
+      "path": "/baskets/{basketId}"
+    },
+    {
+      "evidence": [
+        "services/shopping/src/main/java/shop/shopping/basket/BasketItemsController.java:38"
+      ],
+      "method": "PATCH",
+      "path": "/baskets/{basketId}/items/{offerId}"
+    },
+    {
+      "evidence": [
+        "services/shopping/src/main/java/shop/shopping/basket/BasketItemsController.java:45"
+      ],
+      "method": "PATCH",
+      "path": "/baskets/{basketId}/items"
+    },
+    {
+      "evidence": [
+        "services/shopping/src/main/java/shop/shopping/basket/BasketSelectionController.java:33"
+      ],
+      "method": "PATCH",
+      "path": "/baskets/{basketId}/selection"
+    },
+    {
+      "evidence": [
+        "services/shopping/src/main/java/shop/shopping/basket/BasketsController.java:29"
+      ],
+      "method": "GET",
+      "path": "/baskets"
+    }
+  ],
+  "openapi": null,
+  "paths": {
+    "/baskets": {
+      "get": {
+        "captures": [],
+        "declared": {
+          "consumes": [],
+          "produces": [
+            "application/json"
+          ]
+        },
+        "description": "The identity is the token's subject and never a value the client sends; the authority that gates the route is the chain's, decided once in AppConfiguration (D27), and the row it answers is the customer's own — the route filters by the subject, so no second customer can appear in a list. The answer is the read model's, so this adapter holds the projection ({@code http.no-write-model-in-read}) — with the one write element 07 §Recorded deviations grants it, because a customer with no basket gets one and the projection delegates that creation to the basket service rather than reaching the write model itself.",
+        "description_evidence": [
+          "services/shopping/src/main/java/shop/shopping/basket/BasketsController.java:17"
+        ],
+        "evidence": [
+          "services/shopping/src/main/java/shop/shopping/basket/BasketsController.java:29"
+        ],
+        "exercised": false,
+        "handler": {
+          "name": "list",
+          "return_type": "Baskets",
+          "source": "services/shopping/src/main/java/shop/shopping/basket/BasketsController.java:30"
+        },
+        "method": "GET",
+        "not_exercised": true,
+        "operationId": "get-baskets",
+        "parameters": [],
+        "path": "/baskets",
+        "request_count": 0,
+        "request_type": null,
+        "requests": [],
+        "responses": {},
+        "source": "services/shopping/src/main/java/shop/shopping/basket/BasketsController.java:29",
+        "summary": "GET /baskets — step 1 of the contract: the customer's active baskets, and never an empty list, because asking a customer with none creates the one they always own (D29, D42, element 07 §Contract decisions).",
+        "summary_evidence": [
+          "services/shopping/src/main/java/shop/shopping/basket/BasketsController.java:14"
+        ],
+        "summary_source": "javadoc"
+      }
+    },
+    "/baskets/{basketId}": {
+      "get": {
+        "captures": [],
+        "declared": {
+          "consumes": [],
+          "produces": [
+            "application/json"
+          ]
+        },
+        "description": "It is one of the routes that pull and write (D66, D62): it re-reads the basket's offers, applies each answer through the ingestion path and stores what changed, so two concurrent answers to one basket can report 409 CONCURRENT_MODIFICATION — a retryable answer the client owns. It therefore holds the write model, which is one of element 07 §Recorded deviations, and not the projection. A basket owned by another customer answers 404, exactly as an unknown id does (D68).",
+        "description_evidence": [
+          "services/shopping/src/main/java/shop/shopping/basket/BasketController.java:15"
+        ],
+        "evidence": [
+          "services/shopping/src/main/java/shop/shopping/basket/BasketController.java:27"
+        ],
+        "exercised": false,
+        "handler": {
+          "name": "read",
+          "return_type": "BasketContent",
+          "source": "services/shopping/src/main/java/shop/shopping/basket/BasketController.java:28"
+        },
+        "method": "GET",
+        "not_exercised": true,
+        "operationId": "get-baskets-basketid",
+        "parameters": [
+          {
+            "evidence": [
+              "services/shopping/src/main/java/shop/shopping/basket/BasketController.java:27"
+            ],
+            "in": "path",
+            "name": "basketId",
+            "observed": [],
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "path": "/baskets/{basketId}",
+        "request_count": 0,
+        "request_type": null,
+        "requests": [],
+        "responses": {},
+        "source": "services/shopping/src/main/java/shop/shopping/basket/BasketController.java:27",
+        "summary": "GET /baskets/{basketId} — step 11 of the contract: content, totals and the delivery estimate in one call (D10).",
+        "summary_evidence": [
+          "services/shopping/src/main/java/shop/shopping/basket/BasketController.java:13"
+        ],
+        "summary_source": "javadoc"
+      }
+    },
+    "/baskets/{basketId}/checkout": {
+      "patch": {
+        "captures": [],
+        "declared": {
+          "consumes": [],
+          "produces": [
+            "application/json"
+          ]
+        },
+        "description": "The answer is HandoverAnswer and not the payload that crosses: the client reads the offers that crossed, the four totals and the identity of the handover, never checkout's own id (D41). The route pulls before it composes (D66), so what crosses is the basket as the catalog describes it now, not as it was when the row was added. A basket that is blocked, empty-handed or archived is refused by the aggregate and reaches the wire through the one advice — {@code 422 NOTHING_SELECTED}, 422 BLOCKED_BY_ITEMS with the rows that refuse it, 422 BASKET_INACTIVE — and a basket owned by another customer is 404 BASKET_NOT_FOUND (D68), so no answer echoes its owner.",
+        "description_evidence": [
+          "services/shopping/src/main/java/shop/shopping/basket/BasketCheckoutController.java:18"
+        ],
+        "evidence": [
+          "services/shopping/src/main/java/shop/shopping/basket/BasketCheckoutController.java:31"
+        ],
+        "exercised": false,
+        "handler": {
+          "name": "handOver",
+          "return_type": "HandoverAnswer",
+          "source": "services/shopping/src/main/java/shop/shopping/basket/BasketCheckoutController.java:32"
+        },
+        "method": "PATCH",
+        "not_exercised": true,
+        "operationId": "patch-baskets-basketid-checkout",
+        "parameters": [
+          {
+            "evidence": [
+              "services/shopping/src/main/java/shop/shopping/basket/BasketCheckoutController.java:31"
+            ],
+            "in": "path",
+            "name": "basketId",
+            "observed": [],
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "path": "/baskets/{basketId}/checkout",
+        "request_count": 0,
+        "request_type": "HandOver",
+        "requests": [],
+        "responses": {},
+        "source": "services/shopping/src/main/java/shop/shopping/basket/BasketCheckoutController.java:31",
+        "summary": "PATCH /baskets/{basketId/checkout} — steps 14, 16, 18, 19 and 21 of the contract: go to checkout is a command, not a navigation, so it is a PATCH with no resource of its own (element 07 §Contract decisions, D32).",
+        "summary_evidence": [
+          "services/shopping/src/main/java/shop/shopping/basket/BasketCheckoutController.java:15"
+        ],
+        "summary_source": "javadoc"
+      }
+    },
+    "/baskets/{basketId}/items": {
+      "patch": {
+        "captures": [],
+        "declared": {
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ]
+        },
+        "description": "",
+        "description_evidence": [],
+        "evidence": [
+          "services/shopping/src/main/java/shop/shopping/basket/BasketItemsController.java:45"
+        ],
+        "exercised": false,
+        "handler": {
+          "name": "remove",
+          "return_type": "BasketContent",
+          "source": "services/shopping/src/main/java/shop/shopping/basket/BasketItemsController.java:47"
+        },
+        "method": "PATCH",
+        "not_exercised": true,
+        "operationId": "patch-baskets-basketid-items",
+        "parameters": [
+          {
+            "evidence": [
+              "services/shopping/src/main/java/shop/shopping/basket/BasketItemsController.java:45"
+            ],
+            "in": "path",
+            "name": "basketId",
+            "observed": [],
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "path": "/baskets/{basketId}/items",
+        "request_count": 0,
+        "request_type": "RemoveItems",
+        "requests": [],
+        "responses": {},
+        "source": "services/shopping/src/main/java/shop/shopping/basket/BasketItemsController.java:45",
+        "summary": "Remove",
+        "summary_evidence": [
+          "services/shopping/src/main/java/shop/shopping/basket/BasketItemsController.java:47"
+        ],
+        "summary_source": "handler"
+      }
+    },
+    "/baskets/{basketId}/items/{offerId}": {
+      "patch": {
+        "captures": [],
+        "declared": {
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ]
+        },
+        "description": "",
+        "description_evidence": [],
+        "evidence": [
+          "services/shopping/src/main/java/shop/shopping/basket/BasketItemsController.java:38"
+        ],
+        "exercised": false,
+        "handler": {
+          "name": "setQuantity",
+          "return_type": "BasketContent",
+          "source": "services/shopping/src/main/java/shop/shopping/basket/BasketItemsController.java:40"
+        },
+        "method": "PATCH",
+        "not_exercised": true,
+        "operationId": "patch-baskets-basketid-items-offerid",
+        "parameters": [
+          {
+            "evidence": [
+              "services/shopping/src/main/java/shop/shopping/basket/BasketItemsController.java:38"
+            ],
+            "in": "path",
+            "name": "basketId",
+            "observed": [],
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "evidence": [
+              "services/shopping/src/main/java/shop/shopping/basket/BasketItemsController.java:38"
+            ],
+            "in": "path",
+            "name": "offerId",
+            "observed": [],
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "path": "/baskets/{basketId}/items/{offerId}",
+        "request_count": 0,
+        "request_type": "UpdateQuantity",
+        "requests": [],
+        "responses": {},
+        "source": "services/shopping/src/main/java/shop/shopping/basket/BasketItemsController.java:38",
+        "summary": "Set quantity",
+        "summary_evidence": [
+          "services/shopping/src/main/java/shop/shopping/basket/BasketItemsController.java:40"
+        ],
+        "summary_source": "handler"
+      }
+    },
+    "/baskets/{basketId}/selection": {
+      "patch": {
+        "captures": [],
+        "declared": {
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ]
+        },
+        "description": "Selection is state and not history (RULE-10), so the command records no event and the answer is the basket the new selection prices (VIEW-1): ship it, the shipment's rows change the totals; ship it for the whole basket, every row does. Deselecting everything is a valid basket with an empty selection — the refusal lives at the handover, not here (RULE-9). Like every route that answers basket content it pulls before it answers (D66), so the rows it returns are the catalog's current answer, not the one they were added with — which is what makes step 15 of the contract possible without a transport. A basket owned by another customer answers 404 BASKET_NOT_FOUND (D68).",
+        "description_evidence": [
+          "services/shopping/src/main/java/shop/shopping/basket/BasketSelectionController.java:19"
+        ],
+        "evidence": [
+          "services/shopping/src/main/java/shop/shopping/basket/BasketSelectionController.java:33"
+        ],
+        "exercised": false,
+        "handler": {
+          "name": "select",
+          "return_type": "BasketContent",
+          "source": "services/shopping/src/main/java/shop/shopping/basket/BasketSelectionController.java:35"
+        },
+        "method": "PATCH",
+        "not_exercised": true,
+        "operationId": "patch-baskets-basketid-selection",
+        "parameters": [
+          {
+            "evidence": [
+              "services/shopping/src/main/java/shop/shopping/basket/BasketSelectionController.java:33"
+            ],
+            "in": "path",
+            "name": "basketId",
+            "observed": [],
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "path": "/baskets/{basketId}/selection",
+        "request_count": 0,
+        "request_type": "SelectItems",
+        "requests": [],
+        "responses": {},
+        "source": "services/shopping/src/main/java/shop/shopping/basket/BasketSelectionController.java:33",
+        "summary": "PATCH /baskets/{basketId/selection} — steps 12, 13, 15 and 17 of the contract: the three checkboxes of the screen.",
+        "summary_evidence": [
+          "services/shopping/src/main/java/shop/shopping/basket/BasketSelectionController.java:17"
+        ],
+        "summary_source": "javadoc"
+      }
+    }
+  },
+  "servers": [],
+  "tags": [],
+  "unresolved": {
+    "placeholders": [],
+    "unmatched_requests": [
+      {
+        "method": "GET",
+        "path": "/actuator/health",
+        "source": "services/shopping/e2e/healthcheck.hurl:5"
+      },
+      {
+        "method": "GET",
+        "path": "/actuator/info",
+        "source": "services/shopping/e2e/healthcheck.hurl:11"
+      },
+      {
+        "method": "GET",
+        "path": "/actuator/info",
+        "source": "services/shopping/e2e/healthcheck.hurl:15"
+      }
+    ],
+    "unparsed_sections": []
+  }
+}
