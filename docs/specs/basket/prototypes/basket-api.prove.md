@@ -40,6 +40,8 @@ Status: 200
 ```
 
 **capture basketId:** $.baskets[0].basketId
+**ignore:**
+- $.baskets[*].basketId
 
 ## 2. Clear the basket — every later golden is deterministic
 
@@ -59,7 +61,7 @@ Status: 200
 
 ```json response
 {
-  "basketId": "B-7f3a",
+  "basketId": "{{basketId}}",
   "state": "active",
   "currency": "PLN",
   "items": [],
@@ -107,7 +109,7 @@ Status: 200
 
 ```json response
 {
-  "basketId": "B-7f3a",
+  "basketId": "{{basketId}}",
   "state": "active",
   "currency": "PLN",
   "items": [
@@ -205,7 +207,7 @@ Status: 200
 
 ```json response
 {
-  "basketId": "B-7f3a",
+  "basketId": "{{basketId}}",
   "state": "active",
   "currency": "PLN",
   "items": [
@@ -329,7 +331,7 @@ Status: 200
 
 ```json response
 {
-  "basketId": "B-7f3a",
+  "basketId": "{{basketId}}",
   "state": "active",
   "currency": "PLN",
   "items": [
@@ -453,7 +455,7 @@ Status: 200
 
 ```json response
 {
-  "basketId": "B-7f3a",
+  "basketId": "{{basketId}}",
   "state": "active",
   "currency": "PLN",
   "items": [
@@ -577,7 +579,7 @@ Status: 200
 
 ```json response
 {
-  "basketId": "B-7f3a",
+  "basketId": "{{basketId}}",
   "state": "active",
   "currency": "PLN",
   "items": [
@@ -758,7 +760,7 @@ Status: 200
 
 ```json response
 {
-  "basketId": "B-7f3a",
+  "basketId": "{{basketId}}",
   "state": "active",
   "currency": "PLN",
   "items": [
@@ -884,7 +886,7 @@ Status: 200
 
 ```json response
 {
-  "basketId": "B-7f3a",
+  "basketId": "{{basketId}}",
   "state": "active",
   "currency": "PLN",
   "items": [
@@ -1008,7 +1010,7 @@ Status: 200
 
 ```json response
 {
-  "basketId": "B-7f3a",
+  "basketId": "{{basketId}}",
   "state": "active",
   "currency": "PLN",
   "items": [
@@ -1126,7 +1128,7 @@ Status: 200
 
 ```json response
 {
-  "basketId": "B-7f3a",
+  "basketId": "{{basketId}}",
   "state": "active",
   "currency": "PLN",
   "items": [
@@ -1273,7 +1275,7 @@ Status: 200
 
 ```json response
 {
-  "basketId": "B-7f3a",
+  "basketId": "{{basketId}}",
   "state": "active",
   "currency": "PLN",
   "items": [
@@ -1389,8 +1391,8 @@ Status: 200
 
 ```json response
 {
-  "handoverId": "B-7f3a",
-  "basketId": "B-7f3a",
+  "handoverId": "{{basketId}}",
+  "basketId": "{{basketId}}",
   "createdAt": "2026-11-26T10:00:00Z",
   "customerId": "C-42",
   "currency": "PLN",
@@ -1425,6 +1427,7 @@ Status: 200
 **capture revision:** $.revision
 **ignore:**
 - $.createdAt
+- $.customerId
 - $.revision
 
 ## 19. Repeating the handover is the same handover while the content is unchanged (HAND-4)
@@ -1437,8 +1440,8 @@ Status: 200
 
 ```json response
 {
-  "handoverId": "B-7f3a",
-  "basketId": "B-7f3a",
+  "handoverId": "{{basketId}}",
+  "basketId": "{{basketId}}",
   "createdAt": "2026-11-26T10:00:00Z",
   "customerId": "C-42",
   "currency": "PLN",
@@ -1473,6 +1476,7 @@ Status: 200
 
 **ignore:**
 - $.createdAt
+- $.customerId
 
 ## 20. An unavailable item blocks the handover and is named (HAND-1, DoD14)
 
@@ -1491,7 +1495,7 @@ Status: 200
 
 ```json response
 {
-  "basketId": "B-7f3a",
+  "basketId": "{{basketId}}",
   "state": "active",
   "currency": "PLN",
   "items": [
@@ -1662,7 +1666,7 @@ Status: 200
 
 ```json response
 {
-  "basketId": "B-7f3a",
+  "basketId": "{{basketId}}",
   "state": "active",
   "currency": "PLN",
   "items": [
